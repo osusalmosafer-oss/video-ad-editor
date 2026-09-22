@@ -10,6 +10,7 @@ canvas{display:block}
 </style></head><body>
 <canvas id="c" width="1080" height="1920"></canvas>
 <script src="plan.js"></script>
+<script src="caps.js"></script>
 <script>
 const W=1080,H=1920,FPS=30;
 const WA_PATH='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z';
@@ -112,16 +113,36 @@ function chrome(t){
   X.fillStyle=hx(T.acc,.92); rr(X,60+(W-120)*(1-p),1601,(W-120)*p,6,3); X.fill();
 }
 
-/* ── كرت العنوان ─────────────────────────────────────── */
-function titleCard(t){
-  const S=SCENES.title, w=win(t,S.s,S.e,0.45,0.45); if(!w) return;
-  const y=880+34*(1-eBack(w.in)), a=w.k;
+/* ── الكابشن المتزامن ────────────────────────────────── */
+function captions(t){
+  let cap=null;
+  for(const c of CAPS){ if(t>=c.s-0.06 && t<c.e+0.06){ cap=c; break; } }
+  if(!cap) return;
+  const life=t-cap.s, dur=cap.e-cap.s;
+  const a=Math.min(cl(life/0.13+0.35,0,1), cl((cap.e+0.06-t)/0.12,0,1));
+  const SZ=58, GAP=18, PAD=34;
+  X.font=`800 ${SZ}px Tajawal, sans-serif`; X.direction='rtl';
+  const ws=cap.w.map(o=>({...o, w:X.measureText(o.t).width}));
+  const tw=ws.reduce((s,o)=>s+o.w,0)+GAP*(ws.length-1);
+  const bw=Math.min(tw+PAD*2, CAPBOX.x1-CAPBOX.x0);
+  let cx=W/2;                                        // الوسط، إلا إذا خرج عن الحدّ الآمن
+  if(cx+bw/2 > CAPBOX.x1) cx=CAPBOX.x1-bw/2;
+  if(cx-bw/2 < CAPBOX.x0) cx=CAPBOX.x0+bw/2;
+  const bh=SZ+46, by=CAPBOX.y, bx=cx-bw/2;
+  const pop=1+0.035*(1-eOut(cl(life/0.16,0,1)));
   X.save(); X.globalAlpha=a;
-  shadow(X,'rgba(0,0,0,.45)',40,14);
-  X.fillStyle=hx(T.bg,0.90); rr(X,60,y,W-120,206,30); X.fill(); noShadow(X);
-  X.fillStyle=T.acc; rr(X,W-60-9,y+22,9,162,5); X.fill();   // شريط التمييز جهة اليمين
-  ar(TEXTS.titleTop,72,800,T.ink,W-96,y+96);
-  ar(TEXTS.titleSub,39,500,'#C9D3EC',W-96,y+160);
+  X.translate(cx,by+bh/2); X.scale(pop,pop); X.translate(-cx,-(by+bh/2));
+  shadow(X,'rgba(0,0,0,.50)',30,10);
+  X.fillStyle=hx(T.deep,0.86); rr(X,bx,by,bw,bh,bh/2); X.fill(); noShadow(X);
+  X.strokeStyle='rgba(255,255,255,.10)'; X.lineWidth=2; rr(X,bx+1,by+1,bw-2,bh-2,bh/2); X.stroke();
+  let x=cx+tw/2;                                   // RTL: نبدأ من اليمين
+  X.textAlign='right'; X.textBaseline='alphabetic';
+  for(const o of ws){
+    X.font=`800 ${SZ}px Tajawal, sans-serif`;
+    X.fillStyle=o.h?T.acc:T.ink;
+    X.fillText(o.t, x, by+bh-32);
+    x-=o.w+GAP;
+  }
   X.restore();
 }
 
@@ -148,7 +169,7 @@ function alertCard(t){
   X.lineJoin='round'; X.lineWidth=16; X.strokeStyle=T.warn; X.stroke(); X.fill();
   X.fillStyle=T.bg; X.fillRect(-7,-30,14,44); X.beginPath(); X.arc(0,32,9,0,7); X.fill();
   X.restore();
-  ar(TEXTS.alert,104,900,T.ink,S.w-46,S.h/2+36);
+  ar(TEXTS.alert,106,900,T.ink,S.w-44,S.h/2+37);
   X.restore();
 }
 
@@ -282,7 +303,7 @@ function draw(t){
   X.clearRect(0,0,W,H);
   if(t<SRC_END){
     videoLayer(t);
-    titleCard(t);
+    captions(t);
     alertCard(t);
     mapCard(t,SCENES.map1);
     mapCard(t,SCENES.map2);

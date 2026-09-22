@@ -43,9 +43,9 @@ WU,WD,TH,TP,AL=whoosh(0.36,True),whoosh(0.32,False),thud(),tap(),alert()
 ev=0
 for t0,sw in beats:
     if sw:
-        add(WU if t0<20 else WD, max(0,t0-0.16), 0.085); ev+=1
-add(AL, 6.22, 0.10); ev+=1                       # «انتبه»
-for t0 in (11.00, 20.80, 32.40):          # ظهور الكروت
+        add(WU if t0<19 else WD, max(0,t0-0.16), 0.085); ev+=1
+add(AL, 0.28, 0.105); ev+=1                       # «انتبه»
+for t0 in (16.76, 24.30):          # ظهور الكروت
     add(TP, t0, 0.070); ev+=1
 add(TH, 37.58, 0.105); ev+=1                     # الدخول لكرت النهاية
 buf=np.clip(buf,-0.95,0.95)
