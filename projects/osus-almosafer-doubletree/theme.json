@@ -1,0 +1,14 @@
+{
+  "bg":   "#1f2449",
+  "deep": "#151935",
+  "ink":  "#FFFFFF",
+  "acc":  "#2884ff",
+  "mut":  "#A9B4D0",
+  "warn": "#FFC53D",
+  "font": "Tajawal",
+  "brand": "أسس المسافر",
+  "logo": "assets/logo.png",
+  "grade": false,
+  "grid": true,
+  "pace": "normal"
+}
