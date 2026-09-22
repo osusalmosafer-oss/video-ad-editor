@@ -1,0 +1,766 @@
+<title>تدريب حجوزات مكة</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#EFF3F1; --surface:#FFFFFF; --surface-2:#E4EAE7; --paper:#F4F0E5;
+    --ink:#132320; --ink-2:#4E615B; --ink-3:#7E8F89; --line:#D2DCD8;
+    --accent:#0D6B57; --accent-ink:#FFFFFF; --accent-soft:#D6E9E1;
+    --gold:#8A6220; --gold-soft:#EFE4CC;
+    --good:#1C7A4E; --warn:#A5691E; --bad:#A83A33;
+    --shadow:0 1px 2px rgba(19,35,32,.05), 0 10px 26px rgba(19,35,32,.05);
+    --f-display:"Reem Kufi","IBM Plex Sans Arabic",system-ui,sans-serif;
+    --f-body:"IBM Plex Sans Arabic",system-ui,"Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0C1412; --surface:#15201D; --surface-2:#1C2926; --paper:#1F2620;
+      --ink:#E7EEEB; --ink-2:#A4B5AF; --ink-3:#7C8D87; --line:#293733;
+      --accent:#41B296; --accent-ink:#052019; --accent-soft:#15322B;
+      --gold:#D2A44E; --gold-soft:#2C2718;
+      --good:#4BB07C; --warn:#D2963F; --bad:#D66159;
+      --shadow:0 1px 2px rgba(0,0,0,.40), 0 10px 26px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0C1412; --surface:#15201D; --surface-2:#1C2926; --paper:#1F2620;
+    --ink:#E7EEEB; --ink-2:#A4B5AF; --ink-3:#7C8D87; --line:#293733;
+    --accent:#41B296; --accent-ink:#052019; --accent-soft:#15322B;
+    --gold:#D2A44E; --gold-soft:#2C2718;
+    --good:#4BB07C; --warn:#D2963F; --bad:#D66159;
+    --shadow:0 1px 2px rgba(0,0,0,.40), 0 10px 26px rgba(0,0,0,.28);
+  }
+
+  body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.75;}
+  .app{direction:rtl; max-width:1120px; margin:0 auto; padding-inline:16px; padding-block:0 48px;}
+  h1,h2,h3{font-family:var(--f-display); font-weight:600; text-wrap:balance; margin:0;}
+  p{margin:0;}
+  button{font-family:inherit; font-size:inherit; color:inherit;}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px;}
+
+  /* ---------- رأس الصفحة ---------- */
+  .top{padding-block:24px 18px; border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; justify-content:space-between;}
+  .eyebrow{font-size:11.5px; letter-spacing:.14em; color:var(--gold); font-weight:600;}
+  .top h1{font-size:clamp(25px,5vw,34px); line-height:1.3; margin-top:4px;}
+  .top .lede{color:var(--ink-2); font-size:14px; max-width:52ch; margin-top:6px;}
+  .meter{display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-l,18px); padding:10px 14px; box-shadow:var(--shadow);}
+  .ring{width:46px; height:46px; flex:none;}
+  .ring text{font-family:var(--f-body); font-weight:600; font-size:13px; fill:var(--ink);}
+  .meter b{display:block; font-size:13px; font-weight:600;}
+  .meter span{display:block; font-size:12px; color:var(--ink-3);}
+
+  /* ---------- التنقل ---------- */
+  .shell{display:grid; gap:24px; margin-top:22px; grid-template-columns:1fr;}
+  .rail{display:flex; gap:8px; overflow-x:auto; padding-block:4px; scrollbar-width:thin; position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); z-index:5;}
+  .rail button{white-space:nowrap; background:var(--surface); border:1px solid var(--line); color:var(--ink-2); padding:8px 14px; border-radius:999px; cursor:pointer; font-weight:500;}
+  .rail button[aria-selected="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+  .rail .num{font-size:11px; opacity:.7; margin-inline-start:6px;}
+  @media (min-width:900px){
+    .shell{grid-template-columns:214px 1fr; align-items:start;}
+    .rail{flex-direction:column; overflow:visible; position:sticky; top:calc(env(safe-area-inset-top,0px) + 16px); gap:4px; background:transparent;}
+    .rail button{text-align:start; border-radius:10px; border-color:transparent; background:transparent;}
+    .rail button:hover{background:var(--surface-2);}
+    .rail button[aria-selected="true"]{background:var(--accent); border-color:var(--accent);}
+  }
+
+  /* ---------- عناصر عامة ---------- */
+  .sec-head{margin-bottom:16px;}
+  .sec-head h2{font-size:22px;}
+  .sec-head p{color:var(--ink-2); font-size:14px; margin-top:4px; max-width:62ch;}
+  .grid{display:grid; gap:14px;}
+  @media (min-width:640px){ .grid.two{grid-template-columns:repeat(2,1fr);} }
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow);}
+  .card h3{font-size:16px; margin-bottom:8px;}
+  .card ul{margin:0; padding-inline-start:18px; color:var(--ink-2);}
+  .card li{margin-block:4px;}
+  .tag{display:inline-block; font-size:11.5px; font-weight:600; padding:2px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent);}
+  .tag.gold{background:var(--gold-soft); color:var(--gold);}
+  .tag.bad{background:color-mix(in srgb, var(--bad) 14%, transparent); color:var(--bad);}
+  .kv{display:flex; justify-content:space-between; gap:12px; padding-block:7px; border-bottom:1px dashed var(--line); font-size:14px;}
+  .kv:last-child{border-bottom:0;}
+  .kv span:last-child{color:var(--ink-2); font-variant-numeric:tabular-nums; text-align:start;}
+
+  /* ---------- خطة الأيام ---------- */
+  .day{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow); border-inline-start:4px solid var(--accent);}
+  .day .head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:10px;}
+  .day .n{font-family:var(--f-display); font-size:13px; color:var(--accent); font-weight:700;}
+  .day h3{font-size:17px;}
+  .task{display:flex; gap:10px; align-items:flex-start; padding-block:6px; cursor:pointer;}
+  .task input{margin-top:6px; accent-color:var(--accent); width:16px; height:16px; flex:none;}
+  .task span{font-size:14px; color:var(--ink-2);}
+  .task input:checked + span{color:var(--ink-3); text-decoration:line-through;}
+  .win{margin-top:10px; padding:9px 12px; background:var(--accent-soft); border-radius:10px; font-size:13px; color:var(--ink);}
+  .win b{color:var(--accent);}
+
+  /* ---------- السكربتات ---------- */
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px;}
+  input[type="search"], input[type="text"], textarea{font-family:inherit; font-size:14px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:9px 12px; width:100%; max-width:100%;}
+  textarea{min-height:70px; resize:vertical;}
+  .chip{background:var(--surface); border:1px solid var(--line); color:var(--ink-2); border-radius:999px; padding:6px 12px; font-size:13px; cursor:pointer;}
+  .chip[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink);}
+  .script{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; box-shadow:var(--shadow);}
+  .script .row{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;}
+  .script h3{font-size:15px;}
+  .bubble{background:var(--paper); border:1px solid var(--line); border-start-start-radius:4px; border-start-end-radius:14px; border-end-end-radius:14px; border-end-start-radius:14px; padding:12px 14px; white-space:pre-wrap; font-size:14px; line-height:1.85; color:var(--ink);}
+  .copy{background:var(--accent-soft); color:var(--accent); border:0; border-radius:8px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer; flex:none;}
+  .copy.done{background:var(--good); color:#fff;}
+
+  /* ---------- الاعتراضات ---------- */
+  details.obj{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:0; box-shadow:var(--shadow); overflow:hidden;}
+  details.obj summary{cursor:pointer; padding:13px 16px; font-weight:600; font-size:15px; list-style:none; display:flex; justify-content:space-between; gap:10px; align-items:center;}
+  details.obj summary::-webkit-details-marker{display:none;}
+  details.obj summary::after{content:"+"; color:var(--accent); font-weight:700;}
+  details.obj[open] summary::after{content:"−";}
+  details.obj .body{padding:0 16px 16px; border-top:1px solid var(--line); padding-top:12px;}
+  .say{background:var(--paper); border-radius:10px; padding:11px 13px; white-space:pre-wrap; font-size:14px; line-height:1.85;}
+  .never{margin-top:10px; font-size:13.5px; color:var(--bad);}
+  .never b{font-weight:600;}
+
+  /* ---------- التمارين ---------- */
+  .drill{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow);}
+  .drill .row{display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;}
+  .lvl{font-size:12px; color:var(--gold); letter-spacing:.1em;}
+  .cust{background:var(--surface-2); border-radius:12px; padding:12px 14px; font-size:14.5px; line-height:1.8;}
+  .cust b{display:block; font-size:11.5px; letter-spacing:.1em; color:var(--ink-3); margin-bottom:4px; font-weight:600;}
+  .meta{display:grid; gap:6px; margin-top:10px; font-size:13.5px; color:var(--ink-2);}
+  .reveal{margin-top:12px; background:transparent; border:1px dashed var(--accent); color:var(--accent); border-radius:10px; padding:8px 14px; font-weight:600; cursor:pointer;}
+  .model{margin-top:12px;}
+
+  /* ---------- التقييم ---------- */
+  .axis{display:grid; gap:6px; padding-block:11px; border-bottom:1px solid var(--line);}
+  .axis .line{display:flex; justify-content:space-between; gap:10px; align-items:baseline;}
+  .axis label{font-weight:600; font-size:14.5px;}
+  .axis .hint{font-size:12.5px; color:var(--ink-3); line-height:1.6;}
+  .axis output{font-variant-numeric:tabular-nums; font-weight:700; color:var(--accent); font-size:15px;}
+  input[type="range"]{width:100%; accent-color:var(--accent);}
+  .total{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; background:var(--accent-soft); border-radius:14px; padding:14px 18px; margin-block:16px;}
+  .total .num{font-family:var(--f-display); font-size:38px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums;}
+  .total .num small{font-size:15px; color:var(--ink-2); font-weight:500;}
+  .verdict{font-weight:700; font-size:15px; padding:6px 14px; border-radius:999px; background:var(--surface); border:1px solid var(--line);}
+  .fatal{display:flex; gap:9px; align-items:flex-start; padding-block:5px; font-size:13.5px; color:var(--ink-2); cursor:pointer;}
+  .fatal input{margin-top:5px; accent-color:var(--bad); width:15px; height:15px; flex:none;}
+  .btn{background:var(--accent); color:var(--accent-ink); border:0; border-radius:10px; padding:10px 18px; font-weight:600; cursor:pointer;}
+  .btn[disabled]{opacity:.5; cursor:not-allowed;}
+  .btn.ghost{background:transparent; color:var(--ink-2); border:1px solid var(--line);}
+  .note{font-size:13px; color:var(--ink-3); margin-top:10px;}
+  .rec{display:flex; justify-content:space-between; gap:12px; align-items:flex-start; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--surface); margin-top:8px;}
+  .rec .who{font-weight:600; font-size:14.5px;}
+  .rec .when{font-size:12px; color:var(--ink-3);}
+  .rec .sc{font-family:var(--f-display); font-size:22px; font-weight:700; font-variant-numeric:tabular-nums;}
+  .rec .nt{font-size:13px; color:var(--ink-2); margin-top:4px; max-width:60ch;}
+  .field{display:grid; gap:5px; margin-bottom:10px;}
+  .field label{font-size:13px; font-weight:600; color:var(--ink-2);}
+  footer{margin-top:32px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-3);}
+  @media (prefers-reduced-motion:no-preference){ .sec{animation:rise .18s ease-out;} }
+  @keyframes rise{from{opacity:.4; transform:translateY(4px);} to{opacity:1; transform:none;}}
+</style>
+
+<div class="app" lang="ar" dir="rtl">
+  <header class="top">
+    <div>
+      <div class="eyebrow">وحدات ضيافة · مكة المكرمة</div>
+      <h1>تدريب حجوزات مكة</h1>
+      <p class="lede">واجهة تدريب موظف الحجوزات على الواتساب: خطة خمسة أيام، سكربتات جاهزة للنسخ، مواقف صعبة، تمارين لعب أدوار، وبطاقة تقييم من مئة درجة.</p>
+    </div>
+    <div class="meter" id="meter" title="تقدّمك في خطة الأيام الخمسة">
+      <svg class="ring" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="16" fill="none" stroke="var(--surface-2)" stroke-width="5"></circle>
+        <circle id="ringFill" cx="20" cy="20" r="16" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 100" transform="rotate(-90 20 20)" pathLength="100"></circle>
+      </svg>
+      <div>
+        <b id="meterNum">0٪ من الخطة</b>
+        <span id="meterSub">ابدأ باليوم الأول</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav class="rail" id="rail" aria-label="أقسام التدريب"></nav>
+    <main id="main">
+      <section class="sec" id="sec-plan"></section>
+      <section class="sec" id="sec-basics" hidden></section>
+      <section class="sec" id="sec-scripts" hidden></section>
+      <section class="sec" id="sec-objections" hidden></section>
+      <section class="sec" id="sec-drills" hidden></section>
+      <section class="sec" id="sec-score" hidden></section>
+    </main>
+  </div>
+
+  <footer>
+    المواضع المكتوبة بين قوسين تُملأ من سياسات المنشأة (الأسعار، العربون، الإلغاء، أوقات الدخول، الحساب الرسمي). البنود النظامية — تسجيل النزلاء والفوترة — تُراجع مع الجهة المختصة قبل اعتمادها؛ هذه واجهة تدريب لا مرجع نظامي.
+  </footer>
+</div>
+
+<script>
+/* ===================== المحتوى ===================== */
+const DAYS = [
+  { n:"اليوم الأول", t:"المكان والمنتج",
+    items:["يحفظ كل وحدة: الحي، المسافة من الحرم مشياً وبالسيارة، الدور، المصعد",
+           "عدد الغرف والأسرّة وسعة الأشخاص لكل وحدة",
+           "جملة واحدة تميّز كل وحدة: الأقرب للحرم · الأوسع للعائلة · الأوفر",
+           "التسعير: سعر الليلة عادي وموسم، الحد الأدنى لليالي، والعربون"],
+    win:"يجاوب خلال 10 ثوانٍ على: «كم تبعد وحدة [س] عن الحرم؟ وكم تسع؟»" },
+  { n:"اليوم الثاني", t:"أسلوب الكلام بالواتساب",
+    items:["الأسئلة الخمسة قبل أي سعر",
+           "زمن الردّ، والالتزام بالموعد الذي وعد به",
+           "النبرة: مختصر وواضح ومحترم، بلا مبالغة",
+           "تمرين: عشر رسائل عملاء حقيقية يرد عليها ويصحّحها المشرف"],
+    win:"ثماني ردود من عشر تمرّ بلا تعديل جوهري" },
+  { n:"اليوم الثالث", t:"دورة الحجز كاملة",
+    items:["المراحل العشر: استفسار ← تأهيل ← إتاحة ← عرض ← تأكيد ودفع ← ما قبل الوصول ← استقبال ← إقامة ← مغادرة ← تقييم",
+           "إدخال حجز تجريبي بالنظام ومعرفة أين تُحفظ بيانات النزيل",
+           "كتابة رسالة تأكيد كاملة بلا بند ناقص",
+           "تبليغ الاستقبال بالوصول المتأخر كتابةً"],
+    win:"حجز وهمي: عائلة 5 أشخاص، أربع ليالٍ، وصول الساعة 3 فجراً — بلا معلومة ناقصة" },
+  { n:"اليوم الرابع", t:"الاعتراضات والمواقف الصعبة",
+    items:["غالي · بفكر وأرد عليك · إلغاء · عدم حضور",
+           "شكوى نظافة · عطل مكيّف · ضجيج · طلب استرجاع",
+           "متى يقرر بنفسه ومتى يصعّد فوراً",
+           "ست جولات لعب أدوار تتصاعد صعوبتها"],
+    win:"لا يعد بشيء خارج صلاحيته مهما ارتفع الضغط" },
+  { n:"اليوم الخامس", t:"وردية حقيقية تحت الإشراف",
+    items:["ثلاث ساعات: المشرف يقرأ كل ردّ قبل الإرسال",
+           "ثلاث ساعات: المشرف يقرأ بعد الإرسال",
+           "تسليم وردية مكتوب بالقالب",
+           "مراجعة بطاقة التقييم الأسبوعية"],
+    win:"يُعتمد للحالات العادية، ويبقى التصعيد إلزامياً في المالي والشكاوى" }
+];
+
+const BASICS = [
+  { t:"الأسئلة الخمسة قبل أي سعر", tag:"لا تُرسل رقماً قبلها",
+    list:["تاريخ الدخول والخروج وكم ليلة","عدد الأشخاص: كبار وأطفال","عدد الغرف المطلوبة","الأولوية: الأقرب للحرم أو الأوفر أو الأوسع","وقت الوصول التقريبي"] },
+  { t:"زمن الردّ", tag:"أهم عامل منفرد",
+    kv:[["أول ردّ داخل الدوام","خلال 5 دقائق"],["بعد الدوام","ردّ آلي فوراً + ردّ بشري أول الدوام"],["سؤال يحتاج تأكيداً","إفادة خلال 10 دقائق ثم الجواب بالموعد"]] },
+  { t:"ثلاث جُمل تنقذك", tag:"احفظها حرفياً",
+    list:["«فهمت عليك، وأرجع لك خلال [وقت محدد].»","«اللي أقدر أسويه الآن هو [كذا].»","«هذا خارج صلاحيتي، وأرفعه لمسؤولي حالاً وأتابعه معك.»"] },
+  { t:"بنية عرض السعر", tag:"بهذا الترتيب",
+    list:["اسم الوحدة والحي","المسافة من الحرم مشياً بالدقائق","ما تحتويه: غرف، أسرّة، سعة، مطبخ، مصعد، مواقف","السعر الإجمالي للإقامة لا سعر الليلة","ما يشمله وما لا يشمله","سؤال إغلاق واحد: أثبّتها لك؟"] },
+  { t:"ممنوعات", tag:"من اليوم الأول", bad:true,
+    list:["وعد بميزة غير مؤكدة كتابةً: إطلالة، دور معيّن، دخول مبكر","طلب بيانات بطاقة بالواتساب أو تحويل لحساب شخصي","صور وحدة غير الوحدة المحجوزة","وعد باسترجاع مبلغ أو خصم من عند الموظف","مشاركة بيانات النزلاء خارج فريق العمل"] },
+  { t:"ثلاث لحظات تصنع التقييم", tag:"أمسكها",
+    list:["قبل الوصول بيوم: الموقع والطريق واسم المستقبِل ورقمه","بعد الدخول بساعة: «وصلتوا بخير؟ كل شي تمام؟»","صباح المغادرة: شكر + وقت الخروج + طلب التقييم"] }
+];
+
+const SCRIPTS = [
+  { c:"فتح", t:"الردّ الأول على استفسار جديد", b:"حياك الله، معك [الاسم] من [اسم المنشأة].\nعشان أرشّح لك الأنسب وأعطيك السعر النهائي:\n• تاريخ الدخول والخروج؟\n• كم شخص (كبار/أطفال)؟\n• كم غرفة؟\n• تفضّل الأقرب للحرم أو الأوفر سعراً؟\n• وقت وصولكم تقريباً؟" },
+  { c:"فتح", t:"خارج الدوام", b:"وصلتنا رسالتك، شكراً لتواصلك مع [اسم المنشأة].\nفريق الحجوزات يستقبل الرسائل من [الساعة] إلى [الساعة]، وبنرد عليك أول الدوام بإذن الله.\nللطوارئ للنزلاء الحاليين: [الرقم]." },
+  { c:"تسعير", t:"عرض السعر", b:"[اسم الوحدة] — حي [الحي]\n🕌 تبعد عن الحرم [x] دقائق مشياً (تقريباً [y] كم)\n🛏️ [عدد] غرف · تتسع [عدد] أشخاص · [مطبخ/غسالة/مصعد/موقف]\n📅 من [التاريخ] إلى [التاريخ] = [عدد] ليالٍ\n💰 الإجمالي: [المبلغ] ريال [شامل/غير شامل الضريبة والرسوم]\n\nالوحدة متاحة الحين. أثبّتها لك؟" },
+  { c:"تسعير", t:"خيار ثانٍ (أوفر أو أوسع)", b:"وعندي بديل: [اسم الوحدة] — تبعد [x] دقائق مشياً، تتسع [عدد]، إجمالي الإقامة [المبلغ] ريال.\nالفرق: [جملة واحدة تشرح الفرق بصدق].\nأيّهما أرتّب لك؟" },
+  { c:"تسعير", t:"الاعتذار عن عدم الإتاحة", b:"للأسف [اسم الوحدة] محجوزة بهذي التواريخ.\nالمتاح عندي: [البديل] — [المسافة] · تتسع [العدد] · إجمالي [المبلغ] ريال.\nيناسبكم؟ وإلا أسجّل طلبك وأخبرك أول ما تتوفر." },
+  { c:"تأكيد", t:"إمساك مؤقت وطلب التحويل", b:"ممتاز. أمسك لك [اسم الوحدة] حتى [الساعة] اليوم.\nلتثبيت الحجز: [العربون] تحويلاً على حساب المنشأة:\n[اسم الحساب + الآيبان الرسمي]\nوترسل لي صورة الإشعار وأأكد لك مباشرة.\nملاحظة: الوحدة ترجع متاحة للجميع بعد [الساعة]." },
+  { c:"تأكيد", t:"رسالة التأكيد الكاملة", b:"✅ تم تأكيد حجزك\nرقم الحجز: [الرقم]\nالاسم: [اسم النزيل]\nالوحدة: [الاسم] — حي [الحي]\nالدخول: [التاريخ] من الساعة [الوقت]\nالخروج: [التاريخ] قبل الساعة [الوقت]\nعدد الأشخاص: [العدد] · عدد الغرف: [العدد]\nالإجمالي: [المبلغ] ريال · المدفوع: [المبلغ] · المتبقي: [المبلغ] يُسدّد [متى]\nسياسة الإلغاء: [انسخها من سياسة المنشأة]\nالموقع: [رابط الخرائط]\nيستقبلكم: [الاسم] — [الرقم]\nأي استفسار أنا معك على هذا الرقم." },
+  { c:"متابعة", t:"تذكير قبل الوصول بيوم", b:"تذكير بحجزكم غداً [التاريخ] — [اسم الوحدة].\n📍 الموقع: [رابط]\n🚗 الطريق: [وصف المدخل/الدور/رقم الشقة/المواقف]\n🔑 يستقبلكم [الاسم] — [الرقم]\nوصولكم تقريباً الساعة [الوقت]؟ أكّد لي عشان يكون الاستقبال جاهز." },
+  { c:"متابعة", t:"بعد الدخول بساعة", b:"اطمأنّيت عليكم — وصلتوا بخير؟ الوحدة والمكيّف والماء الحار تمام؟\nأي ملاحظة الحين وأعالجها لك فوراً." },
+  { c:"متابعة", t:"صباح المغادرة", b:"صباح الخير. تذكير: موعد الخروج اليوم قبل الساعة [الوقت].\nتحتاجون تأخير خروج؟ أشوف المتاح وأخبرك.\nتقبّل الله طاعتكم، وشرّفتونا." },
+  { c:"متابعة", t:"طلب التقييم", b:"سعدنا باستضافتكم. لو الإقامة عجبتكم، تقييمكم يفرق معنا كثير:\n[رابط التقييم]\nوإن كان فيه شي ما كان على قدر توقعكم، أخبرني أولاً وأنا أتابعه شخصياً." },
+  { c:"متابعة", t:"عميل تأخر عن الردّ (متابعة واحدة)", b:"ذكّرتك بطلبك على [اسم الوحدة] لتواريخ [التاريخ].\nلا زالت متاحة إلى الحين، وأقدر أثبّتها لك اليوم.\nإن كانت خططكم تغيّرت، خبّرني وأقفل الطلب — ما يزعجني شي." },
+  { c:"شكاوى", t:"استقبال شكوى", b:"آسف جداً على هذا، وهذا ما يمثّل مستوانا.\nفهمت المشكلة: [أعد صياغتها بكلماتك].\nأبدأ فيها الحين: [الإجراء] خلال [المدة].\nأرجع لك بتحديث الساعة [الوقت] بالضبط." },
+  { c:"شكاوى", t:"تسليم الحل", b:"تم معالجة [المشكلة] الساعة [الوقت].\nوتقديراً للإزعاج: [ما اعتُمد من الإدارة فقط].\nتأكّد لي إن كل شي صار تمام الآن؟" }
+];
+
+const OBJECTIONS = [
+  { t:"«غالي»", say:"أقدّر وضوحك. السعر يقابل: الموقع [x] دقائق مشياً من الحرم، والوحدة تتسع [عدد] بدل غرفتين فندقية، ومطبخ يوفّر عليكم الوجبات.\nوإن كانت الميزانية محدّدة، عندي [الوحدة الأوفر] بـ[المبلغ] — أبعد شوي بس نظيفة ومريحة. أيّهما أثبّت؟",
+    never:"تخفيض من عندك · التقليل من المنافس · «هذا أرخص شي بمكة»" },
+  { t:"«شفت أرخص عند غيركم»", say:"ممكن، والأسعار تختلف حسب المسافة والسعة والخدمة. لو ترسل لي تفاصيل العرض الثاني أقارن لك بصدق — وإذا كان فعلاً أنسب لكم، أقولها لك بصراحة.",
+    never:"الجدال · التشكيك بالعرض الثاني" },
+  { t:"«بفكر وأرد عليك»", say:"خذ راحتك. أمسكها لك حتى [الساعة] بدون التزام، وأخبرك إذا جاء عليها طلب ثانٍ.",
+    never:"أكثر من متابعة واحدة — الإلحاح يخسر العميل نهائياً" },
+  { t:"«أبغى خصم»", say:"الخصومات عندنا من الإدارة وبمواسم محددة. اللي أقدر عليه: [ميزة بلا تكلفة — دخول مبكر إن توفر، تمديد خروج، ترقية وحدة إن كانت متاحة]. يناسبك؟",
+    never:"وعد بميزة قبل التحقق من إتاحتها" },
+  { t:"«الموقع بعيد عن الحرم»", say:"صحيح، تبعد [x] دقائق مشياً. بالمقابل [الميزة]. وإن كان القرب أهم شي عندكم، الأقرب المتاح: [الوحدة] بـ[المبلغ]. الفرق [المبلغ] للإقامة كاملة.",
+    never:"الجدال في المسافة أو تصغيرها" },
+  { t:"طلب إلغاء", say:"تم، وأتفهّم تغيّر الخطط. حسب السياسة المتفق عليها بالتأكيد: [نص السياسة].\nوقبل ما ألغي — هل يناسبكم تأجيل التواريخ بدل الإلغاء؟ أحفظ لكم نفس السعر [إن كان مسموحاً].",
+    never:"الوعد باسترجاع المبلغ — الاسترجاع يُصعَّد دائماً" },
+  { t:"وصول بعد منتصف الليل", say:"ما فيها شي، جهّزنا لكم الاستقبال. أكّد لي الساعة التقريبية عشان [اسم المستقبِل] يكون بانتظاركم.",
+    never:"«تمام ما فيه مشكلة» بلا تبليغ الاستقبال كتابةً" },
+  { t:"عدم الحضور (No-show)", say:"حاولنا التواصل معكم اليوم على [الأوقات] ولم نوفّق. حجزكم رقم [الرقم] يخضع لسياسة عدم الحضور: [النص]. إن كان صار عندكم ظرف طارئ، خبّرني وأرفع وضعكم للإدارة.",
+    never:"الإلغاء قبل محاولتين اتصال ورسالة موثّقة" },
+  { t:"شكوى نظافة", say:"آسف على هذا، وهذا ما يمثّل مستوانا. أرسل فريق النظافة خلال [المدة] الآن.\nتفضّلون نعالجها وأنتم بالوحدة، أو ننقلكم لوحدة جاهزة [إن توفرت]؟",
+    never:"طلب صور قبل الاعتذار · الاعتماد على الفريق بلا متابعة منك" },
+  { t:"عطل مكيّف أو ماء حار", say:"آسف، وأتابعها الحين. [الفني] بطريقه لكم، والوقت المتوقع [المدة].\nوإلى ذلك الوقت: [حل مؤقت]. أحدّثك كل نصف ساعة حتى تنتهي.",
+    never:"مدة غير واقعية · الصمت بين التحديثات" },
+  { t:"تهديد بتقييم سيئ", say:"حقك تكتب رأيك، وأنا اللي يهمّني أصلح اللي صار. اللي أقدر أسويه الآن: [الإجراء]. أسمح لي أعالجها أولاً؟",
+    never:"عرض تعويض مقابل حذف تقييم · التأخر في التصعيد" },
+  { t:"تحويل لحساب شخصي", say:"للأمان، التحويل يكون فقط على حساب المنشأة الرسمي: [الاسم/الآيبان]. أي حساب شخصي ما يمثّلنا، وما نستلم بيانات بطاقة بالواتساب.",
+    never:"قبول الإشعار · تجاهل إبلاغ الإدارة" }
+];
+
+const DRILLS = [
+  { l:1, t:"استفسار مبهم", msg:"السلام عليكم، الأسعار؟", want:"لا يُرسل سعراً. يجمع الأسئلة الخمسة برسالة واحدة مرتبة.", trap:"أن يرد «من [المبلغ] ريال» فيفقد التأهيل والمقارنة.",
+    model:"حياك الله، معك [الاسم] من [اسم المنشأة].\nعشان أعطيك السعر النهائي وأرشّح لك الأنسب:\n• تاريخ الدخول والخروج؟\n• كم شخص؟\n• كم غرفة؟\n• الأقرب للحرم أو الأوفر؟\n• وقت الوصول تقريباً؟" },
+  { l:1, t:"طلب واضح", msg:"نبي شقة غرفتين من 12 إلى 16، أربع كبار وطفلين، الأقرب للحرم.", want:"تحقق من الإتاحة، خياران فقط، سعر إجمالي، سؤال إغلاق.", trap:"ثلاثة خيارات فأكثر، أو سعر ليلة بدل الإجمالي.",
+    model:"أبشر. متاح لكم:\n[الوحدة أ] — [x] دقائق مشياً · غرفتان · تتسع 6 · إجمالي 4 ليالٍ [المبلغ] ريال\nوإن حبيتم أوسع: [الوحدة ب] — [x] دقائق · إجمالي [المبلغ] ريال\nأيّهما أثبّت لكم؟" },
+  { l:2, t:"«غالي»", msg:"لا والله غالي، لقيت بأقل بثلاثين بالمئة.", want:"سؤال يكشف نوع الاعتراض، ثم قيمة + بديل أوفر.", trap:"تخفيض ذاتي، أو التقليل من المنافس.",
+    model:"أقدّر صراحتك. تسمح لي أسأل: العرض الثاني كم يبعد عن الحرم وكم يتسع؟\nلأن سعرنا يقابل [المسافة] و[السعة] و[الخدمة].\nوإن كانت الميزانية محدّدة، عندي [البديل] بـ[المبلغ] — أبعد قليلاً وبنفس النظافة والخدمة." },
+  { l:2, t:"وصول متأخر", msg:"طيارتنا تنزل 1:40 بعد منتصف الليل، نوصلكم حوالي 3 فجراً. فيه مشكلة؟", want:"طمأنة + ترتيب الاستقبال + تبليغ داخلي مكتوب + تأكيد محدّث.", trap:"«تمام ما فيه مشكلة» بلا إجراء داخلي.",
+    model:"ولا يهمّك، مرحّبين فيكم بأي وقت.\nسجّلت وصولكم 3 فجراً، و[اسم المستقبِل] بيكون بانتظاركم ورقمه [الرقم].\nأرسل لكم الموقع ووصف المدخل الحين، وأكّدوا لي إذا تأخرت الرحلة." },
+  { l:2, t:"شكوى نظافة بعد الدخول", msg:"دخلنا الشقة والحمام مو نظيف. هذا اللي دفعنا عليه؟", want:"اعتذار بلا تبرير + إجراء بمدة محددة + خيار + متابعة بعد التنفيذ.", trap:"الجدال أو طلب صور قبل الاعتذار.",
+    model:"آسف جداً، وهذا ما يمثّلنا.\nفريق النظافة بطريقه لكم الحين، ويخلص خلال [المدة].\nتفضّلون نعالجها وأنتم بالوحدة، أو ننقلكم لوحدة جاهزة الحين؟\nوأتابع معكم بنفسي بعد ما يخلصون." },
+  { l:2, t:"إلغاء قبل يومين", msg:"ظروف طارئة، نبي نلغي ونسترد المبلغ كامل.", want:"تعاطف + عرض التأجيل + قراءة السياسة كما هي + تصعيد الاسترجاع.", trap:"«أكيد بنرجعه لك» أو «ما فيه استرجاع نهائياً» — كلاهما خطأ.",
+    model:"الله يسهّل أموركم، وأتفهّم الظرف.\nقبل الإلغاء: يناسبكم تأجيل التواريخ بدل الإلغاء؟\nوإذا كان الإلغاء هو القرار، سياسة الحجز تنص على [النص]، وأرفع طلب الاسترجاع للإدارة وأرجع لك بالردّ خلال [المدة]." },
+  { l:3, t:"تعارض حجزين", msg:"(داخلي) وحدة واحدة محجوزة لعميلين بنفس التاريخ، وأحدهما يصل بعد ثلاث ساعات.", want:"تصعيد فوري + بديل مساوٍ أو أفضل على حسابنا + إبلاغ العميل بمبادرة منّا قبل أن يكتشف.", trap:"الصمت والانتظار، أو إلقاء اللوم على «النظام».",
+    model:"أبلغ المشرف فوراً، ثم للعميل:\n«أعتذر منك، صار عندنا خطأ بالجدولة من طرفنا. رتّبت لكم [الوحدة البديلة] — [المسافة] وأوسع/مثلها تماماً، وبلا أي فرق بالسعر، وتقديراً للإزعاج [ما اعتمدته الإدارة].\nالاستقبال جاهز لكم بنفس الموعد، وأنا متابع معكم شخصياً.»" },
+  { l:3, t:"عطل مكيّف بالصيف", msg:"المكيّف ما يبرّد والجو نار والأطفال ما ناموا.", want:"معالجة عاجلة + حل مؤقت + تحديث كل 30 دقيقة + متابعة صباحاً.", trap:"مدة غير واقعية، أو الصمت بين التحديثات.",
+    model:"آسف على هذا، وأتعامل معها الحين كحالة عاجلة.\n[الفني] بطريقه ويوصل خلال [المدة].\nوإلى ذلك الوقت أرسل لكم [مروحة/وحدة بديلة إن توفرت].\nبحدّثك كل نصف ساعة إلى أن تنتهي، وأتطمّن عليكم الصباح." },
+  { l:3, t:"تهديد بتقييم سيئ", msg:"إذا ما رجعتوا لي نص المبلغ بكتب تقييم يفضحكم.", want:"لا مساومة على التقييم، تركيز على معالجة المشكلة، تصعيد مع نسخة المحادثة.", trap:"عرض تعويض مقابل حذف التقييم.",
+    model:"حقك تكتب رأيك بكل صراحة، واللي يهمّني الحين أصلح اللي صار.\nالمشكلة عندي: [المشكلة]، وأرفعها للإدارة مباشرة وأرجع لك بردّ رسمي خلال [المدة].\nواللي أقدر أسويه الآن: [الإجراء الفوري]." },
+  { l:3, t:"مجموعة كبيرة بموسم", msg:"حملة 24 شخصاً، نبي 6 شقق برمضان، وش أفضل سعر؟", want:"منسّق واحد، جدول أسماء وغرف، شروط دفع المجموعات، تصعيد التسعير للإدارة.", trap:"تسعير مجموعة من عنده، أو وعد بوحدات متجاورة بلا تأكيد.",
+    model:"حيّاكم الله. عشان أرفع لكم عرضاً دقيقاً لرمضان:\n• اسم مسؤول المجموعة ورقمه؟\n• التواريخ بالضبط؟\n• توزيع الأشخاص على الشقق؟\nالعروض للمجموعات تُعتمد من الإدارة، وأرجع لكم بالعرض خلال [المدة] بإذن الله." },
+  { l:3, t:"طلب خارج النطاق", msg:"تقدرون تجيبون لنا تأشيرة وتصريح ومواصلات من جدة؟", want:"حدود واضحة بلا وعود، وبديل حقيقي إن وُجد.", trap:"«أبشر نرتبها لك» ثم الاعتذار لاحقاً.",
+    model:"التأشيرات والتصاريح خارج خدماتنا وما أقدر أضمنها لكم.\nاللي أقدر عليه: [المواصلات إن كانت خدمة لدينا بتكلفة إضافية]، وأرشّح لكم مكتباً معتمداً للباقي." },
+  { l:3, t:"دفع مشبوه", msg:"حوّلت المبلغ لرقم أرسله لي شخص قال إنه منكم.", want:"عدم اعتماد الدفع، شرح القناة الرسمية، تصعيد فوري، تحذير بلا إثارة ذعر.", trap:"تأكيد الحجز على تحويل لم يصل لحساب المنشأة.",
+    model:"خلّني أتأكد معك: تحويلاتنا تكون فقط على حساب المنشأة باسم [الاسم] والآيبان [الرقم].\nأرسل لي صورة الإشعار وأتحقق من المحاسبة الحين، وأرفع الموضوع للإدارة.\nوأنصحك توقف أي تحويل ثانٍ لحد ما نتأكد." }
+];
+
+const AXES = [
+  { k:"speed", label:"السرعة", max:20, hint:"أول ردّ خلال 5 دقائق · لا رسالة مقروءة بلا ردّ · الالتزام بالموعد الذي وعد به" },
+  { k:"qualify", label:"التأهيل", max:15, hint:"الأسئلة الخمسة قبل أي سعر · فهم الأولوية الحقيقية للعميل" },
+  { k:"accuracy", label:"دقة المعلومة", max:20, hint:"المسافة من الحرم · السعة · الإتاحة · السعر الإجمالي · السياسات كما هي مكتوبة" },
+  { k:"complete", label:"اكتمال الرسائل", max:15, hint:"رسالة التأكيد بكل بنودها · الموقع والمستقبِل · توثيق أي وعد كتابةً" },
+  { k:"tone", label:"النبرة", max:15, hint:"احترام ووضوح · بلا تبرير داخلي · بلا جفاف · بلا إلحاح" },
+  { k:"close", label:"الإغلاق والمتابعة", max:15, hint:"سؤال إغلاق واضح · متابعة واحدة للمتردّد · إغلاق الحالة أو تصعيدها" }
+];
+
+const FATALS = [
+  "وعد بشيء خارج صلاحيته (استرجاع، خصم، ترقية غير مؤكدة)",
+  "سعر أو سياسة خاطئة أُرسلت للعميل",
+  "طلب تحويل لحساب غير رسمي أو استقبال بيانات بطاقة",
+  "رسالة تأكيد ناقصة تسبّبت في خلاف",
+  "تجاهل شكوى أو تأخير تصعيد عاجل"
+];
+
+const TABS = [
+  { id:"plan", label:"خطة الأيام", n:"5" },
+  { id:"basics", label:"الأساسيات", n:String(BASICS.length) },
+  { id:"scripts", label:"السكربتات", n:String(SCRIPTS.length) },
+  { id:"objections", label:"مواقف صعبة", n:String(OBJECTIONS.length) },
+  { id:"drills", label:"التمارين", n:String(DRILLS.length) },
+  { id:"score", label:"بطاقة التقييم", n:"100" }
+];
+
+/* ===================== أدوات ===================== */
+const $ = (s, r) => (r || document).querySelector(s);
+const el = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; };
+function store(key, val){
+  try{
+    if (val === undefined) { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
+    localStorage.setItem(key, JSON.stringify(val));
+  }catch(e){ return null; }
+}
+
+/* ===================== التنقل ===================== */
+const rail = $("#rail");
+TABS.forEach((tab, i) => {
+  const b = el("button", null);
+  b.type = "button";
+  b.setAttribute("role", "tab");
+  b.setAttribute("aria-selected", i === 0 ? "true" : "false");
+  b.dataset.id = tab.id;
+  b.append(document.createTextNode(tab.label));
+  const n = el("span", "num", tab.n); b.append(n);
+  b.addEventListener("click", () => show(tab.id));
+  rail.append(b);
+});
+function show(id){
+  TABS.forEach(t => { $("#sec-" + t.id).hidden = t.id !== id; });
+  rail.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.id === id)));
+  store("bt.tab", id);
+}
+
+/* ===================== خطة الأيام ===================== */
+const progress = store("bt.progress") || {};
+function renderPlan(){
+  const sec = $("#sec-plan");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "خطة تأهيل خمسة أيام"));
+  head.append(el("p", null, "كل يوم ينتهي بتمرين ومعيار نجاح. علّم البند بعد ما يتقنه الموظف فعلياً — لا بعد ما تشرحه له."));
+  sec.append(head);
+  const grid = el("div", "grid");
+  DAYS.forEach((d, di) => {
+    const card = el("div", "day");
+    const h = el("div", "head");
+    h.append(el("span", "n", d.n));
+    h.append(el("h3", null, d.t));
+    card.append(h);
+    d.items.forEach((item, ii) => {
+      const key = di + "." + ii;
+      const label = el("label", "task");
+      const cb = el("input"); cb.type = "checkbox"; cb.id = "task-" + key; cb.checked = !!progress[key];
+      cb.addEventListener("change", () => { progress[key] = cb.checked; store("bt.progress", progress); paintMeter(); });
+      label.append(cb, el("span", null, item));
+      card.append(label);
+    });
+    const win = el("div", "win");
+    win.append(el("b", null, "معيار النجاح: "));
+    win.append(document.createTextNode(d.win));
+    card.append(win);
+    grid.append(card);
+  });
+  sec.append(grid);
+}
+function paintMeter(){
+  const total = DAYS.reduce((a, d) => a + d.items.length, 0);
+  const done = Object.values(progress).filter(Boolean).length;
+  const pct = Math.round((done / total) * 100);
+  $("#ringFill").setAttribute("stroke-dasharray", pct + " " + (100 - pct));
+  $("#meterNum").textContent = pct + "٪ من الخطة";
+  $("#meterSub").textContent = done + " من " + total + " بنداً";
+}
+
+/* ===================== الأساسيات ===================== */
+function renderBasics(){
+  const sec = $("#sec-basics");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "الأساسيات"));
+  head.append(el("p", null, "ستّ بطاقات يراجعها الموظف قبل كل وردية. لو ما بقي معه غيرها، يكفي."));
+  sec.append(head);
+  const grid = el("div", "grid two");
+  BASICS.forEach(b => {
+    const c = el("div", "card");
+    c.append(el("span", "tag" + (b.bad ? " bad" : " gold"), b.tag));
+    c.append(el("h3", null, b.t));
+    if (b.list){
+      const ul = el("ul");
+      b.list.forEach(x => ul.append(el("li", null, x)));
+      c.append(ul);
+    }
+    if (b.kv){
+      b.kv.forEach(pair => {
+        const row = el("div", "kv");
+        row.append(el("span", null, pair[0]), el("span", null, pair[1]));
+        c.append(row);
+      });
+    }
+    grid.append(c);
+  });
+  sec.append(grid);
+}
+
+/* ===================== السكربتات ===================== */
+let scriptFilter = "الكل", scriptQuery = "";
+function renderScripts(){
+  const sec = $("#sec-scripts");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "سكربتات الواتساب"));
+  head.append(el("p", null, "انسخ، بدّل ما بين الأقواس، أرسل. السعر يُكتب دائماً ولا يُرسل بصوتية."));
+  sec.append(head);
+
+  const bar = el("div", "toolbar");
+  const search = el("input"); search.type = "search"; search.id = "scriptSearch"; search.placeholder = "ابحث في السكربتات…"; search.style.maxWidth = "260px"; search.value = scriptQuery;
+  search.addEventListener("input", () => { scriptQuery = search.value.trim(); paintScripts(); });
+  bar.append(search);
+  const cats = ["الكل"].concat(Array.from(new Set(SCRIPTS.map(s => s.c))));
+  cats.forEach(c => {
+    const b = el("button", "chip", c);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(c === scriptFilter));
+    b.addEventListener("click", () => {
+      scriptFilter = c;
+      bar.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", String(x.textContent === c)));
+      paintScripts();
+    });
+    bar.append(b);
+  });
+  sec.append(bar);
+  const list = el("div", "grid"); list.id = "scriptList";
+  sec.append(list);
+  paintScripts();
+}
+function paintScripts(){
+  const list = $("#scriptList");
+  if (!list) return;
+  list.replaceChildren();
+  const hits = SCRIPTS.filter(s =>
+    (scriptFilter === "الكل" || s.c === scriptFilter) &&
+    (!scriptQuery || (s.t + " " + s.b).includes(scriptQuery))
+  );
+  if (!hits.length){ list.append(el("p", "note", "ما فيه سكربت يطابق بحثك. جرّب كلمة أقصر.")); return; }
+  hits.forEach(s => {
+    const card = el("div", "script");
+    const row = el("div", "row");
+    const left = el("div");
+    left.append(el("span", "tag", s.c));
+    left.append(el("h3", null, s.t));
+    const btn = el("button", "copy", "نسخ");
+    btn.type = "button";
+    btn.addEventListener("click", () => copyText(s.b, btn));
+    row.append(left, btn);
+    card.append(row);
+    card.append(el("div", "bubble", s.b));
+    list.append(card);
+  });
+}
+function copyText(text, btn){
+  const done = () => { btn.textContent = "نُسخ ✓"; btn.classList.add("done"); setTimeout(() => { btn.textContent = "نسخ"; btn.classList.remove("done"); }, 1600); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, () => fallback(text, btn, done));
+  } else fallback(text, btn, done);
+}
+function fallback(text, btn, done){
+  const ta = el("textarea"); ta.value = text; ta.setAttribute("readonly", "");
+  ta.style.position = "fixed"; ta.style.insetInlineStart = "-9999px";
+  document.body.append(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch(e){ btn.textContent = "انسخ يدوياً"; }
+  ta.remove();
+}
+
+/* ===================== المواقف الصعبة ===================== */
+function renderObjections(){
+  const sec = $("#sec-objections");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "المواقف الصعبة"));
+  head.append(el("p", null, "القاعدة: أقرّ بالشعور ← أعد صياغة الطلب ← عالج بخيار واقعي ← تابع حتى الإغلاق. لا تبدأ بالدفاع."));
+  sec.append(head);
+  const grid = el("div", "grid");
+  OBJECTIONS.forEach((o, i) => {
+    const d = el("details", "obj");
+    if (i === 0) d.open = true;
+    const s = el("summary", null, o.t);
+    d.append(s);
+    const body = el("div", "body");
+    body.append(el("div", "say", o.say));
+    const nv = el("div", "never");
+    nv.append(el("b", null, "ممنوع: "));
+    nv.append(document.createTextNode(o.never));
+    body.append(nv);
+    d.append(body);
+    grid.append(d);
+  });
+  sec.append(grid);
+}
+
+/* ===================== التمارين ===================== */
+function renderDrills(){
+  const sec = $("#sec-drills");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "تمارين لعب الأدوار"));
+  head.append(el("p", null, "اقرأ رسالة العميل، اكتب ردّك بنفسك، وبعدين افتح الردّ النموذجي وقارن. لا تفتحه قبل ما تكتب."));
+  sec.append(head);
+  const grid = el("div", "grid");
+  DRILLS.forEach((d, i) => {
+    const card = el("div", "drill");
+    const row = el("div", "row");
+    const h = el("div");
+    h.append(el("h3", null, (i + 1) + ". " + d.t));
+    row.append(h);
+    row.append(el("span", "lvl", "★".repeat(d.l) + "☆".repeat(3 - d.l)));
+    card.append(row);
+    const c = el("div", "cust");
+    c.append(el("b", null, "العميل يكتب"));
+    c.append(document.createTextNode(d.msg));
+    card.append(c);
+    const meta = el("div", "meta");
+    const w = el("div"); w.append(el("strong", null, "المطلوب: ")); w.append(document.createTextNode(d.want));
+    const t = el("div"); t.append(el("strong", null, "الفخ: ")); t.append(document.createTextNode(d.trap));
+    meta.append(w, t);
+    card.append(meta);
+    const btn = el("button", "reveal", "أظهر الردّ النموذجي");
+    btn.type = "button";
+    const model = el("div", "model bubble", d.model);
+    model.hidden = true;
+    btn.addEventListener("click", () => {
+      model.hidden = !model.hidden;
+      btn.textContent = model.hidden ? "أظهر الردّ النموذجي" : "أخفِ الردّ النموذجي";
+    });
+    card.append(btn, model);
+    grid.append(card);
+  });
+  sec.append(grid);
+}
+
+/* ===================== بطاقة التقييم ===================== */
+let records = store("bt.records") || [];
+function renderScore(){
+  const sec = $("#sec-score");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "بطاقة تقييم المحادثة"));
+  head.append(el("p", null, "قيّم محادثة واحدة كاملة — تدريبية أو حقيقية. الدرجة تنزل على الخطأ حتى لو كان الردّ لطيفاً."));
+  sec.append(head);
+
+  const card = el("div", "card");
+  const who = el("div", "grid two");
+  who.append(field("اسم المتدرّب", "evalWho", store("bt.who") || ""));
+  who.append(field("المقيّم", "evalBy", store("bt.by") || ""));
+  card.append(who);
+
+  AXES.forEach(a => {
+    const wrap = el("div", "axis");
+    const line = el("div", "line");
+    const lab = el("label", null, a.label + " — من " + a.max);
+    lab.setAttribute("for", "ax-" + a.k);
+    const out = el("output", null, "0");
+    out.id = "out-" + a.k;
+    line.append(lab, out);
+    const r = el("input");
+    r.type = "range"; r.id = "ax-" + a.k; r.min = "0"; r.max = String(a.max); r.step = "1"; r.value = "0";
+    r.addEventListener("input", () => { out.textContent = r.value; recalc(); });
+    wrap.append(line, r, el("div", "hint", a.hint));
+    card.append(wrap);
+  });
+
+  const total = el("div", "total");
+  const num = el("div", "num"); num.id = "total"; num.append(document.createTextNode("0"));
+  const small = el("small", null, " / 100"); num.append(small);
+  const verdict = el("span", "verdict", "ابدأ التقييم"); verdict.id = "verdict";
+  total.append(num, verdict);
+  card.append(total);
+
+  const fat = el("div");
+  fat.append(el("h3", null, "أخطاء تُسقط المحادثة مهما كانت الدرجة"));
+  FATALS.forEach((f, i) => {
+    const l = el("label", "fatal");
+    const cb = el("input"); cb.type = "checkbox"; cb.id = "fatal-" + i; cb.className = "fatalBox";
+    cb.addEventListener("change", recalc);
+    l.append(cb, el("span", null, f));
+    fat.append(l);
+  });
+  card.append(fat);
+
+  const noteField = el("div", "field");
+  const nl = el("label", null, "ملاحظة للمتدرّب (جملة واحدة محددة، لا مجاملة)");
+  nl.setAttribute("for", "evalNote");
+  const ta = el("textarea"); ta.id = "evalNote"; ta.placeholder = "مثال: أرسلت السعر قبل ما تسأل عن عدد الأشخاص — أعد التمرين الثاني.";
+  noteField.append(nl, ta);
+  card.append(noteField);
+
+  const actions = el("div", "toolbar");
+  const save = el("button", "btn", "احفظ التقييم"); save.type = "button"; save.id = "saveEval";
+  save.addEventListener("click", saveEval);
+  const reset = el("button", "btn ghost", "تقييم جديد"); reset.type = "button";
+  reset.addEventListener("click", resetEval);
+  actions.append(save, reset);
+  card.append(actions);
+  const note = el("p", "note", "يُحفظ التقييم على هذا الجهاز ويظهر في السجل تحت.");
+  note.id = "saveNote";
+  card.append(note);
+  sec.append(card);
+
+  const recWrap = el("div");
+  recWrap.style.marginTop = "22px";
+  recWrap.append(el("h3", null, "آخر التقييمات"));
+  const list = el("div"); list.id = "recList";
+  list.append(el("p", "note", "لا توجد تقييمات محفوظة بعد."));
+  recWrap.append(list);
+  sec.append(recWrap);
+
+  recalc();
+}
+function field(label, id, val){
+  const f = el("div", "field");
+  const l = el("label", null, label); l.setAttribute("for", id);
+  const i = el("input"); i.type = "text"; i.id = id; i.value = val;
+  f.append(l, i);
+  return f;
+}
+function readScores(){
+  const s = {}; let total = 0;
+  AXES.forEach(a => { const v = Number(($("#ax-" + a.k) || {}).value || 0); s[a.k] = v; total += v; });
+  return { s, total };
+}
+function fatalHits(){
+  return FATALS.filter((f, i) => { const b = $("#fatal-" + i); return b && b.checked; });
+}
+function recalc(){
+  const { total } = readScores();
+  const hits = fatalHits();
+  const numEl = $("#total");
+  if (!numEl) return;
+  numEl.replaceChildren(document.createTextNode(String(total)));
+  const small = el("small", null, " / 100");
+  numEl.append(small);
+  const v = $("#verdict");
+  let txt, color;
+  if (hits.length){ txt = "محادثة مرفوضة — " + hits.length + " خطأ قاتل"; color = "var(--bad)"; }
+  else if (total >= 90){ txt = "ممتاز"; color = "var(--good)"; }
+  else if (total >= 75){ txt = "جيد"; color = "var(--accent)"; }
+  else if (total >= 60){ txt = "يحتاج تدريباً"; color = "var(--warn)"; }
+  else { txt = "لا يُترك بلا إشراف"; color = "var(--bad)"; }
+  v.textContent = txt;
+  v.style.color = color;
+  v.style.borderColor = color;
+}
+function resetEval(){
+  AXES.forEach(a => { const r = $("#ax-" + a.k); if (r){ r.value = "0"; $("#out-" + a.k).textContent = "0"; } });
+  FATALS.forEach((f, i) => { const b = $("#fatal-" + i); if (b) b.checked = false; });
+  const note = $("#evalNote"); if (note) note.value = "";
+  recalc();
+}
+function saveEval(){
+  const who = ($("#evalWho").value || "").trim();
+  const by = ($("#evalBy").value || "").trim();
+  if (!who){ setNote("اكتب اسم المتدرّب قبل الحفظ.", true); $("#evalWho").focus(); return; }
+  store("bt.who", who); store("bt.by", by);
+  const { s, total } = readScores();
+  const hits = fatalHits();
+  records.unshift({
+    trainee: who,
+    evaluator: by || "غير مذكور",
+    scores: s,
+    total: total,
+    fatal: hits,
+    note: ($("#evalNote").value || "").trim(),
+    createdAt: new Date().toISOString()
+  });
+  records = records.slice(0, 40);
+  store("bt.records", records);
+  paintRecords(records);
+  setNote("حُفظ تقييم " + who + " بدرجة " + total + " من 100 على هذا الجهاز.", false);
+  resetEval();
+}
+function setNote(msg, warn){
+  const n = $("#saveNote");
+  if (!n) return;
+  n.textContent = msg;
+  n.style.color = warn ? "var(--warn)" : "var(--good)";
+}
+function paintRecords(rows){
+  const list = $("#recList");
+  if (!list) return;
+  list.replaceChildren();
+  if (!rows.length){ list.append(el("p", "note", "لا توجد تقييمات محفوظة بعد.")); return; }
+  rows.forEach((v, i) => {
+    const row = el("div", "rec");
+    const left = el("div");
+    left.append(el("div", "who", String(v.trainee || "—")));
+    const when = new Date(v.createdAt || Date.now());
+    const stamp = isNaN(when.getTime()) ? "" : when.toLocaleDateString("ar", { year:"numeric", month:"long", day:"numeric" });
+    left.append(el("div", "when", stamp + " · قيّمه " + String(v.evaluator || "—")));
+    if (v.note) left.append(el("div", "nt", String(v.note)));
+    if (Array.isArray(v.fatal) && v.fatal.length){
+      const b = el("div", "nt"); b.style.color = "var(--bad)";
+      b.textContent = "خطأ قاتل: " + v.fatal.join(" · ");
+      left.append(b);
+    }
+    const right = el("div");
+    right.style.textAlign = "center";
+    const failed = Array.isArray(v.fatal) && v.fatal.length;
+    const sc = el("div", "sc", String(v.total != null ? v.total : "—"));
+    sc.style.color = failed ? "var(--bad)" : (v.total >= 75 ? "var(--good)" : "var(--warn)");
+    const del = el("button", "chip", "حذف");
+    del.type = "button";
+    del.style.marginTop = "6px";
+    del.addEventListener("click", () => {
+      records.splice(i, 1);
+      store("bt.records", records);
+      paintRecords(records);
+    });
+    right.append(sc, del);
+    row.append(left, right);
+    list.append(row);
+  });
+}
+
+/* ===================== التشغيل ===================== */
+renderPlan(); renderBasics(); renderScripts(); renderObjections(); renderDrills(); renderScore();
+paintMeter();
+const savedTab = store("bt.tab");
+if (savedTab && TABS.some(t => t.id === savedTab)) show(savedTab);
+
+paintRecords(records);
+</script>
