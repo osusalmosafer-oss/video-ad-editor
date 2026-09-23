@@ -165,6 +165,9 @@
   .rooms{font-size:13.5px; color:var(--ink-2); line-height:1.8; background:var(--paper); border-radius:10px; padding:9px 12px;}
   .rooms b{color:var(--ink); font-weight:600;}
   .rooms.none{background:transparent; color:var(--ink-3); padding:0;}
+  .polbox{font-size:13.5px; color:var(--ink-2); line-height:1.8; background:var(--gold-soft); border-radius:10px; padding:9px 12px;}
+  .polbox b{color:var(--gold); font-weight:700;}
+  .polbox.none{background:transparent; color:var(--ink-3); padding:0;}
   .links{display:flex; gap:14px; flex-wrap:wrap; font-size:13px;}
   .links a{color:var(--accent); text-decoration:none; font-weight:600;}
   .links a:hover{text-decoration:underline;}
@@ -202,6 +205,8 @@
       <section class="sec" id="sec-objections" hidden></section>
       <section class="sec" id="sec-drills" hidden></section>
       <section class="sec" id="sec-hotels" hidden></section>
+      <section class="sec" id="sec-sim" hidden></section>
+      <section class="sec" id="sec-team" hidden></section>
       <section class="sec" id="sec-score" hidden></section>
     </main>
   </div>
@@ -349,7 +354,7 @@ const FATALS = [
   "تجاهل شكوى أو تأخير تصعيد عاجل"
 ];
 
-const HOTELS = [{"n":"سويس أوتيل المقام مكة","en":"Swissotel Al Maqam","s":4,"d":"أبراج البيت","addr":"مجمع أبراج البيت","lat":21.420188,"lng":39.825321,"score":8.7,"rev":25509,"bk":"https://www.booking.com/hotel/sa/swissotel-al-maqam-makkah.html","m":273,"walk":5,"rooms":"كلاسيك توين (مع خيار سرير ثالث) · كلاسيك ثلاثية ورباعية بإطلالة مدينة · كلاسيك كنج بإطلالة حرم جزئية · بريمير · جونيور وريزيدنشال وأجنحة عائلية — الغرف تتسع حتى 3 بالغين","gm":"https://www.google.com/maps/search/?api=1&query=21.420188,39.825321"},{"n":"الصفوة البرج الأول","en":"Al Safwah Royale Orchid","s":4,"d":"أبراج الصفوة / أجياد","addr":"أمام بوابة الملك عبدالعزيز رقم 1","lat":21.420038,"lng":39.826781,"score":8.8,"rev":6487,"bk":"https://www.booking.com/hotel/sa/al-safwah.html","m":280,"walk":5,"rooms":"ديلوكس بإطلالة الكعبة · إطلالة حرم جانبية · ستوديو بإطلالة الحرم · إطلالة داخلية — 471 غرفة، وأقرب موقع لساحات الحرم","gm":"https://www.google.com/maps/search/?api=1&query=21.420038,39.826781"},{"n":"سويس أوتيل مكة","en":"Swissotel Makkah","s":5,"d":"أبراج البيت / أجياد","addr":"مجمع أبراج البيت — تقاطع أم القرى","lat":21.419763,"lng":39.826089,"score":8.9,"rev":22869,"bk":"https://www.booking.com/hotel/sa/swissotel-makkah.html","m":305,"walk":5,"rooms":"كلاسيك كنج (إطلالة حرم جزئية) · كلاسيك توين · كلاسيك ثلاثية · كلاسيك رباعية (إطلالة مدينة) · جونيور سويت بطاولة طعام لستة — 1487 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.419763,39.826089"},{"n":"موفنبيك برج هاجر مكة","en":"Movenpick Hajar Tower","s":4,"d":"أبراج البيت","addr":"أبراج البيت — قرب بوابة الملك عبدالعزيز","lat":21.419671,"lng":39.825594,"score":8.6,"rev":11081,"bk":"https://www.booking.com/hotel/sa/movenpick-residence-hajar-tower-makkah.html","m":321,"walk":5,"rooms":"كلاسيك (كنج أو ثلاثة أسرّة، تتسع 4) · ديلوكس سويت بغرفة نوم (تتسع 4) · سوبيريور كنج وكوين · ثلاثية · جناح ملكي 150م² · إطلالات جزئية على الحرم والكعبة","gm":"https://www.google.com/maps/search/?api=1&query=21.419671,39.825594"},{"n":"إنتركونتيننتال دار التوحيد مكة","en":"InterContinental Dar Al Tawhid","s":5,"d":"إبراهيم الخليل","addr":"شارع إبراهيم الخليل","lat":21.420622,"lng":39.822443,"score":8.8,"rev":3711,"bk":"https://www.booking.com/hotel/sa/dar-al-tawhid-intercontinental-makkah.html","m":441,"walk":7,"rooms":"كلاسيك 30–49م² · جونيور سويت 93–114م² · تنفيذي 138–149م² · ملكي 232–309م² · دبلوماسي · رئاسي 282م² · أجنحة من غرفة إلى أربع غرف — 600 غرفة وجناح، وسماعات لبث الأذان","gm":"https://www.google.com/maps/search/?api=1&query=21.420622,39.822443"},{"n":"حياة ريجنسي جبل عمر مكة","en":"Hyatt Regency Makkah","s":5,"d":"جبل عمر","addr":"جبل عمر، شارع إبراهيم الخليل","lat":21.420344,"lng":39.822398,"score":8.8,"rev":21615,"bk":"https://www.booking.com/hotel/sa/hyatt-regency-makkah.html","m":461,"walk":8,"rooms":"توين وكنج 38م² بإطلالة حرم جزئية · مفردة/مزدوجة/ثلاثية/رباعية · أجنحة عائلية · جناح ملكي 190م² بإطلالة الكعبة · بنتهاوس 4 غرف نوم 410م² — 656 غرفة منها 25 جناحاً","gm":"https://www.google.com/maps/search/?api=1&query=21.420344,39.822398"},{"n":"هيلتون الأجنحة جبل عمر مكة","en":"Hilton Suites Makkah","s":4,"d":"جبل عمر","addr":"شارع إبراهيم الخليل","lat":21.421326,"lng":39.82161,"score":9.0,"rev":6713,"bk":"https://www.booking.com/hotel/sa/hilton-suites-makkah.html","m":493,"walk":8,"rooms":"غرفة كنج بإطلالة مدينة · غرفة توين بإطلالة حرم جزئية · جناح بغرفة نوم توين · جناح عائلي بغرفتي نوم — 484 غرفة وجناح، أغلبها تطل على الحرم، وسماعات أذان بكل غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.421326,39.82161"},{"n":"روتانا جبل عمر مكة","en":"Rotana Jabal Omar Makkah","s":5,"d":"جبل عمر","addr":"طريق إبراهيم الخليل","lat":21.420362,"lng":39.821396,"score":9.1,"rev":1519,"bk":"https://www.booking.com/hotel/sa/rotana-jabal-omar.html","m":551,"walk":9,"rooms":"غرف بإطلالة مدينة وأخرى بإطلالة حرم جزئية · أجنحة تنفيذية ورئاسية وملكية وعائلية — 655 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.420362,39.821396"},{"n":"جميرا جبل عمر مكة","en":"Jumeirah Jabal Omar Makkah","s":5,"d":"جبل عمر / أجياد","addr":"طريق إبراهيم الخليل","lat":21.418897,"lng":39.822237,"score":8.9,"rev":14950,"bk":"https://www.booking.com/hotel/sa/jabal-omar-jumeirah-makkah.html","m":573,"walk":10,"rooms":"ديلوكس 35م² حتى الأجنحة الملكية 120م² · جناح عائلي بغرفتي نوم بإطلالة الحرم · شقق وريزيدنسز — 1033 غرفة وجناح + 88 شقة","gm":"https://www.google.com/maps/search/?api=1&query=21.418897,39.822237"},{"n":"كونراد جبل عمر مكة","en":"Conrad Makkah","s":5,"d":"جبل عمر","addr":"شارع إبراهيم الخليل","lat":21.419191,"lng":39.821746,"score":8.9,"rev":5764,"bk":"https://www.booking.com/hotel/sa/conrad-makkah.html","m":590,"walk":10,"rooms":"ديلوكس كنج وتوين · غرف تنفيذية · فئة إطلالة الكعبة وفئة إطلالة الحرم · أجنحة بصالة منفصلة تتسع حتى 6 أشخاص · دخول الصالة التنفيذية","gm":"https://www.google.com/maps/search/?api=1&query=21.419191,39.821746"},{"n":"هيلتون المؤتمرات جبل عمر مكة","en":"Hilton Makkah Convention","s":5,"d":"جبل عمر","addr":"جبل عمر","lat":21.423,"lng":39.820047,"score":8.5,"rev":12620,"bk":"https://www.booking.com/hotel/sa/hilton-makkah-convention.html","m":639,"walk":11,"rooms":"مفردة/مزدوجة/توين/ثلاثية/رباعية · غرف تنفيذية توين وكنج بإطلالة الحرم 80م² بصالة منفصلة · أجنحة تنفيذية 160م² بغرفتي نوم ودورتي مياه — أكثر من 764 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.423,39.820047"},{"n":"مكارم أجياد مكة","en":"Makarem Ajyad Makkah","s":5,"d":"أجياد","addr":"شارع أجياد","lat":21.41706,"lng":39.828258,"score":8.4,"rev":7408,"bk":"https://www.booking.com/hotel/sa/ajyad-makkah-makarim.html","m":641,"walk":11,"rooms":"سوبيريور كنج (2) · سوبيريور توين (2) · سوبيريور بسريري كوين (4) · ثلاثية (3) · رباعية (4) · جونيور سويت (3) · ديلوكس سويت (5) · جناح عائلي (4) · بريميوم (2) · ملكي (2) — 411 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.41706,39.828258"},{"n":"أنجم مكة","en":"Anjum Hotel Makkah","s":5,"d":"أجياد / شارع أم القرى","addr":"شارع أم القرى","lat":21.424129,"lng":39.819591,"score":9.4,"rev":16538,"bk":"https://www.booking.com/hotel/sa/anjum-makkah.html","m":708,"walk":12,"rooms":"مفردة · توين · ثلاثية · رباعية (تتسع 4) · جونيور سويت (3) · أجنحة تنفيذية ودبلوماسية (4) · الفئات بالإطلالة: مدينة / حرم جزئية / كعبة مباشرة","gm":"https://www.google.com/maps/search/?api=1&query=21.424129,39.819591"},{"n":"ماريوت جبل عمر مكة","en":"Marriott Hotel Jabal Omar","s":5,"d":"جبل عمر","addr":"طريق أم القرى","lat":21.423563,"lng":39.819402,"score":8.9,"rev":12525,"bk":"https://www.booking.com/hotel/sa/makkah-marriott.html","m":714,"walk":12,"rooms":"مزدوجة بإطلالة حرم جزئية · مزدوجة إطلالة مدينة · ديلوكس ثلاثية بإطلالة حرم جزئية · ثلاثية ورباعية إطلالة مدينة · أجنحة كنج بصالة — 426 غرفة و52 جناحاً · الديلوكس توين/كنج تتسع لبالغَين وطفلين لا لأربعة بالغين","gm":"https://www.google.com/maps/search/?api=1&query=21.423563,39.819402"},{"n":"العنوان جبل عمر مكة","en":"Address Jabal Omar Makkah","s":5,"d":"جبل عمر / أجياد","addr":"طريق الأمير محمد بن سلمان","lat":21.422407,"lng":39.819156,"score":8.6,"rev":19952,"bk":"https://www.booking.com/hotel/sa/address-jabal-omar-makkah.html","m":729,"walk":12,"rooms":"ديلوكس توين/كنج 42م² (إطلالة مدينة) · ديلوكس بإطلالة حرم · ديلوكس بإطلالة كعبة جزئية · كلوب ديلوكس وكلوب بريمير 45م² · أجنحة بانورامية — 1268 غرفة و212 جناحاً","gm":"https://www.google.com/maps/search/?api=1&query=21.422407,39.819156"},{"n":"تلال جبل الكعبة","en":"Tilal Jabal Al Kabah (Shaza)","s":5,"d":"جبل الكعبة / الشامية","addr":"طريق جبل الكعبة","lat":21.425705,"lng":39.819571,"score":8.5,"rev":3928,"bk":"https://www.booking.com/hotel/sa/shaza-makkah.html","m":773,"walk":13,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.425705,39.819571"},{"n":"شيراتون مكة جبل الكعبة","en":"Sheraton Makkah Jabal Al Kaaba","s":4,"d":"جبل الكعبة","addr":"جبل الكعبة","lat":21.426273,"lng":39.819497,"score":8.2,"rev":3219,"bk":"https://www.booking.com/hotel/sa/sheraton-makkah-jabal-al-kaaba.html","m":811,"walk":14,"rooms":"ديلوكس 30م² حتى الأجنحة التنفيذية 60م² · غرف كلوب · 110 شقق فندقية · إطلالات على توسعة الحرم أو المدينة — 412 غرفة وجناح، وجسر مشاة مكيّف للحرم","gm":"https://www.google.com/maps/search/?api=1&query=21.426273,39.819497"},{"n":"دبل تري باي هيلتون جبل عمر","en":"DoubleTree by Hilton Jabal Omar","s":4,"d":"جبل عمر","addr":"جبل عمر","lat":21.423,"lng":39.818293,"score":8.5,"rev":9260,"bk":"https://www.booking.com/hotel/sa/doubletree-by-hilton-makkah-jabal-omar.html","m":820,"walk":14,"rooms":"توين (شخصان) · ديلوكس كنج (حتى 3) · جونيور سويت · غرف عائلية توين (4) وغرف متصلة — 668 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.423,39.818293"},{"n":"فوكو مكة","en":"voco Makkah by IHG","s":4,"d":"المسفلة","addr":"شارع إبراهيم الخليل، المسفلة","lat":21.407782,"lng":39.81849,"score":8.7,"rev":16925,"bk":"https://www.booking.com/hotel/sa/voco-makkah.html","m":1821,"walk":31,"rooms":"ديلوكس كنج · ديلوكس بثلاثة أسرّة مفردة 30م² · ديلوكس رباعية 30م² · جناح بغرفة نوم كوين · جناح بغرفة نوم 60م² · غرف عائلية كبيرة","gm":"https://www.google.com/maps/search/?api=1&query=21.407782,39.81849"},{"n":"كورت يارد باي ماريوت مكة","en":"Courtyard by Marriott Makkah","s":4,"d":"الروابي / شارع أجياد","addr":"شارع أجياد، حي الروابي","lat":21.404347,"lng":39.830539,"score":8.5,"rev":4834,"bk":"https://www.booking.com/hotel/sa/courtyard-by-marriott-makkah.html","m":2068,"walk":35,"rooms":"غرف تصل إلى أربعة أسرّة مفردة (رباعية مناسبة للمجموعات) · الثلاثية = مزدوجة + سرير إضافي · أجنحة تنفيذية ودبلوماسية بصالة منفصلة وشرفة — 438 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.404347,39.830539"},{"n":"مكارم أم القرى","en":"Makarem Umm Al Qura","s":4,"d":"أجياد","addr":"شارع أجياد","lat":21.402693,"lng":39.830442,"score":8.1,"rev":6893,"bk":"https://www.booking.com/hotel/sa/umm-alqura-makarim.html","m":2246,"walk":38,"rooms":"سوبيريور ثلاثية 22م² (ثلاثة أسرّة مفردة) · سوبيريور رباعية 25م² (أربعة أسرّة مفردة) · غرف وأجنحة عائلية","gm":"https://www.google.com/maps/search/?api=1&query=21.402693,39.830442"},{"n":"راديسون مكة ذاخر سيتي","en":"Radisson Hotel Makkah Thakher City","s":4,"d":"ذاخر","addr":"ريع الكحل — ذاخر سيتي","lat":21.44449,"lng":39.834132,"score":9.6,"rev":29,"bk":"https://www.booking.com/hotel/sa/radisson-hotel-makkah-thakher-city.html","m":2579,"walk":44,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.44449,39.834132"},{"n":"نوفوتيل مكة ذاخر سيتي","en":"Novotel Makkah Thakher City","s":4,"d":"الأندلس / ذاخر","addr":"حي الأندلس","lat":21.444701,"lng":39.833971,"score":8.1,"rev":12377,"bk":"https://www.booking.com/hotel/sa/novotel-makkah-thaker-city.html","m":2596,"walk":44,"rooms":"مزدوجة · ثلاثية · غرف عائلية حتى ستة أسرّة · أجنحة عائلية وغرف متصلة · الأطفال دون 11 سنة يقيمون مجاناً بغرفة الوالدين","gm":"https://www.google.com/maps/search/?api=1&query=21.444701,39.833971"},{"n":"دبل تري باي هيلتون مكة العزيزية","en":"DoubleTree by Hilton Makkah Aziziyah","s":4,"d":"العزيزية / الجامعة","addr":"طريق الملك خالد، حي الجامعة","lat":21.401062,"lng":39.872649,"score":8.7,"rev":5864,"bk":"https://www.booking.com/hotel/sa/doubletree-by-hilton-makkah-aziziyah.html","m":5367,"walk":91,"rooms":"مزدوجة · توين · ثلاثية · رباعية · غرف عائلية · أجنحة — 381 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.401062,39.872649"},{"n":"تايم ربا للفنادق والأجنحة","en":"TIME Ruba Hotel & Suites","s":4,"d":"وادي جليل / طريق الحج","addr":"وادي جليل، طريق الحج","lat":21.470878,"lng":39.843513,"score":8.4,"rev":11284,"bk":"https://www.booking.com/hotel/sa/time-ruba-rayhan.html","m":5670,"walk":96,"rooms":"ديلوكس كنج (2) · ديلوكس توين (2) · ديلوكس ثلاثية (3) · ديلوكس رباعية (4) · جناح تنفيذي (2) · غرفة عائلية (5) — 770 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.470878,39.843513"},{"n":"بارك إن باي راديسون مكة العزيزية","en":"Park Inn by Radisson Makkah Aziziyah","s":5,"d":"العزيزية","addr":"طريق المسجد الحرام، حي العزيزية","lat":21.401386,"lng":39.879247,"score":8.1,"rev":11801,"bk":"https://www.booking.com/hotel/sa/park-inn-by-radisson-makkah-azizyah.html","m":5972,"walk":101,"rooms":"ستاندرد بسريرين (تتسع 3) · سوبيريور توين أو كنج (تتسع حتى 6) · سوبيريور بدور مرتفع · جناح بغرفة نوم (5) · جناح بغرفتي نوم (7)","gm":"https://www.google.com/maps/search/?api=1&query=21.401386,39.879247"},{"n":"بارك إن باي راديسون مكة النسيم","en":"Park Inn by Radisson Makkah Al Naseem","s":4,"d":"النسيم","addr":"حي النسيم","lat":21.381832,"lng":39.871477,"score":8.3,"rev":8749,"bk":"https://www.booking.com/hotel/sa/park-inn-by-radisson-makkah-al-naseem.html","m":6513,"walk":110,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.381832,39.871477"},{"n":"ميلينيوم مكة النسيم","en":"Millennium Makkah Al Naseem","s":4,"d":"النسيم","addr":"طريق الطائف، حي النسيم","lat":21.380843,"lng":39.872262,"score":8.1,"rev":9488,"bk":"https://www.booking.com/hotel/sa/millennium-makkah-al-naseem.html","m":6648,"walk":112,"rooms":"ستاندرد · ديلوكس بإطلالة مدينة · ثلاثية (ثلاثة أسرّة) · رباعية · جونيور سويت · جناح تنفيذي — 1307 غرف","gm":"https://www.google.com/maps/search/?api=1&query=21.380843,39.872262"},{"n":"كوبثورن مكة النسيم","en":"Copthorne Makkah Al Naseem","s":4,"d":"النسيم","addr":"طريق الطائف، حي النسيم","lat":21.38074,"lng":39.872503,"score":7.8,"rev":2949,"bk":"https://www.booking.com/hotel/sa/copthorne-makkah-al-naseem.html","m":6674,"walk":113,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.38074,39.872503"},{"n":"فور بوينتس باي شيراتون مكة النسيم","en":"Four Points by Sheraton Makkah Al Naseem","s":4,"d":"النسيم","addr":"الطريق الدائري الثالث، خلف جامع الراجحي","lat":21.38081,"lng":39.874312,"score":8.1,"rev":10278,"bk":"https://www.booking.com/hotel/sa/four-points-by-sheraton-makkah-al-naseem.html","m":6804,"walk":115,"rooms":"كلاسيك توين/كنج (2) · كلاسيك بثلاثة أسرّة (3) · ديلوكس (2) · جونيور سويت (2) · جناح بريميوم بغرفتي نوم (4)","gm":"https://www.google.com/maps/search/?api=1&query=21.38081,39.874312"}];
+const HOTELS = [{"n":"سويس أوتيل المقام مكة","en":"Swissotel Al Maqam","s":4,"d":"أبراج البيت","addr":"مجمع أبراج البيت","lat":21.420188,"lng":39.825321,"score":8.7,"rev":25509,"bk":"https://www.booking.com/hotel/sa/swissotel-al-maqam-makkah.html","m":273,"walk":5,"rooms":"كلاسيك توين (مع خيار سرير ثالث) · كلاسيك ثلاثية ورباعية بإطلالة مدينة · كلاسيك كنج بإطلالة حرم جزئية · بريمير · جونيور وريزيدنشال وأجنحة عائلية — الغرف تتسع حتى 3 بالغين","gm":"https://www.google.com/maps/search/?api=1&query=21.420188,39.825321","pol":"الدخول 16:00 (18:00 في رمضان) · الخروج 12:00 · حتى سنتين مهد مجاناً · حتى 12 سنة مجاناً بسرير حالي · 13–17 سنة 160 ريال/ليلة · سرير إضافي: حتى 11 سنة 250 ريال، ومن 12 سنة 500 ريال"},{"n":"الصفوة البرج الأول","en":"Al Safwah Royale Orchid","s":4,"d":"أبراج الصفوة / أجياد","addr":"أمام بوابة الملك عبدالعزيز رقم 1","lat":21.420038,"lng":39.826781,"score":8.8,"rev":6487,"bk":"https://www.booking.com/hotel/sa/al-safwah.html","m":280,"walk":5,"rooms":"ديلوكس بإطلالة الكعبة · إطلالة حرم جانبية · ستوديو بإطلالة الحرم · إطلالة داخلية — 471 غرفة، وأقرب موقع لساحات الحرم","gm":"https://www.google.com/maps/search/?api=1&query=21.420038,39.826781","pol":""},{"n":"سويس أوتيل مكة","en":"Swissotel Makkah","s":5,"d":"أبراج البيت / أجياد","addr":"مجمع أبراج البيت — تقاطع أم القرى","lat":21.419763,"lng":39.826089,"score":8.9,"rev":22869,"bk":"https://www.booking.com/hotel/sa/swissotel-makkah.html","m":305,"walk":5,"rooms":"كلاسيك كنج (إطلالة حرم جزئية) · كلاسيك توين · كلاسيك ثلاثية · كلاسيك رباعية (إطلالة مدينة) · جونيور سويت بطاولة طعام لستة — 1487 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.419763,39.826089","pol":"الدخول 16:00 (يتأخر إلى 18:00 في المواسم) · الخروج حتى 14:00 · الأطفال بكل الأعمار مرحّب بهم ومن 18 سنة بالغ · الإلغاء يختلف بخطة السعر ويشتدّ في الحج والعمرة · في موسم الحج الإقامة لحاملي التصريح النظامي فقط"},{"n":"صفوة الغفران مكة","en":"Al Ghufran Safwah Hotel","s":5,"d":"أجياد","addr":"أمام بوابة الملك عبدالعزيز — شارع أجياد","lat":21.419698,"lng":39.82661,"score":9.4,"rev":5781,"bk":"https://www.booking.com/hotel/sa/dar-al-ghufran-makkah.html","rooms":"غرف مزدوجة وثلاثية ورباعية وغرف عائلية وأجنحة · فئات إطلالة على الحرم وأخرى داخلية — تحقّق من الفئة بالضبط عند الحجز","m":314,"walk":5,"pol":"الدخول 16:00 · الخروج 12:00 · من 6 سنوات يُحتسب بالغاً · مهد مجاني · الدخول المبكر والخروج المتأخر برسوم وحسب التوفر","gm":"https://www.google.com/maps/search/?api=1&query=21.419698,39.82661"},{"n":"فندق ساعة مكة فيرمونت","en":"Makkah Clock Royal Tower, A Fairmont Hotel","s":5,"d":"أبراج البيت","addr":"وقف الملك عبدالعزيز — أبراج البيت","lat":21.419696,"lng":39.825583,"score":8.8,"rev":17879,"bk":"https://www.booking.com/hotel/sa/makkah-clock-royal-tower-a-fairmont.html","rooms":"سيجنتشر 42م² بإطلالة الكعبة (كنج أو توين) · جناح ريزيدنشال 92م² بصالة ودورتي مياه · جناح دوبلكس بغرفتين 138م² · جناح بغرفتين 172م² · أجنحة ملكية ورئاسية · طابق Fairmont Gold بمدخل وصالة خاصة — 1662 غرفة وجناح، وسماعات بث الحرم بالغرف","m":318,"walk":5,"pol":"الدخول 16:00 · الخروج 12:00 · حتى طفلين (6 سنوات فأقل) مجاناً بالأسرّة الحالية · من 18 سنة يُحتسب بالغاً · المهد والسرير الإضافي برسوم وحسب التوفر","gm":"https://www.google.com/maps/search/?api=1&query=21.419696,39.825583"},{"n":"بولمان زمزم مكة","en":"Pullman ZamZam Makkah","s":4,"d":"أبراج البيت","addr":"مجمع أبراج البيت","lat":21.419683,"lng":39.825571,"score":8.2,"rev":12152,"bk":"https://www.booking.com/hotel/sa/zamzam-grand-suites-managed-by-pullman.html","rooms":"كلاسيك 37م² بثلاثة أسرّة مفردة (إطلالة ساحة الحرم) · كلاسيك 37م² بأربعة أسرّة مفردة (إطلالة مدينة) · غرف مزدوجة · أجنحة · الفئات: كعبة جزئية / حرم مباشرة / مدينة — 1315 غرفة وجناح بسماعات بث الحرم","m":320,"walk":5,"pol":"الدخول 16:00 · الخروج 12:00 (بعض المصادر تذكر 14:00/10:00 — أكّدها) · حتى 3 سنوات مجاناً بمهد · حتى 11 سنة مجاناً بسرير حالي · من 12 سنة بالغ · بلّغ الفندق بوقت الوصول قبل 24 ساعة","gm":"https://www.google.com/maps/search/?api=1&query=21.419683,39.825571"},{"n":"موفنبيك برج هاجر مكة","en":"Movenpick Hajar Tower","s":4,"d":"أبراج البيت","addr":"أبراج البيت — قرب بوابة الملك عبدالعزيز","lat":21.419671,"lng":39.825594,"score":8.6,"rev":11081,"bk":"https://www.booking.com/hotel/sa/movenpick-residence-hajar-tower-makkah.html","m":321,"walk":5,"rooms":"كلاسيك (كنج أو ثلاثة أسرّة، تتسع 4) · ديلوكس سويت بغرفة نوم (تتسع 4) · سوبيريور كنج وكوين · ثلاثية · جناح ملكي 150م² · إطلالات جزئية على الحرم والكعبة","gm":"https://www.google.com/maps/search/?api=1&query=21.419671,39.825594","pol":"الدخول 16:00 · الخروج 11:30 · طفل حتى 11 سنة مجاناً بالأسرّة الحالية · من 12 سنة بالغ · مهد داخل الغرفة وجليسة أطفال برسوم · الدخول المبكر والخروج المتأخر برسوم"},{"n":"المروة ريحان من روتانا","en":"Al Marwa Rayhaan by Rotana","s":4,"d":"أبراج البيت","addr":"أبراج البيت","lat":21.419651,"lng":39.825591,"score":8.5,"rev":9712,"bk":"https://www.booking.com/hotel/sa/al-marwa-rayhaan-makkah.html","rooms":"غرف 35–37م² (كنج أو توين) بإطلالة مدينة أو حرم جزئية أو كعبة جزئية · جناح بغرفة نوم 70–75م² · أجنحة بغرفتين · أجنحة عائلية · جناح ملكي بإطلالة بانورامية","m":323,"walk":5,"pol":"الدخول 16:00 · الخروج 12:00 · حتى 4 سنوات مهد مجاناً · حتى 6 سنوات مجاناً بسرير حالي · 7–12 سنة 150 ريال/ليلة بسرير حالي · 7–16 سنة 150 ريال بسرير إضافي · كل سرير إضافي بموافقة الإدارة","gm":"https://www.google.com/maps/search/?api=1&query=21.419651,39.825591"},{"n":"قصر مكة رافلز","en":"Raffles Makkah Palace","s":5,"d":"أبراج البيت","addr":"وقف الملك عبدالعزيز — أبراج البيت","lat":21.419643,"lng":39.825566,"score":9.2,"rev":2364,"bk":"https://www.booking.com/hotel/sa/raffles-makkah-palace.html","rooms":"فندق أجنحة بالكامل — 219 جناحاً · أجنحة فاخرة بغرفة نوم وصالة · أجنحة قصر ومتعددة الغرف · جناح رئاسي بغرفتين 120م² · الفئات بالإطلالة: كعبة / حرم / مدينة · خدمة بتلر وسماعات بث الحرم","m":324,"walk":5,"pol":"الدخول 16:00 (18:00 في رمضان) · الخروج 12:00 · دخول مبكر برسم 250 ريال حسب التوفر · حتى طفلين (6 سنوات فأقل) مجاناً بالأسرّة الحالية · من 12–13 سنة يُحتسب بالغاً · سرير إضافي 150–200 ريال","gm":"https://www.google.com/maps/search/?api=1&query=21.419643,39.825566"},{"n":"إنتركونتيننتال دار التوحيد مكة","en":"InterContinental Dar Al Tawhid","s":5,"d":"إبراهيم الخليل","addr":"شارع إبراهيم الخليل","lat":21.420622,"lng":39.822443,"score":8.8,"rev":3711,"bk":"https://www.booking.com/hotel/sa/dar-al-tawhid-intercontinental-makkah.html","m":441,"walk":7,"rooms":"كلاسيك 30–49م² · جونيور سويت 93–114م² · تنفيذي 138–149م² · ملكي 232–309م² · دبلوماسي · رئاسي 282م² · أجنحة من غرفة إلى أربع غرف — 600 غرفة وجناح، وسماعات لبث الأذان","gm":"https://www.google.com/maps/search/?api=1&query=21.420622,39.822443","pol":"الدخول 16:00 · الخروج 12:00 · حتى 4 سنوات مجاناً بمهد · حتى 17 سنة مجاناً بالأسرّة الحالية · من 18 سنة بالغ"},{"n":"حياة ريجنسي جبل عمر مكة","en":"Hyatt Regency Makkah","s":5,"d":"جبل عمر","addr":"جبل عمر، شارع إبراهيم الخليل","lat":21.420344,"lng":39.822398,"score":8.8,"rev":21615,"bk":"https://www.booking.com/hotel/sa/hyatt-regency-makkah.html","m":461,"walk":8,"rooms":"توين وكنج 38م² بإطلالة حرم جزئية · مفردة/مزدوجة/ثلاثية/رباعية · أجنحة عائلية · جناح ملكي 190م² بإطلالة الكعبة · بنتهاوس 4 غرف نوم 410م² — 656 غرفة منها 25 جناحاً","gm":"https://www.google.com/maps/search/?api=1&query=21.420344,39.822398","pol":"الدخول 15:00 · الخروج 12:00 · سياسة الأطفال تختلف بين المصادر (طفل حتى 6 سنوات مجاناً بالأسرّة الحالية) — أكّدها قبل الوعد"},{"n":"هيلتون الأجنحة جبل عمر مكة","en":"Hilton Suites Makkah","s":4,"d":"جبل عمر","addr":"شارع إبراهيم الخليل","lat":21.421326,"lng":39.82161,"score":9.0,"rev":6713,"bk":"https://www.booking.com/hotel/sa/hilton-suites-makkah.html","m":493,"walk":8,"rooms":"غرفة كنج بإطلالة مدينة · غرفة توين بإطلالة حرم جزئية · جناح بغرفة نوم توين · جناح عائلي بغرفتي نوم — 484 غرفة وجناح، أغلبها تطل على الحرم، وسماعات أذان بكل غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.421326,39.82161","pol":"الدخول 16:00 · الخروج 12:00 · حتى طفلين (6 سنوات فأقل) مجاناً بالأسرّة الحالية · من 13 سنة بالغ · سرير إضافي برسوم ومهد مجاني"},{"n":"إيلاف كندة","en":"Elaf Kinda Hotel","s":4,"d":"أجياد","addr":"شارع أجياد — قرب بوابة الملك عبدالعزيز","lat":21.418355,"lng":39.823793,"score":8.3,"rev":5727,"bk":"https://www.booking.com/hotel/sa/ilaf-kinda.html","rooms":"ثلاثية 27م² بثلاثة أسرّة مفردة · رباعية 36م² بإطلالة الحرم · جناح عائلي بغرفتين 50م² (يتسع 4) · جونيور سويت بإطلالة الحرم 37م² (يتسع 3) — 240 غرفة وجناح","m":524,"walk":9,"pol":"","gm":"https://www.google.com/maps/search/?api=1&query=21.418355,39.823793"},{"n":"روتانا جبل عمر مكة","en":"Rotana Jabal Omar Makkah","s":5,"d":"جبل عمر","addr":"طريق إبراهيم الخليل","lat":21.420362,"lng":39.821396,"score":9.1,"rev":1519,"bk":"https://www.booking.com/hotel/sa/rotana-jabal-omar.html","m":551,"walk":9,"rooms":"غرف بإطلالة مدينة وأخرى بإطلالة حرم جزئية · أجنحة تنفيذية ورئاسية وملكية وعائلية — 655 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.420362,39.821396","pol":""},{"n":"جميرا جبل عمر مكة","en":"Jumeirah Jabal Omar Makkah","s":5,"d":"جبل عمر / أجياد","addr":"طريق إبراهيم الخليل","lat":21.418897,"lng":39.822237,"score":8.9,"rev":14950,"bk":"https://www.booking.com/hotel/sa/jabal-omar-jumeirah-makkah.html","m":573,"walk":10,"rooms":"ديلوكس 35م² حتى الأجنحة الملكية 120م² · جناح عائلي بغرفتي نوم بإطلالة الحرم · شقق وريزيدنسز — 1033 غرفة وجناح + 88 شقة","gm":"https://www.google.com/maps/search/?api=1&query=21.418897,39.822237","pol":"الدخول 16:00 · الخروج 12:00 · الدخول المبكر والخروج المتأخر حسب التوفر · مهد مجاني حسب التوفر ورسوم الأسرّة الإضافية غير مشمولة بالسعر"},{"n":"كونراد جبل عمر مكة","en":"Conrad Makkah","s":5,"d":"جبل عمر","addr":"شارع إبراهيم الخليل","lat":21.419191,"lng":39.821746,"score":8.9,"rev":5764,"bk":"https://www.booking.com/hotel/sa/conrad-makkah.html","m":590,"walk":10,"rooms":"ديلوكس كنج وتوين · غرف تنفيذية · فئة إطلالة الكعبة وفئة إطلالة الحرم · أجنحة بصالة منفصلة تتسع حتى 6 أشخاص · دخول الصالة التنفيذية","gm":"https://www.google.com/maps/search/?api=1&query=21.419191,39.821746","pol":"الدخول 16:00 · الخروج 12:00 (خروج متأخر عند الطلب) · من هم دون 18 لا يسجّلون إلا مع ولي أمر · الأطفال حتى 18 سنة مجاناً بالأسرّة الحالية على سعر الغرفة فقط · الوجبات: حتى 5 سنوات مجاناً، 6–11 خصم 50٪، من 12 بالغ · مهد مجاني ولا تتوفر أسرّة إضافية"},{"n":"هيلتون المؤتمرات جبل عمر مكة","en":"Hilton Makkah Convention","s":5,"d":"جبل عمر","addr":"جبل عمر","lat":21.423,"lng":39.820047,"score":8.5,"rev":12620,"bk":"https://www.booking.com/hotel/sa/hilton-makkah-convention.html","m":639,"walk":11,"rooms":"مفردة/مزدوجة/توين/ثلاثية/رباعية · غرف تنفيذية توين وكنج بإطلالة الحرم 80م² بصالة منفصلة · أجنحة تنفيذية 160م² بغرفتي نوم ودورتي مياه — أكثر من 764 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.423,39.820047","pol":"الدخول 16:00 · الخروج 12:00 · دون 18 سنة لا يسجّل إلا مع ولي أمر · الأطفال حتى 18 سنة مجاناً بالأسرّة الحالية على سعر الغرفة · حتى سنتين مهد مجاناً · الوجبات: حتى 5 سنوات مجاناً، 6–11 خصم 50٪، من 12 بالغ"},{"n":"مكارم أجياد مكة","en":"Makarem Ajyad Makkah","s":5,"d":"أجياد","addr":"شارع أجياد","lat":21.41706,"lng":39.828258,"score":8.4,"rev":7408,"bk":"https://www.booking.com/hotel/sa/ajyad-makkah-makarim.html","m":641,"walk":11,"rooms":"سوبيريور كنج (2) · سوبيريور توين (2) · سوبيريور بسريري كوين (4) · ثلاثية (3) · رباعية (4) · جونيور سويت (3) · ديلوكس سويت (5) · جناح عائلي (4) · بريميوم (2) · ملكي (2) — 411 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.41706,39.828258","pol":""},{"n":"أنجم مكة","en":"Anjum Hotel Makkah","s":5,"d":"أجياد / شارع أم القرى","addr":"شارع أم القرى","lat":21.424129,"lng":39.819591,"score":9.4,"rev":16538,"bk":"https://www.booking.com/hotel/sa/anjum-makkah.html","m":708,"walk":12,"rooms":"مفردة · توين · ثلاثية · رباعية (تتسع 4) · جونيور سويت (3) · أجنحة تنفيذية ودبلوماسية (4) · الفئات بالإطلالة: مدينة / حرم جزئية / كعبة مباشرة","gm":"https://www.google.com/maps/search/?api=1&query=21.424129,39.819591","pol":"الدخول من 16:00 حتى 23:30 · الخروج قبل 11:30 · طفلان (6 سنوات فأقل) مجاناً بالغرفة · الوجبات: حتى 6 سنوات مجاناً و7–11 خصم 50٪ · من 12 سنة بالغ · الدخول المبكر بطلب خاص وحسب التوفر"},{"n":"ماريوت جبل عمر مكة","en":"Marriott Hotel Jabal Omar","s":5,"d":"جبل عمر","addr":"طريق أم القرى","lat":21.423563,"lng":39.819402,"score":8.9,"rev":12525,"bk":"https://www.booking.com/hotel/sa/makkah-marriott.html","m":714,"walk":12,"rooms":"مزدوجة بإطلالة حرم جزئية · مزدوجة إطلالة مدينة · ديلوكس ثلاثية بإطلالة حرم جزئية · ثلاثية ورباعية إطلالة مدينة · أجنحة كنج بصالة — 426 غرفة و52 جناحاً · الديلوكس توين/كنج تتسع لبالغَين وطفلين لا لأربعة بالغين","gm":"https://www.google.com/maps/search/?api=1&query=21.423563,39.819402","pol":"الدخول 16:00 · الخروج 12:00 · حتى طفلين (6 سنوات فأقل) مجاناً بالأسرّة الحالية · من 12 سنة بالغ · سرير إضافي 200 ريال/ليلة · مهد مجاني"},{"n":"العنوان جبل عمر مكة","en":"Address Jabal Omar Makkah","s":5,"d":"جبل عمر / أجياد","addr":"طريق الأمير محمد بن سلمان","lat":21.422407,"lng":39.819156,"score":8.6,"rev":19952,"bk":"https://www.booking.com/hotel/sa/address-jabal-omar-makkah.html","m":729,"walk":12,"rooms":"ديلوكس توين/كنج 42م² (إطلالة مدينة) · ديلوكس بإطلالة حرم · ديلوكس بإطلالة كعبة جزئية · كلوب ديلوكس وكلوب بريمير 45م² · أجنحة بانورامية — 1268 غرفة و212 جناحاً","gm":"https://www.google.com/maps/search/?api=1&query=21.422407,39.819156","pol":"تأمين 500 ريال نقداً عند الوصول يُعاد عند المغادرة · لا تتوفر أسرّة إضافية والمهد حسب نوع الغرفة والتوفر · لا يوجد استقبال بعد ساعات العمل الرسمية · الحيوانات ممنوعة · أوقات الدخول والخروج تُؤكَّد مع الفندق"},{"n":"تلال جبل الكعبة","en":"Tilal Jabal Al Kabah (Shaza)","s":5,"d":"جبل الكعبة / الشامية","addr":"طريق جبل الكعبة","lat":21.425705,"lng":39.819571,"score":8.5,"rev":3928,"bk":"https://www.booking.com/hotel/sa/shaza-makkah.html","m":773,"walk":13,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.425705,39.819571","pol":""},{"n":"شيراتون مكة جبل الكعبة","en":"Sheraton Makkah Jabal Al Kaaba","s":4,"d":"جبل الكعبة","addr":"جبل الكعبة","lat":21.426273,"lng":39.819497,"score":8.2,"rev":3219,"bk":"https://www.booking.com/hotel/sa/sheraton-makkah-jabal-al-kaaba.html","m":811,"walk":14,"rooms":"ديلوكس 30م² حتى الأجنحة التنفيذية 60م² · غرف كلوب · 110 شقق فندقية · إطلالات على توسعة الحرم أو المدينة — 412 غرفة وجناح، وجسر مشاة مكيّف للحرم","gm":"https://www.google.com/maps/search/?api=1&query=21.426273,39.819497","pol":""},{"n":"دبل تري باي هيلتون جبل عمر","en":"DoubleTree by Hilton Jabal Omar","s":4,"d":"جبل عمر","addr":"جبل عمر","lat":21.423,"lng":39.818293,"score":8.5,"rev":9260,"bk":"https://www.booking.com/hotel/sa/doubletree-by-hilton-makkah-jabal-omar.html","m":820,"walk":14,"rooms":"توين (شخصان) · ديلوكس كنج (حتى 3) · جونيور سويت · غرف عائلية توين (4) وغرف متصلة — 668 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.423,39.818293","pol":""},{"n":"فوكو مكة","en":"voco Makkah by IHG","s":4,"d":"المسفلة","addr":"شارع إبراهيم الخليل، المسفلة","lat":21.407782,"lng":39.81849,"score":8.7,"rev":16925,"bk":"https://www.booking.com/hotel/sa/voco-makkah.html","m":1821,"walk":31,"rooms":"ديلوكس كنج · ديلوكس بثلاثة أسرّة مفردة 30م² · ديلوكس رباعية 30م² · جناح بغرفة نوم كوين · جناح بغرفة نوم 60م² · غرف عائلية كبيرة","gm":"https://www.google.com/maps/search/?api=1&query=21.407782,39.81849","pol":"الدخول 15:00 · الخروج 12:00 · حتى طفلين (12 سنة فأقل) مجاناً بالأسرّة الحالية · مهد مجاني · السرير الإضافي يختلف بالمصدر ويُؤكَّد مع الفندق"},{"n":"كورت يارد باي ماريوت مكة","en":"Courtyard by Marriott Makkah","s":4,"d":"الروابي / شارع أجياد","addr":"شارع أجياد، حي الروابي","lat":21.404347,"lng":39.830539,"score":8.5,"rev":4834,"bk":"https://www.booking.com/hotel/sa/courtyard-by-marriott-makkah.html","m":2068,"walk":35,"rooms":"غرف تصل إلى أربعة أسرّة مفردة (رباعية مناسبة للمجموعات) · الثلاثية = مزدوجة + سرير إضافي · أجنحة تنفيذية ودبلوماسية بصالة منفصلة وشرفة — 438 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.404347,39.830539","pol":""},{"n":"مكارم أم القرى","en":"Makarem Umm Al Qura","s":4,"d":"أجياد","addr":"شارع أجياد","lat":21.402693,"lng":39.830442,"score":8.1,"rev":6893,"bk":"https://www.booking.com/hotel/sa/umm-alqura-makarim.html","m":2246,"walk":38,"rooms":"سوبيريور ثلاثية 22م² (ثلاثة أسرّة مفردة) · سوبيريور رباعية 25م² (أربعة أسرّة مفردة) · غرف وأجنحة عائلية","gm":"https://www.google.com/maps/search/?api=1&query=21.402693,39.830442","pol":""},{"n":"راديسون مكة ذاخر سيتي","en":"Radisson Hotel Makkah Thakher City","s":4,"d":"ذاخر","addr":"ريع الكحل — ذاخر سيتي","lat":21.44449,"lng":39.834132,"score":9.6,"rev":29,"bk":"https://www.booking.com/hotel/sa/radisson-hotel-makkah-thakher-city.html","m":2579,"walk":44,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.44449,39.834132","pol":""},{"n":"نوفوتيل مكة ذاخر سيتي","en":"Novotel Makkah Thakher City","s":4,"d":"الأندلس / ذاخر","addr":"حي الأندلس","lat":21.444701,"lng":39.833971,"score":8.1,"rev":12377,"bk":"https://www.booking.com/hotel/sa/novotel-makkah-thaker-city.html","m":2596,"walk":44,"rooms":"مزدوجة · ثلاثية · غرف عائلية حتى ستة أسرّة · أجنحة عائلية وغرف متصلة · الأطفال دون 11 سنة يقيمون مجاناً بغرفة الوالدين","gm":"https://www.google.com/maps/search/?api=1&query=21.444701,39.833971","pol":""},{"n":"إم مكة من ميلينيوم","en":"M Hotel Makkah by Millennium","s":4,"d":"التقوى / إبراهيم الخليل","addr":"طريق إبراهيم الخليل — حي التقوى","lat":21.400633,"lng":39.815123,"score":8.1,"rev":10083,"bk":"https://www.booking.com/hotel/sa/m-makkah-by-millennium.html","rooms":"ستاندرد ثلاثية 24م² (ثلاثة أسرّة) · كلاسيك رباعية 25م² (أربعة أسرّة) · مفردة ومزدوجة وتوين · أجنحة عائلية وغرف متصلة تتسع 4–6 · مهود وأسرّة إضافية عند الطلب","m":2688,"walk":45,"pol":"","gm":"https://www.google.com/maps/search/?api=1&query=21.400633,39.815123"},{"n":"دبل تري باي هيلتون مكة العزيزية","en":"DoubleTree by Hilton Makkah Aziziyah","s":4,"d":"العزيزية / الجامعة","addr":"طريق الملك خالد، حي الجامعة","lat":21.401062,"lng":39.872649,"score":8.7,"rev":5864,"bk":"https://www.booking.com/hotel/sa/doubletree-by-hilton-makkah-aziziyah.html","m":5367,"walk":91,"rooms":"مزدوجة · توين · ثلاثية · رباعية · غرف عائلية · أجنحة — 381 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.401062,39.872649","pol":""},{"n":"تايم ربا للفنادق والأجنحة","en":"TIME Ruba Hotel & Suites","s":4,"d":"وادي جليل / طريق الحج","addr":"وادي جليل، طريق الحج","lat":21.470878,"lng":39.843513,"score":8.4,"rev":11284,"bk":"https://www.booking.com/hotel/sa/time-ruba-rayhan.html","m":5670,"walk":96,"rooms":"ديلوكس كنج (2) · ديلوكس توين (2) · ديلوكس ثلاثية (3) · ديلوكس رباعية (4) · جناح تنفيذي (2) · غرفة عائلية (5) — 770 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.470878,39.843513","pol":""},{"n":"بارك إن باي راديسون مكة العزيزية","en":"Park Inn by Radisson Makkah Aziziyah","s":5,"d":"العزيزية","addr":"طريق المسجد الحرام، حي العزيزية","lat":21.401386,"lng":39.879247,"score":8.1,"rev":11801,"bk":"https://www.booking.com/hotel/sa/park-inn-by-radisson-makkah-azizyah.html","m":5972,"walk":101,"rooms":"ستاندرد بسريرين (تتسع 3) · سوبيريور توين أو كنج (تتسع حتى 6) · سوبيريور بدور مرتفع · جناح بغرفة نوم (5) · جناح بغرفتي نوم (7)","gm":"https://www.google.com/maps/search/?api=1&query=21.401386,39.879247","pol":""},{"n":"بارك إن باي راديسون مكة النسيم","en":"Park Inn by Radisson Makkah Al Naseem","s":4,"d":"النسيم","addr":"حي النسيم","lat":21.381832,"lng":39.871477,"score":8.3,"rev":8749,"bk":"https://www.booking.com/hotel/sa/park-inn-by-radisson-makkah-al-naseem.html","m":6513,"walk":110,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.381832,39.871477","pol":""},{"n":"ميلينيوم مكة النسيم","en":"Millennium Makkah Al Naseem","s":4,"d":"النسيم","addr":"طريق الطائف، حي النسيم","lat":21.380843,"lng":39.872262,"score":8.1,"rev":9488,"bk":"https://www.booking.com/hotel/sa/millennium-makkah-al-naseem.html","m":6648,"walk":112,"rooms":"ستاندرد · ديلوكس بإطلالة مدينة · ثلاثية (ثلاثة أسرّة) · رباعية · جونيور سويت · جناح تنفيذي — 1307 غرف","gm":"https://www.google.com/maps/search/?api=1&query=21.380843,39.872262","pol":""},{"n":"كوبثورن مكة النسيم","en":"Copthorne Makkah Al Naseem","s":4,"d":"النسيم","addr":"طريق الطائف، حي النسيم","lat":21.38074,"lng":39.872503,"score":7.8,"rev":2949,"bk":"https://www.booking.com/hotel/sa/copthorne-makkah-al-naseem.html","m":6674,"walk":113,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.38074,39.872503","pol":""},{"n":"فور بوينتس باي شيراتون مكة النسيم","en":"Four Points by Sheraton Makkah Al Naseem","s":4,"d":"النسيم","addr":"الطريق الدائري الثالث، خلف جامع الراجحي","lat":21.38081,"lng":39.874312,"score":8.1,"rev":10278,"bk":"https://www.booking.com/hotel/sa/four-points-by-sheraton-makkah-al-naseem.html","m":6804,"walk":115,"rooms":"كلاسيك توين/كنج (2) · كلاسيك بثلاثة أسرّة (3) · ديلوكس (2) · جونيور سويت (2) · جناح بريميوم بغرفتي نوم (4)","gm":"https://www.google.com/maps/search/?api=1&query=21.38081,39.874312","pol":""}];
 
 const TABS = [
   { id:"plan", label:"خطة الأيام", n:"5" },
@@ -358,6 +363,8 @@ const TABS = [
   { id:"objections", label:"مواقف صعبة", n:String(OBJECTIONS.length) },
   { id:"drills", label:"التمارين", n:String(DRILLS.length) },
   { id:"hotels", label:"دليل الفنادق", n:String(HOTELS.length) },
+  { id:"sim", label:"محاكي المحادثات", n:String(SIMQ.length) },
+  { id:"team", label:"أداء الفريق", n:"" },
   { id:"score", label:"بطاقة التقييم", n:"100" }
 ];
 
@@ -604,8 +611,25 @@ function renderHotels(){
   sec.replaceChildren();
   const head = el("div", "sec-head");
   head.append(el("h2", null, "دليل فنادق مكة — 4 و5 نجوم"));
-  head.append(el("p", null, "لكل فندق: المسافة من الكعبة، زمن المشي التقريبي، أنواع الغرف، وموقعه على الخرائط. استخدمه وأنت ترد على العميل — لا ترسل مسافة من ذاكرتك."));
+  head.append(el("p", null, "لكل فندق: المسافة من الكعبة، زمن المشي التقريبي، أنواع الغرف، سياسات الدخول والخروج والأطفال، وموقعه على الخرائط. استخدمه وأنت ترد على العميل — لا ترسل مسافة ولا سياسة من ذاكرتك."));
   sec.append(head);
+
+  const gen = el("div", "card");
+  gen.style.marginBottom = "16px";
+  gen.append(el("span", "tag gold", "اقرأها قبل أي وعد"));
+  gen.append(el("h3", null, "سياسات عامة تسري على فنادق مكة"));
+  const gul = el("ul");
+  [
+    "الدخول والخروج يختلفان بين فندق وآخر، والمعتاد الدخول 16:00 والخروج 12:00 — لا تعد بدخول مبكر أو خروج متأخر قبل تأكيد الفندق، وغالباً برسوم.",
+    "عمر احتساب الطفل بالغاً يختلف من فندق لآخر (من 6 إلى 18 سنة) — اسأل عن أعمار الأطفال واكتبها بالحجز، وإلا صار فرق حساب عند الوصول.",
+    "الأسرّة الإضافية والمهود بطلب وموافقة الفندق، وأغلبها برسوم لا تدخل بالسعر المعروض.",
+    "الإلغاء والاسترجاع يتبعان خطة السعر لا الفندق: نفس الفندق فيه أسعار قابلة للإلغاء وأخرى غير مستردة — اقرأ الخطة قبل ما ترسلها للعميل.",
+    "في رمضان والحج: أوقات دخول متأخرة، حد أدنى لعدد الليالي، وسياسات إلغاء أشدّ، وبعض الفنادق تشترط تصريحاً نظامياً للإقامة.",
+    "هوية أو جواز لكل نزيل عند الوصول، وتسجيل النزلاء إلزامي حسب الإجراء المعتمد لدينا — تأكد من الأسماء قبل الوصول لا عنده.",
+    "الوصول بعد منتصف الليل يُبلَّغ للفندق قبل 24 ساعة، وإلا قد يُعتبر عدم حضور ويُلغى الحجز."
+  ].forEach(t => gul.append(el("li", null, t)));
+  gen.append(gul);
+  sec.append(gen);
 
   const bar = el("div", "toolbar");
   const search = el("input"); search.type = "search"; search.id = "hotelSearch";
@@ -640,7 +664,7 @@ function renderHotels(){
   sec.append(list);
 
   const note = el("p", "note");
-  note.textContent = "المصدر: نتائج Booking.com المباشرة (الأسماء، النجوم، الإحداثيات، تقييم النزلاء) ومواقع الفنادق الرسمية لأنواع الغرف. المسافة محسوبة من إحداثيات الكعبة بخط مستقيم × معامل التفاف 1.35، وزمن المشي على 80 متراً بالدقيقة — تقدير للاسترشاد، والمسار الفعلي يختلف بالبوابة والزحام. الأسعار والإتاحة تتغير يومياً: لا تعد بها قبل التحقق.";
+  note.textContent = "المصدر: نتائج Booking.com المباشرة (الأسماء، النجوم، الإحداثيات، تقييم النزلاء) ومواقع الفنادق الرسمية ومنصات الحجز لأنواع الغرف والسياسات. المسافة محسوبة من إحداثيات الكعبة بخط مستقيم × معامل التفاف 1.35، وزمن المشي على 80 متراً بالدقيقة — تقدير للاسترشاد، والمسار الفعلي يختلف بالبوابة والزحام. الأسعار والإتاحة تتغير يومياً: لا تعد بها قبل التحقق.";
   note.style.marginTop = "18px";
   sec.append(note);
   paintHotels();
@@ -684,6 +708,15 @@ function paintHotels(){
       card.append(r);
     } else {
       card.append(el("div", "rooms none", "أنواع الغرف: غير مؤكدة — تحقّق من الفندق قبل العرض."));
+    }
+
+    if (x.pol){
+      const pb = el("div", "polbox");
+      pb.append(el("b", null, "السياسات: "));
+      pb.append(document.createTextNode(x.pol));
+      card.append(pb);
+    } else {
+      card.append(el("div", "polbox none", "السياسات: غير موثّقة هنا — المعتاد الدخول 16:00 والخروج 12:00، أكّدها مع الفندق قبل الوعد."));
     }
 
     const links = el("div", "links");
@@ -878,8 +911,529 @@ function paintRecords(rows){
   });
 }
 
+
+/* ===================== بنك أسئلة العملاء + المحاكي ===================== */
+const SIMQ = [
+ {c:"تسعير", l:1, q:"السلام عليكم، الأسعار؟",
+  ok:[["سأل عن التواريخ",["تاريخ","متى","الدخول","الخروج","ليله","ليالي","كم ليله"]],["سأل عن عدد الأشخاص",["كم شخص","عدد الاشخاص","كبار","اطفال","بالغين"]],["سأل عن عدد الغرف",["كم غرفه","عدد الغرف","غرفتين"]],["سأل عن الأولوية",["الاقرب","الاوفر","الاوسع","تفضل","الاولويه"]],["سأل عن وقت الوصول",["وقت الوصول","متى توصلون","الساعه كم توصلون"]],["حيّا العميل وعرّف بنفسه",["حياك","اهلا","مرحبا","معك","حياكم"]]],
+  no:[["أرسل سعراً قبل التأهيل",["ريال","السعر","سعر الليله"]]],
+  m:"حياك الله، معك [الاسم] من [اسم المنشأة].\nعشان أعطيك السعر النهائي وأرشّح لك الأنسب:\n• تاريخ الدخول والخروج؟\n• كم شخص (كبار/أطفال)؟\n• كم غرفة؟\n• تفضّل الأقرب للحرم أو الأوفر؟\n• وقت وصولكم تقريباً؟"},
+ {c:"تسعير", l:1, q:"كم سعر الليلة عندكم بأرخص وحدة؟",
+  ok:[["لم يكتفِ بسعر الليلة وربطه بالتواريخ",["التواريخ","اي فتره","الموسم","يعتمد","يختلف"]],["سأل عن عدد الأشخاص أو الغرف",["كم شخص","عدد","غرفه"]],["عرض إعطاء الإجمالي",["الاجمالي","اجمالي الاقامه","كامل الاقامه"]]],
+  no:[["وعد بسعر ثابت بلا تحقق",["ثابت","دايما","طول السنه"]]],
+  m:"السعر يختلف حسب التواريخ وعدد الأشخاص.\nأعطني تاريخ الدخول والخروج وعدد الأشخاص، وأرسل لك الإجمالي للإقامة كاملة بدل سعر الليلة."},
+ {c:"تسعير", l:2, q:"لا والله غالي، لقيت أرخص بكثير.",
+  ok:[["سأل ليفهم المقارنة",["ممكن ترسل","كم يبعد","تفاصيل العرض","وش يشمل"]],["ذكر القيمة: المسافة أو السعة أو الخدمة",["دقايق","مشيا","يتسع","مطبخ","الخدمه","المسافه"]],["عرض بديلاً أوفر",["بديل","اوفر","خيار ثاني","عندي"]]],
+  no:[["خفّض السعر من عنده",["اخصم","خصم خاص","انزل لك","اخر سعر"]],["قلّل من المنافس",["مايسوى","مو نظيف","سيئ","لا تروح لهم"]]],
+  m:"أقدّر صراحتك. تسمح لي أسأل: العرض الثاني كم يبعد عن الحرم وكم يتسع؟\nسعرنا يقابل [المسافة] و[السعة] و[الخدمة]، وإن كانت الميزانية محدّدة عندي [البديل] بـ[المبلغ]."},
+ {c:"مسافة وموقع", l:1, q:"وين الموقع بالضبط؟ وكم يبعد عن الحرم؟",
+  ok:[["ذكر المسافة بالدقائق مشياً",["دقايق","دقيقه","مشيا","مشي"]],["ذكر الحي أو المعلم",["حي","شارع","قرب","بوابه","اجياد","جبل عمر"]],["أرسل رابط الموقع",["رابط","الخرائط","قوقل","الموقع"]],["أعاد المحادثة للحجز",["اثبت","احجز لك","ارسل لك السعر","يناسبك"]]],
+  no:[["أرسل رابطاً بلا شرح",[]]],
+  m:"[اسم الوحدة] في حي [الحي] — تبعد عن الحرم [x] دقائق مشياً، و[y] دقائق بالسيارة.\n📍 الموقع: [رابط]\nأرسل لك الصور والسعر للتواريخ اللي تناسبكم؟"},
+ {c:"مسافة وموقع", l:2, q:"الموقع بعيد شوي، ما عندكم أقرب للحرم؟",
+  ok:[["أقرّ بالمسافة بصدق",["صحيح","نعم","فعلا","تبعد"]],["عرض الأقرب المتاح وسعره",["الاقرب","متاح","بـ","المبلغ"]],["وضّح الفرق بالسعر أو الميزة",["الفرق","بالمقابل","تتسع","اوسع","اوفر"]]],
+  no:[["جادل أو صغّر المسافة",["مو بعيد","قريب جدا","ولا شي"]]],
+  m:"صحيح، تبعد [x] دقائق مشياً. بالمقابل [الميزة].\nوإن كان القرب أهم شي، الأقرب المتاح: [الوحدة] بـ[المبلغ] — الفرق [المبلغ] للإقامة كاملة."},
+ {c:"غرف وسعة", l:1, q:"عندي عائلة ٦ أشخاص، وش تنصحني؟",
+  ok:[["سأل عن تفاصيل الأعمار أو التوزيع",["اعمار","اطفال","كبار","توزيع","كم طفل"]],["اقترح خياراً يتسع للعدد",["تتسع","رباعيه","غرفتين","جناح","عائليه"]],["ذكر البديل الثاني",["او","بديل","خيار"]]],
+  no:[["وعد بسعة أكبر من النظامية",["يدخل اكثر","ما احد يسال","زيدوا معكم"]]],
+  m:"أبشر. عشان أرشّح الأنسب: كم بالغ وكم طفل وأعمارهم؟\nالمتاح: [غرفة رباعية + غرفة مزدوجة] أو [جناح عائلي يتسع 6] — أيّهما أرتّب لكم؟"},
+ {c:"غرف وسعة", l:2, q:"الغرفة فيها كم سرير؟ وتتسع لأربعة بالغين؟",
+  ok:[["حدّد عدد الأسرّة بدقة",["سريرين","ثلاثه اسرة","اربعه اسرة","سرير واحد","كنج","توين"]],["ذكر السعة النظامية",["تتسع","السعه","الحد","نظاميا"]],["عرض حلاً إن كانت لا تكفي",["بديل","غرفه ثانيه","رباعيه","سرير اضافي"]]],
+  no:[["أكّد سعة غير صحيحة لإتمام الحجز",["اكيد تتسع","ما فيه مشكله ادخلوا"]]],
+  m:"[اسم الغرفة] فيها [عدد] أسرّة وتتسع لـ[عدد] أشخاص نظامياً.\nلأربعة بالغين الأنسب [الغرفة الرباعية] أو غرفتين — أيّهما أثبّت؟"},
+ {c:"دفع", l:1, q:"كيف أدفع؟ وهل فيه عربون؟",
+  ok:[["ذكر الحساب الرسمي للمنشأة",["حساب المنشاه","الحساب الرسمي","الايبان","باسم"]],["حدد قيمة العربون أو آلية التثبيت",["عربون","لتثبيت","مقدم","دفعه"]],["طلب إشعار التحويل",["اشعار","صوره التحويل","السند"]]],
+  no:[["طلب بيانات بطاقة بالواتساب",["رقم البطاقه","البطاقه الائتمانيه","cvv","الرقم السري"]],["حساب شخصي",["حسابي","حساب شخصي","باسمي"]]],
+  m:"التثبيت بتحويل [العربون] على حساب المنشأة الرسمي:\n[اسم الحساب + الآيبان]\nترسل لي صورة الإشعار وأأكد لك الحجز مباشرة. ما نستقبل بيانات بطاقة بالواتساب."},
+ {c:"دفع", l:3, q:"واحد كلمني وقال إنه منكم وأعطاني رقم حساب باسم شخص، حوّلت له. تمام؟",
+  ok:[["نبّه أن الحساب الشخصي لا يمثّل المنشأة",["حساب شخصي","ما يمثلنا","الرسمي فقط"]],["طلب إشعار التحويل للتحقق",["اشعار","نتحقق","المحاسبه"]],["صعّد للإدارة",["الاداره","ارفع","مسؤولي","ابلغ"]],["نصح بإيقاف أي تحويل آخر",["توقف","لا تحول","لا ترسل"]]],
+  no:[["أكّد الحجز على تحويل غير مؤكد",["تم الحجز","مؤكد","تمام"]]],
+  m:"خلّني أتأكد معك فوراً: تحويلاتنا فقط على حساب المنشأة باسم [الاسم] والآيبان [الرقم].\nأرسل لي صورة الإشعار وأتحقق من المحاسبة الآن وأرفع الموضوع للإدارة، ولا تحوّل أي مبلغ ثانٍ لحد ما نتأكد."},
+ {c:"إلغاء وتعديل", l:2, q:"ظروف طارئة، أبي ألغي وأسترد المبلغ كامل.",
+  ok:[["تعاطف بلا لوم",["الله يسهل","اتفهم","اعذرك","ولا يهمك"]],["ذكر سياسة الإلغاء كما هي",["السياسه","حسب","نصت","المتفق"]],["عرض التأجيل كبديل",["تاجيل","نغير التواريخ","نأجل"]],["صعّد الاسترجاع للإدارة",["الاداره","ارفع","المحاسبه","ارجع لك خلال"]]],
+  no:[["وعد باسترجاع كامل",["نرجع لك المبلغ كامل","اكيد بنرجعه","مضمون"]],["رفض قاطع بلا سياسة",["ما فيه استرجاع نهائيا","مستحيل"]]],
+  m:"الله يسهّل أموركم وأتفهّم الظرف.\nقبل الإلغاء: يناسبكم تأجيل التواريخ بنفس السعر؟\nوإن كان الإلغاء هو القرار، السياسة المتفق عليها: [النص]، وأرفع طلب الاسترجاع للإدارة وأرجع لك خلال [المدة]."},
+ {c:"إلغاء وتعديل", l:2, q:"أبي أزيد ليلة على حجزي المؤكد.",
+  ok:[["تحقّق من الإتاحة قبل الوعد",["اتاكد","افحص","اشوف المتاح","الاتاحه"]],["ذكر فرق السعر",["الفرق","سعر الليله الاضافيه","المبلغ"]],["وعد بتأكيد كتابي محدّث",["ارسل لك التاكيد","احدث الحجز","رساله تاكيد"]]],
+  no:[["أكّد التمديد بلا فحص",["تم","اكيد متوفره","ولا يهمك زدناها"]]],
+  m:"أبشر. أتأكد من إتاحة الليلة الإضافية وأرجع لك خلال [المدة].\nإذا متاحة، الفرق [المبلغ] وأرسل لك تأكيداً محدّثاً برقم الحجز نفسه."},
+ {c:"وصول ومغادرة", l:2, q:"طيارتنا تنزل الساعة ٢ بعد منتصف الليل، نقدر ندخل؟",
+  ok:[["طمأن العميل",["ولا يهمك","مرحبين","ما فيها شي","جاهزين"]],["أكّد ترتيب الاستقبال والاسم والرقم",["الاستقبال","اسم","رقمه","بانتظاركم"]],["طلب تأكيد وقت الوصول",["اكد لي","الساعه كم","وقت الوصول"]]],
+  no:[["وافق بلا ترتيب داخلي",["تمام","اوك","نعم"]]],
+  m:"ولا يهمّك، مرحّبين فيكم بأي وقت.\nسجّلت وصولكم 2 فجراً و[اسم المستقبِل] بيكون بانتظاركم ورقمه [الرقم].\nأكّد لي إذا تأخرت الرحلة عشان نعدّل الترتيب."},
+ {c:"وصول ومغادرة", l:1, q:"وقت الدخول والخروج كم؟ ونقدر نتأخر بالخروج؟",
+  ok:[["ذكر وقت الدخول والخروج",["الدخول","الخروج","الساعه"]],["ربط التأخير بالتوفر لا بالوعد",["حسب التوفر","اشوف","بحسب الاشغال","اتاكد"]],["عرض حل بديل",["حفظ الامانات","نحفظ الشنط","رسوم"]]],
+  no:[["وعد بخروج متأخر مجاني بلا تأكيد",["اكيد تقدرون","ولا يهمك مجانا","ما فيه مشكله تأخروا"]]],
+  m:"الدخول من الساعة [الوقت] والخروج حتى [الوقت].\nتأخير الخروج حسب الإشغال ذلك اليوم — أشوف المتاح وأخبرك، ولو ما توفر نحفظ لكم الأمانات مجاناً لين ما تجهزون."},
+ {c:"شكاوى", l:2, q:"دخلنا الشقة والحمام مو نظيف! هذا اللي دفعنا عليه؟",
+  ok:[["اعتذر بلا تبرير",["اسف","نعتذر","ما يمثل","اعتذر"]],["حدّد إجراءً بمدة",["خلال","الحين","فورا","نرسل"]],["أعطى خياراً (معالجة أو نقل)",["نعالجها","ننقلكم","وحده جاهزه","تفضلون"]],["وعد بمتابعة بعد التنفيذ",["اتابع","ارجع لك","اتطمن"]]],
+  no:[["جادل أو طلب إثباتاً قبل الاعتذار",["ارسل صوره","مستحيل","الوحده كانت نظيفه"]]],
+  m:"آسف جداً، وهذا ما يمثّلنا.\nفريق النظافة بطريقه لكم الحين ويخلص خلال [المدة].\nتفضّلون نعالجها وأنتم بالوحدة، أو ننقلكم لوحدة جاهزة الآن؟ وأتابع معكم بنفسي بعدها."},
+ {c:"شكاوى", l:3, q:"المكيّف ما يبرّد والأطفال ما ناموا من الحر. حلّوا لي المشكلة الحين!",
+  ok:[["اعتبرها حالة عاجلة",["عاجل","الحين","فورا","حالا"]],["أعطى مدة واقعية",["خلال","المده","دقيقه","ساعه"]],["قدّم حلاً مؤقتاً",["مروحه","وحده بديله","ننقلكم","حل مؤقت"]],["تعهّد بتحديثات",["احدثك","كل نص ساعه","ارجع لك"]]],
+  no:[["وعد بحل فوري غير واقعي",["الحين خلال دقيقتين","جاهز الان تماما"]]],
+  m:"آسف على هذا، وأتعامل معها كحالة عاجلة الحين.\n[الفني] بطريقه ويوصل خلال [المدة]، وإلى ذلك الوقت أرسل لكم [مروحة/وحدة بديلة].\nبحدّثك كل نصف ساعة إلى أن تنتهي."},
+ {c:"شكاوى", l:3, q:"إذا ما رجعتوا لي نص المبلغ بكتب تقييم يفضحكم بكل المنصات.",
+  ok:[["لم يساوم على التقييم",["حقك","رايك","اكتب","ما يهمني التقييم"]],["ركّز على معالجة المشكلة",["اصلح","نعالج","الاجراء","اللي اقدر اسويه"]],["صعّد للإدارة",["الاداره","ارفعها","مسؤولي","رد رسمي"]]],
+  no:[["عرض تعويضاً مقابل حذف التقييم",["احذف التقييم","لا تكتب","مقابل"]],["وعد باسترجاع",["نرجع لك نص المبلغ","اكيد بنرجع"]]],
+  m:"حقك تكتب رأيك بكل صراحة، واللي يهمّني الحين أصلح اللي صار.\nالمشكلة عندي: [المشكلة]، وأرفعها للإدارة وأرجع لك برد رسمي خلال [المدة].\nواللي أقدر أسويه الآن: [الإجراء الفوري]."},
+ {c:"مجموعات", l:3, q:"عندي حملة ٢٤ شخص، أبي ٦ غرف برمضان، أفضل سعر كم؟",
+  ok:[["طلب اسم منسّق المجموعة ورقمه",["مسؤول المجموعه","المنسق","اسم ورقم"]],["طلب التواريخ والتوزيع",["التواريخ","التوزيع","كم غرفه","الاعمار"]],["أشار إلى اعتماد الإدارة للتسعير",["الاداره","يعتمد","ارفع","عرض رسمي"]],["حدّد موعد الرد",["خلال","ارجع لك","اليوم","بكره"]]],
+  no:[["سعّر المجموعة من عنده",["اعطيك خصم","السعر لكم","اخر سعر"]],["وعد بغرف متجاورة بلا تأكيد",["متجاوره","نفس الدور","اكيد جنب بعض"]]],
+  m:"حيّاكم الله. عشان أرفع لكم عرضاً دقيقاً لرمضان:\n• اسم مسؤول المجموعة ورقمه؟\n• التواريخ بالضبط؟\n• توزيع الأشخاص على الغرف؟\nعروض المجموعات تُعتمد من الإدارة، وأرجع لكم خلال [المدة]."},
+ {c:"مواسم", l:2, q:"ليش أسعاركم برمضان ضعف العادي؟",
+  ok:[["شرح بالقيمة لا بالاعتذار",["الطلب","الموسم","القرب","الخدمه","نفس الجوده"]],["لم يعتذر عن السعر",[]],["عرض خياراً يناسب الميزانية",["بديل","اوفر","فتره ثانيه","خيار"]]],
+  no:[["اعتذر أو شكّك بسعر منشأته",["اعتذر عن السعر","غالي فعلا","انا اعرف انه غالي"]]],
+  m:"أسعار رمضان مرتبطة بالطلب على مكة في العشر وأوقات الذروة، والخدمة نفسها بكل المواسم.\nإن كانت الميزانية محدّدة، عندي [البديل] بـ[المبلغ] أو فترة [التاريخ] بسعر أقل."},
+ {c:"مواسم", l:3, q:"أبي أحجز بالحج، تحتاجون تصريح؟",
+  ok:[["أشار إلى اشتراط التصريح النظامي",["تصريح","نظامي","التعليمات","الجهات"]],["لم يفتِ من عنده ووعد بالتأكيد",["اتاكد","ارجع لك","الاداره","الجهه المختصه"]]],
+  no:[["أكّد إمكانية الإقامة بلا تصريح",["بدون تصريح","ما يحتاج","ندخلكم عادي"]]],
+  m:"إقامة موسم الحج تخضع للتعليمات النظامية وتصريح الحج.\nأتأكد من الإجراء المعتمد لدينا لهذا الموسم وأرجع لك خلال [المدة] بردّ مكتوب — ما أقدر أأكد لك شيئاً قبلها."},
+ {c:"خدمات", l:1, q:"فيه مواقف سيارات؟ وواي فاي؟",
+  ok:[["أجاب بوضوح عن المواقف",["مواقف","موقف","باركنق","سيارات"]],["أجاب عن الواي فاي",["واي فاي","انترنت","شبكه"]],["أضاف تفصيلاً مفيداً",["مجاني","برسوم","داخل المبنى","قريب"]]],
+  no:[["أجاب بكلمة واحدة",[]]],
+  m:"نعم — مواقف [داخل المبنى/قريبة] و[مجانية/برسوم [المبلغ]]، وواي فاي مجاني بكل الوحدة واسم الشبكة وكلمة السر مكتوبة داخل الوحدة."},
+ {c:"خدمات", l:2, q:"تقدرون ترتبون لنا مواصلات من جدة وتأشيرة عمرة؟",
+  ok:[["وضّح حدود الخدمة بصدق",["خارج خدماتنا","ما نقدم","ما اقدر اضمن"]],["عرض ما يملكه فعلاً",["اقدر","نرتب","المواصلات","نرشح لك"]]],
+  no:[["وعد بخدمة لا يملكها",["ابشر نجيبها","نرتب لك التاشيره","اكيد نقدر"]]],
+  m:"التأشيرات خارج خدماتنا وما أقدر أضمنها.\nاللي أقدر عليه: [المواصلات من جدة بتكلفة [المبلغ]] وأرشّح لكم مكتباً معتمداً للباقي."},
+ {c:"تسعير", l:2, q:"أعطني خصم وأحجز الحين.",
+  ok:[["أشار إلى أن الخصم من الإدارة",["الاداره","صلاحيه","معتمد"]],["عرض ميزة بلا تكلفة بدل الخصم",["دخول مبكر","تمديد","ترقيه","حسب التوفر"]],["أبقى الباب مفتوحاً للإغلاق",["اثبتها","احجز لك","يناسبك"]]],
+  no:[["أعطى خصماً من نفسه",["خصمت لك","خذها بـ","اخر سعر مني"]]],
+  m:"الخصومات عندنا من الإدارة وبمواسم محددة.\nاللي أقدر عليه: [دخول مبكر إن توفر / تمديد خروج / ترقية عند الإتاحة]. يناسبك أثبّتها لك بهذا؟"},
+ {c:"تسعير", l:1, q:"بفكر وأرد عليك.",
+  ok:[["لم يضغط على العميل",["خذ راحتك","براحتك","ولا يهمك"]],["عرض إمساك مؤقت بمدة",["امسكها لك","حتى الساعه","احجزها مؤقتا"]],["ترك باب المتابعة",["اخبرك","ارجع لك","اذا جاء عليها طلب"]]],
+  no:[["ألحّ أو ضغط",["بسرعه","بتروح عليك","اخر فرصه","قرر الحين"]]],
+  m:"خذ راحتك.\nأمسكها لك حتى [الساعة] بدون التزام، وأخبرك إذا جاء عليها طلب ثانٍ."},
+ {c:"وصول ومغادرة", l:2, q:"تأخرنا وما قدرنا نجي اليوم، حجزنا وش صار فيه؟",
+  ok:[["سأل عن السبب والوضع",["وش صار","الظرف","تاخرتوا","كل شي تمام"]],["ذكر سياسة عدم الحضور",["سياسه","عدم الحضور","حسب"]],["عرض المتاح: تعديل أو تصعيد",["نعدل","ارفع","الاداره","نشوف الحل"]]],
+  no:[["ألغى بلا محاولة تواصل موثّقة",["ملغي","انتهى","راح عليكم"]]],
+  m:"سلامتكم، وش صار معكم؟\nحجزكم رقم [الرقم] يخضع لسياسة عدم الحضور: [النص].\nإن كان الظرف طارئاً أرفع وضعكم للإدارة وأرجع لك خلال [المدة]."},
+ {c:"غرف وسعة", l:1, q:"الوحدة فيها مطبخ؟ نقدر نطبخ؟",
+  ok:[["أجاب بدقة عن المطبخ",["مطبخ","طباخ","ثلاجه","ادوات"]],["ذكر المتوفر أو غير المتوفر",["يتوفر","ما يتوفر","فيه","ما فيه"]],["أضاف بديلاً أو معلومة مفيدة",["مطاعم","قريب","توصيل","ميكرويف"]]],
+  no:[["وعد بتجهيزات غير موجودة",["كل شي موجود","جميع الادوات","مطبخ كامل"]]],
+  m:"نعم، الوحدة فيها مطبخ [كامل/صغير] ويشمل [ثلاجة، فرن، أدوات طبخ أساسية].\n[وغير متوفر: غسالة صحون] — تحتاجون شيئاً معيناً أجهّزه لكم قبل الوصول؟"},
+ {c:"شكاوى", l:2, q:"الجيران صوتهم عالي ومزعجين طول الليل.",
+  ok:[["شكر على الإبلاغ واعتذر",["شكرا لابلاغي","اسف","نعتذر"]],["تعهّد بإجراء فوري بلا تحيّز",["اتعامل","اعالج","الحين","اتواصل"]],["عرض حلاً بديلاً إن تكرر",["ننقلكم","وحده ثانيه","نعوضكم"]]],
+  no:[["تحدث عن نزيل آخر بتفاصيل",["هم ناس","النزيل اللي عندهم","عائله"]]],
+  m:"شكراً لإبلاغي، وأعتذر عن الإزعاج.\nأتعامل مع الموضوع الحين مباشرة وأرجع لك خلال [المدة]، وإن تكرر ننقلكم لوحدة أهدأ."},
+ {c:"دفع", l:2, q:"أدفع عند الوصول بدل التحويل؟",
+  ok:[["وضّح سياسة التثبيت",["لتثبيت","العربون","سياستنا","الحجز يثبت"]],["عرض بديلاً ممكناً",["نمسكها لك","حتى الساعه","جزء من المبلغ"]],["حافظ على نبرة محترمة",["ولا يهمك","اتفهم","ابشر"]]],
+  no:[["وافق بلا صلاحية",["تمام ادفع عند الوصول","ولا يهمك بدون عربون"]]],
+  m:"الحجز يثبت بالعربون، لأن الوحدة تبقى محجوزة لكم ونوقف عرضها.\nاللي أقدر أسويه: أمسكها لك حتى [الساعة] بلا التزام، وإن حبيت التثبيت أرسل لك بيانات الحساب الرسمي."},
+ {c:"مسافة وموقع", l:1, q:"فيه باصات أو مشي للحرم؟ الوالدة كبيرة بالسن.",
+  ok:[["راعى حالة الوالدة",["الوالده","كبار السن","راحتها","مريح"]],["وضّح خيار المشي والمسافة",["مشيا","دقايق","الطريق"]],["ذكر بديل المواصلات",["باص","سياره","توصيل","اجره","قريب من البوابه"]]],
+  no:[["وعد بخدمة نقل غير موجودة",["عندنا باص","نوصلكم مجانا"]]],
+  m:"المسافة [x] دقائق مشياً والطريق [مستوٍ/فيه صعود].\nلراحة الوالدة: أقرب بوابة لكم [البوابة]، والسيارة توصلكم [النقطة] ومنها [المسافة].\nتحبون أرشّح لكم الأقرب للحرم؟"},
+ {c:"خدمات", l:1, q:"عندكم خدمة تنظيف يومية؟",
+  ok:[["أجاب بوضوح عن التنظيف",["تنظيف","يومي","كل يوم","حسب"]],["ذكر التفاصيل: المواعيد أو الطلب",["الساعه","بطلب","نرتبها","المواعيد"]]],
+  no:[["وعد بخدمة يومية بلا تأكيد",["اكيد يومي","كل يوم مضمون"]]],
+  m:"التنظيف [يومي/كل يومين] ويكون بين [الوقت] و[الوقت]، وإذا تحبون وقتاً معيناً أو تفضّلون عدم الدخول للوحدة خبّروني وأرتّبها."},
+ {c:"إلغاء وتعديل", l:1, q:"أبي أغيّر الاسم بالحجز لشخص ثاني.",
+  ok:[["ذكر أن التعديل يحتاج تأكيداً",["اتاكد","حسب السياسه","الاداره","امكانيه"]],["طلب بيانات الشخص الجديد",["الاسم","الهويه","بيانات","رقمه"]],["وعد بتأكيد مكتوب",["ارسل لك","تاكيد","احدث"]]],
+  no:[["وافق فوراً بلا تحقق",["تم غيرته","ولا يهمك عادي"]]],
+  m:"أتحقق من إمكانية نقل الحجز حسب السياسة وأرجع لك خلال [المدة].\nلو تفضّل ترسل لي اسم الشخص الجديد ورقمه وبيانات هويته عشان أجهّز الطلب."},
+ {c:"شكاوى", l:2, q:"الصور اللي أرسلتوها غير الوحدة اللي دخلناها!",
+  ok:[["أخذ البلاغ بجدية واعتذر",["اسف","اعتذر","نتحقق","ما يمثلنا"]],["طلب توضيحاً محدداً",["وش الفرق","اي وحده","رقم الوحده","صور"]],["عرض حلاً فورياً",["ننقلكم","نعالج","بديل","نعوض"]],["صعّد",["الاداره","ارفع","مسؤولي"]]],
+  no:[["أنكر بلا تحقق",["مستحيل","نفس الصور","انت غلطان"]]],
+  m:"آسف، وهذا شي ما نقبله.\nتفضّل أرسل لي صورة للوضع الحالي ورقم الوحدة عشان أتحقق حالاً.\nإذا كان فيه اختلاف فعلي: ننقلكم لوحدة مطابقة الآن، وأرفع الموضوع للإدارة."},
+ {c:"مجموعات", l:2, q:"نبي ٣ وحدات بنفس المبنى ونفس الدور لو ممكن.",
+  ok:[["لم يعد قبل التحقق",["اتاكد","اشوف","الاتاحه","ارجع لك"]],["وضّح ما يمكن ضمانه",["نحاول","حسب المتاح","اضمن لكم","نفس المبنى"]],["وعد برد بموعد",["خلال","اليوم","ارجع لك الساعه"]]],
+  no:[["وعد بنفس الدور بلا تأكيد",["اكيد نفس الدور","ابشر متجاورين"]]],
+  m:"أتأكد من المتاح وأرجع لك خلال [المدة].\nاللي أقدر أضمنه الحين: نفس المبنى. ونفس الدور نحاول عليه حسب الإتاحة، وما أوعدكم بشي قبل التأكيد."},
+ {c:"وصول ومغادرة", l:1, q:"نقدر ندخل قبل الموعد؟ وصلنا الصبح.",
+  ok:[["ربطه بالتوفر",["حسب التوفر","اشوف","الاشغال","اتاكد"]],["عرض حفظ الأمتعة",["الامانات","الشنط","نحفظ"]],["حدّد وقت الرد",["خلال","ارجع لك","بعد ما اتاكد"]]],
+  no:[["وعد بدخول مبكر مؤكد",["اكيد تقدرون","ادخلوا الحين","ولا يهمك جاهزه"]]],
+  m:"أشوف حالة الوحدة والإشغال وأرجع لك خلال [المدة].\nوإلى ذلك الوقت احفظوا أمتعتكم عندنا وارتاحوا بالاستقبال — ما يحتاج تنتظرون بالسيارة."},
+ {c:"خدمات", l:2, q:"الوحدة مناسبة لكرسي متحرك؟ عندنا أخ من ذوي الإعاقة.",
+  ok:[["سأل عن الاحتياج بدقة",["مصعد","درج","الباب","الحمام","يحتاج"]],["أجاب بصدق عن التجهيز",["متوفر","غير مجهزه","مجهزه","يوجد"]],["عرض البديل الأنسب",["بديل","الانسب","وحده ثانيه","ارشح"]]],
+  no:[["أكّد التجهيز بلا تحقق",["مجهزه بالكامل","اكيد مناسبه"]]],
+  m:"عشان أرشّح الأنسب: يحتاج مصعد ودخول بلا درج وحمام بمقابض؟\nأتحقق من تجهيزات [الوحدة] وأرجع لك بجواب دقيق خلال [المدة] — ما أحب أأكد لك شيئاً قبل ما أتأكد بنفسي."},
+ {c:"شكاوى", l:3, q:"حجزت وأكدت وجيت ولقيت الوحدة محجوزة لغيري!",
+  ok:[["اعتذر بلا تبرير داخلي",["اعتذر","اسف","خطأ من طرفنا"]],["تحمّل المسؤولية بلا لوم النظام",[]],["رتّب بديلاً مساوياً أو أفضل",["بديل","مساويه","افضل","على حسابنا"]],["صعّد فوراً",["الاداره","المشرف","ارفع","حالا"]]],
+  no:[["ألقى اللوم على النظام أو زميل",["النظام","الموظف الثاني","مو تقصيري"]],["طلب من العميل الانتظار بلا حل",["انتظر شوي بس","ما عندي حل"]]],
+  m:"أعتذر منك بشدة، هذا خطأ من طرفنا وأنا أتحمّله الآن.\nرتّبت لكم [الوحدة البديلة] — [المسافة] ومساوية أو أفضل، بلا أي فرق بالسعر، والاستقبال جاهز لكم.\nورفعت الموضوع للإدارة وأتابعه معكم شخصياً."},
+ {c:"تسعير", l:1, q:"السعر شامل الضريبة ولا يضاف عليه؟",
+  ok:[["أجاب بوضوح عن الشمول",["شامل","غير شامل","يضاف","مع الضريبه"]],["ذكر الإجمالي النهائي",["الاجمالي","النهائي","المبلغ"]],["عرض إرسال التفاصيل مكتوبة",["ارسل لك","مكتوب","تفصيل","فاتوره"]]],
+  no:[["أجاب بتخمين",["اظن","تقريبا","يمكن"]]],
+  m:"السعر اللي أرسلته [شامل/غير شامل] الضريبة والرسوم.\nالإجمالي النهائي للإقامة: [المبلغ] ريال، وأرسل لك التفصيل مكتوباً مع رسالة التأكيد."},
+ {c:"مواسم", l:2, q:"أبي أحجز العشر الأواخر من رمضان، متى أحجز؟",
+  ok:[["نبّه لسرعة النفاد",["تنفد","تنحجز بدري","مبكرا","الطلب عالي"]],["ذكر الشروط الموسمية",["حد ادنى","ليالي","سياسه","عربون"]],["دفع للحجز المبكر بلا ضغط",["اثبت","احجز الحين","امسك لك"]]],
+  no:[["وعد بتوفر مضمون لاحقاً",["متوفره دايما","لا تستعجل","تلقاها اي وقت"]]],
+  m:"العشر الأواخر تنحجز مبكراً جداً، وغالباً فيه حد أدنى [عدد] ليالٍ وسياسة إلغاء أشدّ.\nإن كانت التواريخ شبه مؤكدة عندكم، أثبّتها لكم الحين وأرسل لكم الشروط مكتوبة."},
+ {c:"دفع", l:1, q:"تعطوني فاتورة باسم الشركة؟",
+  ok:[["أكّد إمكانية الفاتورة",["فاتوره","نصدر","تصدر","نوفرها"]],["طلب بيانات الشركة",["الاسم التجاري","الرقم الضريبي","بيانات الشركه","السجل"]],["وعد بالإرسال",["ارسلها","بعد الدفع","مع التاكيد"]]],
+  no:[["رفض بلا تحقق",["ما نعطي فواتير","ما يصير"]]],
+  m:"نعم. أرسل لي الاسم التجاري والرقم الضريبي للشركة، وتُصدر لكم الفاتورة وتوصلكم مع رسالة التأكيد."},
+ {c:"خدمات", l:1, q:"نقدر نستقبل زوار بالوحدة؟",
+  ok:[["ذكر سياسة الزوار",["سياسه","الزوار","مسموح","غير مسموح","التسجيل"]],["وضّح بلا تشدد",["الاداره","نظام","للجميع","حفاظا"]]],
+  no:[["وافق بلا سياسة",["عادي","سوّوا اللي تبون","ما احد يسال"]]],
+  m:"سياسة الزوار لدينا: [النص] — الغرض حفظ خصوصية وأمان جميع النزلاء.\nإن كان عندكم ظرف معيّن خبّروني وأشوف المتاح لكم."},
+ {c:"غرف وسعة", l:2, q:"الغرفة إطلالتها على الحرم؟",
+  ok:[["لم يؤكد الإطلالة بلا تحقق",["اتاكد","حسب الفئه","الدور","الفئه المحجوزه"]],["وضّح الفئات",["اطلاله جزئيه","مدينه","مباشره","فئه"]],["عرض البديل إن كانت مهمة",["لو مهمه","نرقي","فئه ثانيه","الفرق"]]],
+  no:[["وعد بإطلالة غير مؤكدة",["اكيد على الحرم","اطلاله مباشره","تشوفون الكعبه"]]],
+  m:"الإطلالة تعتمد على فئة الغرفة والدور: عندنا [إطلالة مدينة] و[إطلالة جزئية على الحرم].\nالفئة المحجوزة حالياً [الفئة]. لو الإطلالة مهمة لكم، فرق الترقية [المبلغ] وأتأكد من التوفر."}
+];
+
+const SIMCATS = ["الكل","تسعير","مسافة وموقع","غرف وسعة","دفع","إلغاء وتعديل","وصول ومغادرة","شكاوى","مجموعات","مواسم","خدمات"];
+
+function norm(s){
+  return (s||"")
+    .replace(/[ً-ْٰ]/g,"")
+    .replace(/[أإآا]/g,"ا").replace(/ة/g,"ه").replace(/[ىي]/g,"ي").replace(/ؤ/g,"و").replace(/ئ/g,"ي")
+    .replace(/[^ء-يa-zA-Z0-9]+/g," ")
+    .trim();
+}
+function hitKw(ans, kws){
+  if (!kws || !kws.length) return null;
+  const a = norm(ans);
+  return kws.some(k => a.includes(norm(k)));
+}
+
+/* ===================== محاكي المحادثات ===================== */
+let team = store("bt.team") || [];
+let activeEmp = store("bt.activeEmp") || "";
+let simResults = store("bt.simResults") || [];
+let simCat = "الكل", simQueue = [], simIdx = 0, simScores = [];
+
+function saveTeam(){ store("bt.team", team); }
+function empName(id){ const e = team.find(x => x.id === id); return e ? e.name : "—"; }
+
+function renderSim(){
+  const sec = $("#sec-sim");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "محاكي المحادثات"));
+  head.append(el("p", null, "عميل افتراضي يكتب لك، وأنت ترد كأنك على الواتساب. بعد كل ردّ تطلع لك الدرجة وما فاتك وما الردّ النموذجي. اختر الموظف أولاً عشان تُحفظ نتائجه."));
+  sec.append(head);
+
+  // شريط الموظفين
+  const emp = el("div", "card");
+  emp.style.marginBottom = "14px";
+  emp.append(el("h3", null, "الموظف المتدرّب"));
+  const row = el("div", "toolbar");
+  const sel = el("select"); sel.id = "empSelect";
+  const opt0 = el("option", null, "— اختر الموظف —"); opt0.value = "";
+  sel.append(opt0);
+  team.forEach(e => { const o = el("option", null, e.name); o.value = e.id; if (e.id === activeEmp) o.selected = true; sel.append(o); });
+  sel.addEventListener("change", () => { activeEmp = sel.value; store("bt.activeEmp", activeEmp); paintSimState(); });
+  const nameIn = el("input"); nameIn.type = "text"; nameIn.id = "empNew"; nameIn.placeholder = "اسم موظف جديد"; nameIn.style.maxWidth = "200px";
+  const addBtn = el("button", "btn", "أضف موظفاً"); addBtn.type = "button";
+  addBtn.addEventListener("click", () => {
+    const v = (nameIn.value || "").trim();
+    if (!v){ nameIn.focus(); return; }
+    if (team.some(x => x.name === v)){ nameIn.value = ""; return; }
+    const id = "e" + Date.now().toString(36);
+    team.push({ id: id, name: v });
+    saveTeam();
+    activeEmp = id; store("bt.activeEmp", activeEmp);
+    renderSim(); renderTeam();
+  });
+  const delBtn = el("button", "btn ghost", "احذف الموظف المحدد"); delBtn.type = "button";
+  delBtn.addEventListener("click", () => {
+    if (!activeEmp) return;
+    team = team.filter(x => x.id !== activeEmp);
+    simResults = simResults.filter(r => r.emp !== activeEmp);
+    saveTeam(); store("bt.simResults", simResults);
+    activeEmp = ""; store("bt.activeEmp", "");
+    renderSim(); renderTeam();
+  });
+  row.append(sel, nameIn, addBtn, delBtn);
+  emp.append(row);
+  const st = el("p", "note"); st.id = "empState";
+  emp.append(st);
+  sec.append(emp);
+
+  // اختيار الفئة وبدء الجلسة
+  const bar = el("div", "toolbar");
+  SIMCATS.forEach(c => {
+    const b = el("button", "chip", c);
+    b.type = "button"; b.dataset.v = c;
+    b.setAttribute("aria-pressed", String(c === simCat));
+    b.addEventListener("click", () => {
+      simCat = c;
+      bar.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === simCat)));
+    });
+    bar.append(b);
+  });
+  const start = el("button", "btn", "ابدأ جلسة (5 مواقف)"); start.type = "button";
+  start.addEventListener("click", startSim);
+  bar.append(start);
+  sec.append(bar);
+
+  const stage = el("div"); stage.id = "simStage";
+  sec.append(stage);
+  const bankNote = el("p", "note", "بنك المواقف: " + SIMQ.length + " سؤالاً حقيقياً من عملاء مكة، موزّعة على " + (SIMCATS.length - 1) + " فئة. الدرجة تُحسب على ما ذكره الموظف فعلاً بردّه، وتنزل على الوعود الممنوعة.");
+  bankNote.style.marginTop = "16px";
+  sec.append(bankNote);
+  paintSimState();
+}
+function paintSimState(){
+  const st = $("#empState");
+  if (!st) return;
+  if (!team.length) st.textContent = "ما فيه موظفون مسجّلون بعد — أضف أول اسم وابدأ.";
+  else if (!activeEmp) st.textContent = "اختر موظفاً عشان تُحفظ نتائج الجلسة باسمه.";
+  else {
+    const rs = simResults.filter(r => r.emp === activeEmp);
+    const avg = rs.length ? Math.round(rs.reduce((a, r) => a + r.score, 0) / rs.length) : 0;
+    st.textContent = "الموظف النشط: " + empName(activeEmp) + " · جلسات: " + rs.length + (rs.length ? " · متوسط الدرجة: " + avg + "/100" : "");
+  }
+  st.style.color = activeEmp ? "var(--accent)" : "var(--warn)";
+}
+function startSim(){
+  let pool = SIMQ.filter(x => simCat === "الكل" || x.c === simCat);
+  pool = pool.slice().sort(() => Math.random() - 0.5).slice(0, 5);
+  if (!pool.length) return;
+  simQueue = pool; simIdx = 0; simScores = [];
+  paintSimStep();
+}
+function paintSimStep(){
+  const stage = $("#simStage");
+  stage.replaceChildren();
+  if (simIdx >= simQueue.length){ paintSimEnd(); return; }
+  const item = simQueue[simIdx];
+
+  const card = el("div", "drill");
+  const row = el("div", "row");
+  row.append(el("h3", null, "موقف " + (simIdx + 1) + " من " + simQueue.length));
+  const tags = el("div", "facts");
+  tags.append(el("span", "fact", item.c));
+  tags.append(el("span", "fact", "★".repeat(item.l) + "☆".repeat(3 - item.l)));
+  row.append(tags);
+  card.append(row);
+
+  const cust = el("div", "cust");
+  cust.append(el("b", null, "العميل يكتب"));
+  cust.append(document.createTextNode(item.q));
+  card.append(cust);
+
+  const f = el("div", "field");
+  f.style.marginTop = "12px";
+  const lab = el("label", null, "ردّك كما ترسله بالواتساب");
+  lab.setAttribute("for", "simAnswer");
+  const ta = el("textarea"); ta.id = "simAnswer"; ta.placeholder = "اكتب ردّك هنا…"; ta.style.minHeight = "110px";
+  f.append(lab, ta);
+  card.append(f);
+
+  const acts = el("div", "toolbar");
+  const send = el("button", "btn", "قيّم ردّي"); send.type = "button";
+  send.addEventListener("click", () => gradeAnswer(item, ta.value || "", card, send));
+  const skip = el("button", "btn ghost", "تخطَّ هذا الموقف"); skip.type = "button";
+  skip.addEventListener("click", () => { simScores.push({ q: item.q, c: item.c, score: 0, skipped: true }); simIdx++; paintSimStep(); });
+  acts.append(send, skip);
+  card.append(acts);
+  stage.append(card);
+  ta.focus();
+}
+function gradeAnswer(item, ans, card, sendBtn){
+  if (!ans.trim()){ $("#simAnswer").focus(); return; }
+  sendBtn.disabled = true;
+  const hits = [], misses = [], viols = [];
+  item.ok.forEach(pair => {
+    const label = pair[0], kws = pair[1];
+    const r = hitKw(ans, kws);
+    if (r === null){ if (ans.trim().length > 60) hits.push(label); else misses.push(label); }
+    else if (r) hits.push(label);
+    else misses.push(label);
+  });
+  (item.no || []).forEach(pair => { if (hitKw(ans, pair[1])) viols.push(pair[0]); });
+  let score = Math.round(100 * hits.length / Math.max(1, item.ok.length));
+  score = Math.max(0, score - viols.length * 25);
+  simScores.push({ q: item.q, c: item.c, score: score, hits: hits, misses: misses, viols: viols });
+
+  const res = el("div");
+  res.style.marginTop = "14px";
+  const tot = el("div", "total");
+  const num = el("div", "num"); num.append(document.createTextNode(String(score)));
+  num.append(el("small", null, " / 100"));
+  const verdict = el("span", "verdict", viols.length ? "ردّ فيه وعد ممنوع" : (score >= 80 ? "ممتاز" : score >= 60 ? "مقبول ويحتاج تحسين" : "يحتاج إعادة"));
+  verdict.style.color = viols.length ? "var(--bad)" : (score >= 80 ? "var(--good)" : score >= 60 ? "var(--warn)" : "var(--bad)");
+  verdict.style.borderColor = verdict.style.color;
+  tot.append(num, verdict);
+  res.append(tot);
+
+  if (hits.length){
+    const g = el("div", "rooms");
+    g.append(el("b", null, "أصبت في: "));
+    g.append(document.createTextNode(hits.join(" · ")));
+    res.append(g);
+  }
+  if (misses.length){
+    const mi = el("div", "polbox");
+    mi.style.marginTop = "8px";
+    mi.append(el("b", null, "فاتك: "));
+    mi.append(document.createTextNode(misses.join(" · ")));
+    res.append(mi);
+  }
+  if (viols.length){
+    const v = el("div", "polbox");
+    v.style.marginTop = "8px";
+    v.style.background = "color-mix(in srgb, var(--bad) 12%, transparent)";
+    const b = el("b", null, "ممنوع: "); b.style.color = "var(--bad)";
+    v.append(b);
+    v.append(document.createTextNode(viols.join(" · ") + " — هذا وحده يسقط المحادثة مهما كانت بقية الدرجة."));
+    res.append(v);
+  }
+  const mdl = el("div", "model bubble", item.m);
+  mdl.style.marginTop = "10px";
+  const mlab = el("p", "note", "الردّ النموذجي:");
+  res.append(mlab, mdl);
+
+  const next = el("button", "btn", simIdx + 1 >= simQueue.length ? "أنهِ الجلسة وأظهر النتيجة" : "الموقف التالي");
+  next.type = "button";
+  next.style.marginTop = "12px";
+  next.addEventListener("click", () => { simIdx++; paintSimStep(); });
+  res.append(next);
+  card.append(res);
+  res.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function paintSimEnd(){
+  const stage = $("#simStage");
+  stage.replaceChildren();
+  const total = Math.round(simScores.reduce((a, s) => a + s.score, 0) / Math.max(1, simScores.length));
+  const viols = simScores.reduce((a, s) => a + ((s.viols || []).length), 0);
+  const card = el("div", "card");
+  card.append(el("h3", null, "نتيجة الجلسة"));
+  const tot = el("div", "total");
+  const num = el("div", "num"); num.append(document.createTextNode(String(total)));
+  num.append(el("small", null, " / 100"));
+  const verdict = el("span", "verdict", viols ? "فيها " + viols + " وعداً ممنوعاً" : total >= 80 ? "جاهز للحالات العادية" : total >= 60 ? "يحتاج تدريباً" : "لا يُترك بلا إشراف");
+  tot.append(num, verdict);
+  card.append(tot);
+
+  const list = el("div");
+  simScores.forEach((s, i) => {
+    const r = el("div", "rec");
+    const left = el("div");
+    left.append(el("div", "who", (i + 1) + ". " + s.q));
+    left.append(el("div", "when", s.c + (s.skipped ? " · تخطّاه" : (s.misses && s.misses.length ? " · فاته: " + s.misses.join(" · ") : " · كامل"))));
+    const sc = el("div", "sc", String(s.score));
+    sc.style.color = s.score >= 80 ? "var(--good)" : s.score >= 60 ? "var(--warn)" : "var(--bad)";
+    r.append(left, sc);
+    list.append(r);
+  });
+  card.append(list);
+
+  const acts = el("div", "toolbar");
+  acts.style.marginTop = "14px";
+  const save = el("button", "btn", "احفظ النتيجة للموظف"); save.type = "button";
+  save.addEventListener("click", () => {
+    if (!activeEmp){ alertNote(card, "اختر الموظف أولاً من الأعلى عشان تُحفظ النتيجة باسمه."); return; }
+    simResults.unshift({
+      emp: activeEmp, date: new Date().toISOString(), score: total, cat: simCat,
+      items: simScores.map(s => ({ q: s.q, c: s.c, score: s.score, misses: s.misses || [], viols: s.viols || [] }))
+    });
+    simResults = simResults.slice(0, 200);
+    store("bt.simResults", simResults);
+    renderTeam(); paintSimState();
+    alertNote(card, "حُفظت نتيجة " + empName(activeEmp) + ": " + total + "/100. شوفها بتبويب «أداء الفريق».");
+    save.disabled = true;
+  });
+  const again = el("button", "btn ghost", "جلسة جديدة"); again.type = "button";
+  again.addEventListener("click", startSim);
+  acts.append(save, again);
+  card.append(acts);
+  stage.append(card);
+}
+function alertNote(parent, msg){
+  let n = parent.querySelector(".saveflash");
+  if (!n){ n = el("p", "note saveflash"); parent.append(n); }
+  n.textContent = msg;
+  n.style.color = "var(--accent)";
+}
+
+/* ===================== أداء الفريق ===================== */
+function renderTeam(){
+  const sec = $("#sec-team");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "أداء الفريق"));
+  head.append(el("p", null, "كل موظف ونتائجه من المحاكي: عدد الجلسات، متوسط الدرجة، وأكثر شي يتكرر فوته. النتائج محفوظة على هذا الجهاز."));
+  sec.append(head);
+
+  if (!team.length){
+    sec.append(el("p", "note", "ما فيه موظفون مسجّلون. أضفهم من تبويب «محاكي المحادثات»."));
+    return;
+  }
+  team.forEach(e => {
+    const rs = simResults.filter(r => r.emp === e.id);
+    const avg = rs.length ? Math.round(rs.reduce((a, r) => a + r.score, 0) / rs.length) : 0;
+    const missCount = {};
+    let viols = 0;
+    rs.forEach(r => r.items.forEach(it => {
+      (it.misses || []).forEach(m => { missCount[m] = (missCount[m] || 0) + 1; });
+      viols += (it.viols || []).length;
+    }));
+    const weak = Object.keys(missCount).sort((a, b) => missCount[b] - missCount[a]).slice(0, 3);
+
+    const card = el("div", "hotel");
+    const row = el("div", "top-row");
+    const left = el("div");
+    left.append(el("h3", null, e.name));
+    row.append(left);
+    const sc = el("div", "sc", rs.length ? String(avg) : "—");
+    sc.style.fontFamily = "var(--f-display)";
+    sc.style.fontSize = "26px";
+    sc.style.fontWeight = "700";
+    sc.style.color = !rs.length ? "var(--ink-3)" : avg >= 80 ? "var(--good)" : avg >= 60 ? "var(--warn)" : "var(--bad)";
+    row.append(sc);
+    card.append(row);
+
+    const facts = el("div", "facts");
+    facts.append(el("span", "fact", "جلسات: " + rs.length));
+    if (rs.length){
+      const last = new Date(rs[0].date);
+      facts.append(el("span", "fact", "آخر جلسة: " + (isNaN(last.getTime()) ? "—" : last.toLocaleDateString("ar", { month:"long", day:"numeric" }))));
+      facts.append(el("span", viols ? "fact rate" : "fact", viols ? "وعود ممنوعة: " + viols : "بلا وعود ممنوعة"));
+    }
+    card.append(facts);
+
+    if (weak.length){
+      const w = el("div", "polbox");
+      w.append(el("b", null, "أكثر ما يفوته: "));
+      w.append(document.createTextNode(weak.join(" · ")));
+      card.append(w);
+    }
+    if (rs.length){
+      const hist = el("div");
+      rs.slice(0, 5).forEach(r => {
+        const line = el("div", "kv");
+        const d = new Date(r.date);
+        line.append(el("span", null, (isNaN(d.getTime()) ? "" : d.toLocaleDateString("ar", { month:"short", day:"numeric" })) + " · " + r.cat));
+        line.append(el("span", null, r.score + "/100"));
+        hist.append(line);
+      });
+      card.append(hist);
+    }
+    const acts = el("div", "links");
+    const cp = el("a", null, "انسخ تقريره");
+    cp.href = "#";
+    cp.addEventListener("click", ev => {
+      ev.preventDefault();
+      const txt = "تقرير تدريب — " + e.name + "\nعدد الجلسات: " + rs.length + "\nمتوسط الدرجة: " + (rs.length ? avg + "/100" : "لا يوجد") +
+        "\nوعود ممنوعة: " + viols + (weak.length ? "\nأكثر ما يفوته: " + weak.join(" · ") : "") +
+        "\n" + rs.slice(0, 10).map(r => "• " + new Date(r.date).toLocaleDateString("ar") + " · " + r.cat + " · " + r.score + "/100").join("\n");
+      copyText(txt, { textContent: "", classList: { add(){}, remove(){} } });
+      cp.textContent = "نُسخ ✓";
+      setTimeout(() => { cp.textContent = "انسخ تقريره"; }, 1600);
+    });
+    const clr = el("a", null, "امسح سجله");
+    clr.href = "#";
+    clr.addEventListener("click", ev => {
+      ev.preventDefault();
+      simResults = simResults.filter(r => r.emp !== e.id);
+      store("bt.simResults", simResults);
+      renderTeam(); paintSimState();
+    });
+    acts.append(cp, clr);
+    card.append(acts);
+    sec.append(card);
+  });
+}
+
 /* ===================== التشغيل ===================== */
-renderPlan(); renderBasics(); renderScripts(); renderObjections(); renderDrills(); renderHotels(); renderScore();
+renderPlan(); renderBasics(); renderScripts(); renderObjections(); renderDrills(); renderHotels(); renderSim(); renderTeam(); renderScore();
 paintMeter();
 const savedTab = store("bt.tab");
 if (savedTab && TABS.some(t => t.id === savedTab)) show(savedTab);
