@@ -1,10 +1,12 @@
 set -e
 W="$(cd "$(dirname "$0")" && pwd)"; cd "$W"
-TOTAL=43.20
-# 1) صوت الفيديو الأصلي ممتدّاً لمدة الإعلان (كرت النهاية بلا كلام)
-ffmpeg -v error -i src.mp4 -vn -ac 2 -ar 48000 -af "afade=t=out:st=36.9:d=0.7,apad" -t $TOTAL -y voice.wav
-# 2) مزج الصوت مع المؤثرات
-ffmpeg -v error -i voice.wav -i sfx.wav -filter_complex "[0:a][1:a]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[a]" -map "[a]" -ac 2 -ar 48000 -y mix.wav
+TOTAL=$(python3 -c "import re;s=open('plan.js',encoding='utf-8').read();print(float(re.search(r'SRC_END\s*=\s*([\d.]+)',s).group(1))+float(re.search(r'OUTRO\s*=\s*([\d.]+)',s).group(1)))")
+SRCEND=$(python3 -c "import re;print(re.search(r'SRC_END\s*=\s*([\d.]+)',open('plan.js',encoding='utf-8').read()).group(1))")
+FADE=$(python3 -c "print(max(0,$SRCEND-0.55))")
+# 1) صوت المصدر مقصوصاً عند نهاية الفيديو وممتدّاً بصمت لمدة كرت النهاية
+ffmpeg -v error -i src.mp4 -vn -ac 2 -ar 48000 -af "atrim=0:$SRCEND,afade=t=out:st=$FADE:d=0.55,apad" -t $TOTAL -y voice.wav
+# 2) المزج: خفض لحظي للأصلي + المؤثرات
+python3 sfx.py
 # 3) التجميع
 ffmpeg -v error -framerate 30 -i out/%05d.jpg -i mix.wav \
   -c:v libx264 -preset slow -crf 19 -pix_fmt yuv420p -profile:v high -level 4.1 \

@@ -492,34 +492,46 @@ const SCLIST=[[0,'ختم 0% مونتاج يدوي'],[3.32,'بطاقات: كاب�
 [30.75,'المشكلة: العربي ينقلب والفيديو يسوَدّ'],[34.9,'الإصلاح: شريط تقدّم + قائمة'],[38.38,'ختم انحلّت'],
 [39.76,'كرت ملف واحد + بطاقات تندمج'],[42.82,'مربع التعليق يكتب «فيديو»'],[46.078,'كرت النهاية']];
 let caps=null,playing=false,cur=0;
+// ساعة التشغيل: بذرتها تُعاد عند كل قفزة، فالتشغيل يكمّل من مكان المؤشر لا من أول المقطع.
+let clkT0=0, clkF0=0, gen=0, drawSeq=0;
+function rebase(){ clkT0=performance.now(); clkF0=cur; }
 const tl=document.getElementById('tl'),tm=document.getElementById('tm'),list=document.getElementById('list');
 SCLIST.forEach((x,i)=>{const b=document.createElement('button');b.className='sc';b.dataset.i=i;
   b.innerHTML=x[1]+'<b>'+x[0].toFixed(2)+'s</b>';
-  b.onclick=()=>{playing=false;document.getElementById('pl').textContent='تشغيل';go(Math.round((x[0]+0.45)*FPS));};
+  b.onclick=()=>seek(Math.round((x[0]+0.45)*FPS));
   list.appendChild(b);});
 function mark(t){[...list.children].forEach((b,i)=>{
   const a=SCLIST[i][0],e=i+1<SCLIST.length?SCLIST[i+1][0]:999;b.classList.toggle('on',t>=a&&t<e);});}
 async function go(f){
   cur=Math.max(0,Math.min(+tl.max,f)); tl.value=cur;
-  const t=cur/FPS;
+  const t=cur/FPS, my=++drawSeq;
   const idx=Math.min(NVF,Math.max(1,Math.round(t*FPS)+1));
   await window.setFrame('vfr/'+String(idx).padStart(5,'0')+'.jpg');
+  if(my!==drawSeq) return;            // سبقه طلب أحدث — لا يرسم فوقه
   window.draw(t);
   tm.textContent=t.toFixed(2)+' / '+(caps.total+OUT_D).toFixed(2)+' s';
   mark(t);
 }
-tl.oninput=()=>go(+tl.value);
-document.getElementById('bk').onclick=()=>go(cur-FPS);
-document.getElementById('fw').onclick=()=>go(cur+FPS);
-document.getElementById('pl').onclick=function(){playing=!playing;this.textContent=playing?'إيقاف':'تشغيل';if(playing)loop();};
-async function loop(){const t0=performance.now(),f0=cur;
-  while(playing){const f=f0+Math.round((performance.now()-t0)/1000*FPS);
+// قفزة: تحرّك المؤشر وتعيد بذرة الساعة، وتبقي حالة التشغيل كما هي
+function seek(f){ cur=Math.max(0,Math.min(+tl.max,f)); tl.value=cur; rebase(); return go(cur); }
+tl.oninput=()=>seek(+tl.value);
+document.getElementById('bk').onclick=()=>seek(cur-FPS);
+document.getElementById('fw').onclick=()=>seek(cur+FPS);
+document.getElementById('pl').onclick=function(){
+  playing=!playing; this.textContent=playing?'إيقاف':'تشغيل';
+  if(playing){ if(cur>=+tl.max) cur=0; rebase(); loop(++gen); }   // من النهاية يبدأ من جديد
+};
+async function loop(my){
+  while(playing && my===gen){
+    const f=clkF0+Math.round((performance.now()-clkT0)/1000*FPS);
     if(f>+tl.max){playing=false;document.getElementById('pl').textContent='تشغيل';break;}
-    await go(f); await new Promise(r=>setTimeout(r,0));}}
+    await go(f);
+    if(!playing || my!==gen) break;
+    await new Promise(r=>setTimeout(r,0));}}
 (async()=>{caps=await (await fetch('caps.json')).json();
   let th={}; try{th=await (await fetch('theme.json')).json();}catch(e){}
   window.init({cards:caps.cards,total:caps.total,outro:OUT_D,theme:th});
   tl.max=Math.round((caps.total+OUT_D)*FPS)-1;
   await document.fonts.ready; await new Promise(r=>{const l=document.getElementById('LOGO');l.complete?r():l.onload=r;});
-  go(Math.round(4.6*FPS));})();
+  await go(Math.round(4.6*FPS)); rebase();})();
 </script></body></html>
