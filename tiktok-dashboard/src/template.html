@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>داشبورد تيك توك — أسس المسافر</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>/*CHARTJS*/</script>
+<style>
+:root{
+  color-scheme:dark;
+  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232321; --surface-3:#2c2c2a;
+  --text:#ffffff; --text-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --good-text:#0ca30c;
+  --accent:#3987e5;
+  --radius:12px;
+  --font:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
+body{overflow-x:hidden}
+a{color:var(--s1)}
+button,select,input{font-family:inherit;font-size:14px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px 64px}
+header.top{position:sticky;top:0;z-index:20;background:rgba(13,13,13,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.top-inner{max-width:1280px;margin:0 auto;padding:12px 16px 0}
+.title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.title-row h1{font-size:18px;margin:0;font-weight:700}
+.title-row .sub{color:var(--muted);font-size:12px}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0}
+.filters label{color:var(--text-2);font-size:12px}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2px;flex-wrap:wrap}
+.seg button{background:none;border:0;color:var(--text-2);padding:6px 10px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--surface-3);color:var(--text);font-weight:600}
+input[type=date],select,input[type=search]{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px;min-height:34px}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;padding-bottom:0}
+nav.tabs button{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-2);padding:10px 12px;cursor:pointer;white-space:nowrap}
+nav.tabs button.on{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+section.tab{display:none;padding-top:20px}
+section.tab.on{display:block}
+h2{font-size:20px;margin:0 0 4px}
+h3{font-size:16px;margin:0 0 8px}
+.lead{color:var(--text-2);margin:0 0 16px;font-size:14px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-width:0}
+.kpi .label{color:var(--text-2);font-size:13px}
+.kpi .val{font-size:26px;font-weight:700;margin:4px 0 2px;letter-spacing:-.3px}
+.kpi .delta{font-size:12px;font-weight:600}
+.delta.up{color:var(--good-text)} .delta.down{color:var(--critical)} .delta.na{color:var(--muted);font-weight:400}
+.src{display:block;color:var(--muted);font-size:11px;margin-top:6px;line-height:1.4;word-break:break-word}
+.na-text{color:var(--muted);font-style:normal}
+.chart-box{position:relative;height:260px}
+.chart-box.tall{height:320px}
+.chart-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-2);margin:4px 0 8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px;vertical-align:middle}
+.crit{display:inline-flex;align-items:center;gap:2px;background:rgba(57,135,229,.14);color:#9ec5f4;border:1px solid rgba(57,135,229,.35);border-radius:6px;padding:0 6px;font-size:12px;font-weight:600;cursor:pointer;line-height:20px;margin:0 2px;font-family:inherit}
+.crit.ads{background:rgba(250,178,25,.10);color:#fad27a;border-color:rgba(250,178,25,.35)}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--surface-3);color:var(--text-2);white-space:nowrap}
+.pill-row .tag{white-space:normal;max-width:100%}
+.tag.good{background:rgba(12,163,12,.15);color:#6fd46f}
+.tag.bad{background:rgba(208,59,59,.15);color:#f09a9a}
+.tag.warn{background:rgba(250,178,25,.13);color:#fad27a}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap}
+td.cap{white-space:normal;min-width:220px;max-width:340px}
+th{color:var(--text-2);font-weight:600;background:var(--surface-2);position:sticky;top:0}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--text)}
+th .arrow{color:var(--accent);margin-inline-start:4px}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr.click{cursor:pointer}
+td.num,th.num{text-align:left;font-variant-numeric:tabular-nums;direction:ltr}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.vcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.vcard .head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.vcard .cap{font-weight:600;cursor:pointer}
+.vcard .cap:hover{color:#9ec5f4}
+.mets{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin:12px 0}
+.met{background:var(--surface-2);border-radius:8px;padding:8px 10px}
+.met b{display:block;font-size:16px}
+.met span{color:var(--muted);font-size:11px}
+ul.reasons{margin:8px 0 0;padding-inline-start:18px}
+ul.reasons li{margin:4px 0;color:var(--text-2)}
+ul.reasons li strong{color:var(--text)}
+.note{border-inline-start:3px solid var(--warning);background:rgba(250,178,25,.06);padding:10px 12px;border-radius:8px;color:var(--text-2);font-size:13px;margin:12px 0}
+.note.info{border-color:var(--s1);background:rgba(57,135,229,.06)}
+.note.bad{border-color:var(--critical);background:rgba(208,59,59,.06)}
+.findings li{margin:6px 0}
+.heat{overflow-x:auto}
+.heat table{font-size:11px;border-collapse:separate;border-spacing:2px}
+.heat td,.heat th{padding:0;border:0;text-align:center;background:none;position:static}
+.heat td.cell{width:30px;min-width:30px;height:30px;border-radius:4px;cursor:default;color:#fff;font-size:10px}
+.heat td.empty{background:var(--surface-2)}
+.heat th{color:var(--muted);font-weight:500;padding:2px 4px}
+.scale{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:8px}
+.scale .bar{height:8px;width:140px;border-radius:4px;background:linear-gradient(to left,#104281,#3987e5,#cde2fb)}
+.rec{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.rec .rh{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.rec h3{margin:0}
+.rec dl{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:12px 0 0;font-size:14px}
+.rec dt{color:var(--muted)}
+.rec dd{margin:0;color:var(--text-2)}
+.prio-h{background:rgba(208,59,59,.15);color:#f09a9a}
+.prio-m{background:rgba(250,178,25,.13);color:#fad27a}
+.prio-l{background:rgba(57,135,229,.14);color:#9ec5f4}
+.vlink{color:#9ec5f4;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(158,197,244,.4)}
+.cal{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.cal .day{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.cal .day.off{opacity:.55}
+.cal .day h4{margin:0 0 6px;font-size:15px}
+.cal .time{font-size:20px;font-weight:700;direction:ltr;text-align:right}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 12px}
+.modal-bg.on{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:860px;width:100%;padding:20px;position:relative}
+.modal .x{position:absolute;left:12px;top:12px;background:var(--surface-3);border:0;color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px}
+blockquote{margin:8px 0;padding:10px 12px;background:var(--surface-2);border-radius:8px;direction:ltr;text-align:left;color:var(--text-2);font-size:13px}
+.small{font-size:12px;color:var(--muted)}
+.pill-row{display:flex;gap:6px;flex-wrap:wrap}
+.muted{color:var(--muted)}
+.bar-inline{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;min-width:60px}
+.bar-inline i{display:block;height:100%;background:var(--s1);border-radius:3px}
+@media (max-width:640px){
+  .kpi .val{font-size:22px}
+  .rec dl{grid-template-columns:1fr}
+  .rec dt{margin-top:6px}
+  h2{font-size:18px}
+  .chart-box{height:230px}
+  header.top{position:static}
+}
+.toolbar>*{max-width:100%;min-width:0}
+.toolbar .small{overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="title-row">
+      <div>
+        <h1>داشبورد أداء تيك توك — <span id="accName"></span></h1>
+        <div class="sub" id="pulledLine"></div>
+      </div>
+      <div class="filters" style="padding:0">
+        <label for="tzSel">توقيت العرض</label>
+        <select id="tzSel" aria-label="توقيت العرض">
+          <option value="3">بتوقيت السعودية (UTC+3)</option>
+          <option value="0">كما يرسله Windsor (UTC)</option>
+        </select>
+      </div>
+    </div>
+    <div class="filters" role="group" aria-label="الفترة الزمنية">
+      <label>الفترة</label>
+      <div class="seg" id="presetSeg">
+        <button data-p="all" class="on">كل البيانات</button>
+        <button data-p="30">آخر 30 يوم</button>
+        <button data-p="14">آخر 14 يوم</button>
+        <button data-p="7">آخر 7 أيام</button>
+        <button data-p="custom">مخصص</button>
+      </div>
+      <span id="customBox" style="display:none;gap:6px;align-items:center">
+        <input type="date" id="dFrom" aria-label="من"> <span class="muted">إلى</span> <input type="date" id="dTo" aria-label="إلى">
+      </span>
+      <span class="small" id="rangeLabel"></span>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="صفحات الداشبورد">
+      <button data-t="overview" class="on">نظرة عامة</button>
+      <button data-t="videos">تحليل الفيديوهات</button>
+      <button data-t="hits">شنو ضرب وشنو ما ضرب</button>
+      <button data-t="hook">تحليل الـ Hook</button>
+      <button data-t="viral">Viral Analysis</button>
+      <button data-t="types">أنواع المحتوى</button>
+      <button data-t="duration">أفضل مدة</button>
+      <button data-t="timing">أوقات النشر</button>
+      <button data-t="conversion">تحويل المتابعين</button>
+      <button data-t="action">Action Plan</button>
+      <button data-t="tests">لوحة الاختبار</button>
+      <button data-t="calendar">تقويم المحتوى</button>
+      <button data-t="sources">المصادر والبيانات</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="tab on" id="t-overview"></section>
+  <section class="tab" id="t-videos"></section>
+  <section class="tab" id="t-hits"></section>
+  <section class="tab" id="t-hook"></section>
+  <section class="tab" id="t-viral"></section>
+  <section class="tab" id="t-types"></section>
+  <section class="tab" id="t-duration"></section>
+  <section class="tab" id="t-timing"></section>
+  <section class="tab" id="t-conversion"></section>
+  <section class="tab" id="t-action"></section>
+  <section class="tab" id="t-tests"></section>
+  <section class="tab" id="t-calendar"></section>
+  <section class="tab" id="t-sources"></section>
+</main>
+
+<div class="modal-bg" id="modalBg" role="dialog" aria-modal="true">
+  <div class="modal"><button class="x" id="modalX" aria-label="إغلاق">×</button><div id="modalBody"></div></div>
+</div>
+
+<script id="data" type="application/json">/*DATA*/</script>
+<script>
+"use strict";
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const NA = '<span class="na-text">غير متوفر في البيانات</span>';
+const NA_SRC = '<span class="na-text">غير متوفر في المصدر</span>';
+
+/* ---------- المعايير (من tiktok-criteria.md) ---------- */
+const CRIT = {
+ C1:{t:'إكمال الفيديو إشارة قوية',scope:'org',q:'"A strong indicator of interest, such as whether a user finishes watching a longer video from beginning to end, would receive greater weight than a weak indicator, such as whether the video\'s viewer and creator are both in the same country."',m:'إكمال مشاهدة الفيديو (خصوصاً الطويل) وزنه أكبر من الإشارات الضعيفة.',src:'TikTok Newsroom — How TikTok recommends videos #ForYou',url:'https://newsroom.tiktok.com/en-us/how-tiktok-recommends-videos-for-you'},
+ C2:{t:'التفاعلات التي يتوقعها النظام',scope:'org',q:'The system predicts a variety of interactions, including the likelihood to like, share, comment on, or mark a video as \'Not Interested,\' as well as finish, skip, or favorite a video, and spend a certain amount of time viewing a video. … Videos with the highest score are selected to be served to your For You feed.',m:'الإعجاب والمشاركة والتعليق والحفظ والإكمال ووقت المشاهدة كلها تدخل في درجة التوقع.',src:'TikTok Support — How TikTok recommends content',url:'https://support.tiktok.com/en/using-tiktok/exploring-videos/how-tiktok-recommends-content'},
+ C3:{t:'عدد المتابعين ليس عاملاً مباشراً',scope:'org',q:'Neither follower count nor whether the account has had previous high-performing videos are direct factors in the recommendation system. However, a video is likely to receive more views if posted by an account that has more followers.',m:'الفيديو يُقيَّم بتفاعل المشاهدين معه لا بحجم الحساب، والمتابعون يرفعون المشاهدات بشكل غير مباشر.',src:'TikTok Newsroom — How TikTok recommends videos #ForYou',url:'https://newsroom.tiktok.com/en-us/how-tiktok-recommends-videos-for-you'},
+ C4:{t:'التنويع',scope:'org',q:'The system also measures content similarity to ensure that if consecutive videos are too similar to each other (for example, they use the same sound), they are replaced with others to provide greater variety.',m:'الفيديوهات المتشابهة جداً والمتتالية تُستبدل بغيرها للتنويع.',src:'TikTok Support — How TikTok recommends content',url:'https://support.tiktok.com/en/using-tiktok/exploring-videos/how-tiktok-recommends-content'},
+ C5:{t:'وقت المشاهدة أثقل وزناً والتفاعل ثانياً',scope:'org',q:'Retention rate is highly important to understand what your audience resonates with. The second most important metric is engagement (likes, comments, and shares). While watch time is more heavily weighted, the success of your videos is dependent upon all of these metrics.',m:'وقت المشاهدة هو الأثقل وزناً، ثم التفاعل.',src:'Creator Academy — Video performance analytics',url:'https://www.tiktok.com/creator-academy/en/article/analytics-tool-video-performance'},
+ C6:{t:'نقطة السقوط في الاحتفاظ',scope:'org',q:'Discover the exact moment in your video when most viewers lost interest … if the retention rate shows that most of your viewers stopped watching at 00:02, rewatch your video to see what could be going on in that moment.',m:'حدد الثانية التي يخسر فيها الفيديو أغلب المشاهدين وراجع ما يحدث فيها.',src:'Creator Academy — Video performance analytics',url:'https://www.tiktok.com/creator-academy/en/article/analytics-tool-video-performance'},
+ C7:{t:'معنى مصادر الزيارات',scope:'org',q:'For You page traffic usually means strong viewer behavior signals like watch time and retention helped expand distribution. Search traffic often means your topic or keywords matched something people were actively looking for.',m:'زيارات For You تعني إشارات مشاهدة قوية، وزيارات البحث تعني تطابق الموضوع مع ما يبحث عنه الناس.',src:'Creator Academy — Video performance analytics',url:'https://www.tiktok.com/creator-academy/en/article/analytics-tool-video-performance'},
+ C8:{t:'اجذب المشاهد خلال أول 5 ثوانٍ',scope:'org',q:'Consider having an attractive element early on in your video that sparks interest, ideally within the first 5 seconds … No matter how long or short your video is, hooking the viewer within the first 5 seconds is incredibly important to rack up those views and increase watch time. … retain your audience\'s attention while making your video more accessible by adding text.',m:'عنصر جذب خلال أول 5 ثوانٍ مهم لرفع المشاهدات ووقت المشاهدة، والنص على الشاشة يساعد.',src:'Creator Academy — Elements of a TikTok video',url:'https://www.tiktok.com/creator-academy/en/article/elements-of-tiktok-video'},
+ C9:{t:'أول 3 ثوانٍ و6 ثوانٍ (إعلانات)',scope:'ads',q:'Introduce your content proposition in the first 3 seconds … 90% of ad recall impact is captured within the first six seconds.',m:'قدّم فكرة المحتوى خلال أول 3 ثوانٍ (إرشاد إعلاني).',src:'TikTok Ads — Creative best practices',url:'https://ads.tiktok.com/help/article/creative-best-practices'},
+ C10:{t:'بنية Hook ← Body ← Close (إعلانات)',scope:'ads',q:'The best TikTok videos follow a reliable structure: hook, body, close. The hook grabs attention with a technique like suspense, surprise or emotion. The body conveys your brand message. The close anchors the ad with a strong CTA.',m:'بداية تجذب، وسط يوصل الرسالة، خاتمة بدعوة لإجراء (إرشاد إعلاني).',src:'TikTok Creative Codes',url:'https://ads.tiktok.com/business/en/creative-codes'},
+ C11:{t:'مدة 21–34 ثانية (إعلانات، للتحويل)',scope:'ads',q:'Video ads on TikTok that fell between 21 and 34 seconds in length received a 280% lift in conversion compared to videos that fell short or long of that duration window. … videos should be at least 10 seconds long.',m:'هذا معيار لتحويل الإعلانات وليس لانتشار الفيديو العضوي.',src:'TikTok Ads — Creative best practices',url:'https://ads.tiktok.com/help/article/creative-best-practices'},
+ C12:{t:'الفيديوهات الأطول من دقيقة',scope:'org',q:'Great TikTok videos usually have a clear beginning, middle, and end. … Enhance engagement by posing a question that gets answered as viewers watch your video in full. … Tutorials are a great way to share knowledge by leveraging longer videos.',m:'الفيديو الطويل يحتاج بداية ووسط ونهاية واضحة، وسؤالاً يُجاب عنه في آخره.',src:'Creator Academy — Longer video content strategy',url:'https://www.tiktok.com/creator-academy/en/article/longer-video-content-strategy'},
+ C13:{t:'انشر قبل ذروة نشاط متابعيك بساعتين كحد أقصى',scope:'org',q:'Use follower activity as your programming calendar guide … Post on the most active days of the week and, at most, two hours before the activity peaks on those days.',m:'استخدم نشاط متابعيك وانشر قبل الذروة بساعتين كحد أقصى.',src:'Creator Academy — Video performance analytics',url:'https://www.tiktok.com/creator-academy/en/article/analytics-tool-video-performance'},
+ C14:{t:'الاستمرارية في النشر',scope:'org',q:'Publishers who post multiple times a day experience higher video views and exposure on the For You feed. … set a daily post target you can consistently hit.',m:'حدد هدف نشر تقدر تلتزم به (المقال موجّه للناشرين الإعلاميين).',src:'Creator Academy — Posting cadence best practices',url:'https://www.tiktok.com/creator-academy/en/article/posting-cadence-best-practices-publishers'},
+ C15:{t:'كلمات ذات صلة بدون حشو',scope:'org',q:'Use relevant keywords in your video, subtitles, and captions … Avoid including irrelevant or misleading keywords based solely on popularity — irrelevant text stacking will negatively affect your video traffic.',m:'استخدم كلمات مرتبطة بالموضوع في النص والوصف، والحشو يضر الزيارات.',src:'Creator Academy — Driving video traffic: Search',url:'https://www.tiktok.com/creator-academy/article/driving-video-traffic-search'},
+ C16:{t:'أساسيات الفيديو (إعلانات)',scope:'ads',q:'Use sound/music, orient vertically at 9:16, shoot at least 720P, and keep content within the UI safe zone.',m:'صوت، عمودي 9:16، دقة 720p على الأقل، والنص داخل المنطقة الآمنة.',src:'TikTok Ads — Creative best practices',url:'https://ads.tiktok.com/help/article/creative-best-practices'},
+ C17:{t:'الواقعية والترندات (إعلانات)',scope:'ads',q:'Focus on realness, not perfection. … 77% of users say they like it when brands use trends, memes, or challenges.',m:'الواقعية أهم من الكمال.',src:'TikTok Creative Codes',url:'https://ads.tiktok.com/business/en/creative-codes'},
+};
+const c = (...ids) => ids.map(id => `<button class="crit${CRIT[id].scope==='ads'?' ads':''}" data-c="${id}" title="${CRIT[id].t}">${id}</button>`).join('');
+
+/* ---------- أدوات ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+const nf = (x, d=0) => x==null||isNaN(x) ? '—' : Number(x).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
+const pct = (x, d=1) => x==null||isNaN(x) ? '—' : (x*100).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d})+'%';
+const sec = x => x==null ? '—' : nf(x,1)+' ث';
+const median = a => { const s=a.filter(x=>x!=null&&!isNaN(x)).sort((x,y)=>x-y); if(!s.length) return null; const m=Math.floor(s.length/2); return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+const mean = a => { const s=a.filter(x=>x!=null&&!isNaN(x)); return s.length? s.reduce((p,q)=>p+q,0)/s.length : null; };
+const sum = a => a.reduce((p,q)=>p+(q||0),0);
+function spearman(xs, ys){
+  const pr = xs.map((x,i)=>[x,ys[i]]).filter(p=>p[0]!=null&&p[1]!=null);
+  if(pr.length<5) return {r:null,n:pr.length};
+  const rank = arr => { const idx=arr.map((v,i)=>i).sort((a,b)=>arr[a]-arr[b]); const r=new Array(arr.length); let i=0; while(i<idx.length){ let j=i; while(j+1<idx.length && arr[idx[j+1]]===arr[idx[i]]) j++; const avg=(i+j)/2; for(let k=i;k<=j;k++) r[idx[k]]=avg; i=j+1;} return r; };
+  const a=rank(pr.map(p=>p[0])), b=rank(pr.map(p=>p[1])); const ma=mean(a), mb=mean(b);
+  let num=0,da=0,db=0; for(let i=0;i<a.length;i++){num+=(a[i]-ma)*(b[i]-mb);da+=(a[i]-ma)**2;db+=(b[i]-mb)**2;}
+  return {r:num/Math.sqrt(da*db), n:pr.length};
+}
+const store = { get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }, set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} } };
+const DAYS = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+
+/* ---------- تصنيف المحتوى (قواعد كلمات مفتاحية في الوصف + تعديل يدوي) ---------- */
+const TYPES = ['تجربة المسافة (فندق ← الحرم)','عروض وأسعار','قوائم فنادق','إرشادات ومعلومات حول الحرم','تعريف/جولة فندق','مشاهد مكة وعام'];
+const TYPE_RULES = [
+  [TYPES[0], /كم يبعد|كم تحتاج|كم يستغرق|مشياً|دقائق و/],
+  [TYPES[1], /ريال|عرض/],
+  [TYPES[2], /(أقرب|أفخم|ترتيب|دليل)[^|]{0,12}(فنادق|الفنادق)|فنادق منطقة|[0-9٠-٩] فنادق/],
+  [TYPES[3], /طريقة|كيف توص|مكان|أماكن|الأبواب|باركود|خريطة|مواقف|دليل|وين |مصلى|كافيه|مقهى|مطعم|سوبر/],
+  [TYPES[4], /فندق|فنادق|أجنحة|جناح|إقامة|Voco/i],
+];
+function autoType(cap){ for(const [t,re] of TYPE_RULES) if(re.test(cap)) return t; return TYPES[5]; }
+let typeOverrides = store.get('tt_type_over',{});
+let personTags = store.get('tt_person',{});
+const typeOf = v => typeOverrides[v.id] || v.autoType;
+
+/* ---------- تجهيز البيانات ---------- */
+const V = DATA.videos.map(v => {
+  const r = v.retention || [];
+  return Object.assign({}, v, {
+    shareRate: v.shares/v.views, saveRate: v.saves/v.views,
+    engRate: (v.likes+v.comments+v.shares+v.saves)/v.views,
+    conv: v.newFollowers/v.views,
+    r2: r.length>2? r[2]:null, r3: r.length>3? r[3]:null, r5: r.length>5? r[5]:null,
+    dropSec: r.length ? (r.findIndex(x=>x<0.5)) : null,
+    watchPct: v.dur ? v.avgWatch/v.dur : null,
+    fy: v.sources.foryou, search: v.sources.search,
+    autoType: autoType(v.caption),
+    short: v.caption.length>60 ? v.caption.slice(0,58)+'…' : v.caption,
+  });
+});
+const FOLLOWERS = Object.fromEntries(DATA.daily.map(d=>[d.date,d.totalFollowers]));
+V.forEach(v => { const f = FOLLOWERS[v.dt.slice(0,10)]; v.followersAtPost = f ?? null; v.viewsPerFollower = f ? v.views/f : null; });
+const PULL = DATA.pulledAt;
+const DAILY_MIN = DATA.daily[0].date, DAILY_MAX = DATA.daily[DATA.daily.length-1].date;
+
+// وسيط الحساب (كل الفيديوهات) — مرجع داخلي وليس معياراً من تيك توك
+const BASE = {};
+['views','avgWatch','fullRate','shareRate','saveRate','engRate','conv','r2','r3','r5','fy','search','newFollowers','watchPct','viewsPerFollower'].forEach(k => BASE[k]=median(V.map(v=>v[k])));
+
+let tz = +store.get('tt_tz',3);
+function localize(){
+  V.forEach(v => { const d=new Date(v.dt+'Z'); const l=new Date(d.getTime()+tz*3600e3);
+    v.date=l.toISOString().slice(0,10); v.day=l.getUTCDay(); v.hour=l.getUTCHours(); v.time=l.toISOString().slice(11,16); });
+}
+localize();
+
+/* ---------- الفلتر الزمني ---------- */
+const ALL_FROM = DATA.range.from, ALL_TO = DATA.range.to;
+let range = {preset:'all', from:ALL_FROM, to:ALL_TO};
+const addDays = (s,n) => { const d=new Date(s+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+const daysBetween = (a,b) => Math.round((new Date(b+'T00:00:00Z')-new Date(a+'T00:00:00Z'))/864e5)+1;
+function setPreset(p){
+  range.preset=p;
+  if(p==='all'){ range.from=ALL_FROM; range.to=ALL_TO; }
+  else if(p!=='custom'){ range.to=ALL_TO; range.from=addDays(ALL_TO,-(+p-1)); }
+  document.querySelectorAll('#presetSeg button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+  $('#customBox').style.display = p==='custom' ? 'inline-flex' : 'none';
+  $('#dFrom').value=range.from; $('#dTo').value=range.to;
+  renderAll();
+}
+const inRange = (d,f=range.from,t=range.to) => d>=f && d<=t;
+const FV = () => V.filter(v => inRange(v.date));
+function prevRange(){ const n=daysBetween(range.from,range.to); return {from:addDays(range.from,-n), to:addDays(range.from,-1), n}; }
+
+/* ---------- الرسوم ---------- */
+Chart.defaults.color = '#898781';
+Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+Chart.defaults.borderColor = '#2c2c2a';
+Chart.defaults.plugins.tooltip.rtl = true;
+Chart.defaults.plugins.tooltip.textDirection = 'rtl';
+Chart.defaults.plugins.tooltip.backgroundColor = '#232321';
+Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,.12)';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.titleColor = '#fff';
+Chart.defaults.plugins.tooltip.bodyColor = '#c3c2b7';
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.legend.display = false;
+Chart.defaults.elements.line.borderWidth = 2;
+Chart.defaults.elements.point.radius = 0;
+Chart.defaults.elements.point.hoverRadius = 5;
+Chart.defaults.elements.bar.borderRadius = 4;
+Chart.defaults.interaction = {mode:'nearest', intersect:false};
+const S1='#3987e5', S2='#d95926', S3='#199e70';
+const charts = {};
+function chart(id, cfg){ if(charts[id]) charts[id].destroy(); const el=document.getElementById(id); if(!el) return; charts[id]=new Chart(el, cfg); return charts[id]; }
+const gridOpts = {color:'#2c2c2a'};
+const axisTicks = {color:'#898781'};
+
+/* ---------- عناصر مشتركة ---------- */
+function kpi(label, val, src, delta){ return `<div class="card kpi"><div class="label">${label}</div><div class="val">${val}</div>${delta||''}<span class="src">المصدر: ${src}</span></div>`; }
+function deltaHtml(cur, prev, label){
+  if(prev==null || cur==null) return `<div class="delta na">مقارنة ${label}: غير متوفر في البيانات</div>`;
+  if(prev===0) return `<div class="delta na">الفترة السابقة = 0</div>`;
+  const d=(cur-prev)/prev; const cls=d>=0?'up':'down';
+  return `<div class="delta ${cls}">${d>=0?'▲':'▼'} ${pct(Math.abs(d))} مقارنة ${label} (${nf(prev)})</div>`;
+}
+function vlink(v, text){ return `<span class="vlink" data-v="${v.id}">${esc(text||v.short)}</span>`; }
+const rel = (x, b) => (x==null||b==null||!b) ? null : (x-b)/b;
+function relTag(x,b){ const r=rel(x,b); if(r==null) return '<span class="tag">—</span>'; return `<span class="tag ${r>=0?'good':'bad'}">${r>=0?'+':''}${pct(r,0)}</span>`; }
+function tableHtml(cols, rows, opts={}){
+  return `<div class="table-wrap"><table><thead><tr>${cols.map(c=>`<th class="${c.num?'num':''}${c.sort?' sortable':''}" ${c.sort?`data-sort="${c.sort}"`:''}>${c.h}${opts.sortKey&&opts.sortKey===c.sort?`<span class="arrow">${opts.sortDir>0?'▲':'▼'}</span>`:''}</th>`).join('')}</tr></thead><tbody>${rows.join('')||`<tr><td colspan="${cols.length}" class="muted">لا توجد فيديوهات في هذه الفترة</td></tr>`}</tbody></table></div>`;
+}
+
+/* ================= 1) نظرة عامة ================= */
+function renderOverview(){
+  const vs=FV(), pr=prevRange();
+  const dCur=DATA.daily.filter(d=>inRange(d.date)&&d.date<=DAILY_MAX), dPrev=DATA.daily.filter(d=>inRange(d.date,pr.from,pr.to));
+  const prevCovered = pr.from>=DAILY_MIN;
+  const curCovered = range.from>=DAILY_MIN;
+  const dsum = (arr,k)=>sum(arr.map(d=>d[k]));
+  const followersAt = d => FOLLOWERS[d] ?? null;
+  const fg = (f,t) => { if(t>DAILY_MAX) t=DAILY_MAX; const a=followersAt(addDays(f,-1))??followersAt(f), b=followersAt(t); return a!=null&&b!=null? b-a : null; };
+  const vPrev=V.filter(v=>inRange(v.date,pr.from,pr.to));
+  const cmpLabel = `بالـ${pr.n} يوم السابقة`;
+  const dv = (k)=> deltaHtml(dsum(dCur,k), prevCovered? dsum(dPrev,k):null, cmpLabel);
+  const covNote = !curCovered ? `<div class="note">بيانات الحساب اليومية تبدأ من ${DAILY_MIN} (TikTok Organic يعطي آخر 60 يوماً فقط)، فمجاميع المشاهدات والإعجابات اليومية لا تشمل ${range.from} إلى ${addDays(DAILY_MIN,-1)}.</div>` : '';
+  const totalHours = sum(vs.map(v=>v.totalWatch))/3600;
+  const vsPrevOk = vPrev.length>0 || pr.from>=ALL_FROM;
+  const fgCur = fg(range.from<DAILY_MIN?DAILY_MIN:range.from, range.to), fgPrev = prevCovered? fg(pr.from,pr.to):null;
+  let h = `<h2>نظرة عامة</h2><p class="lead">الفترة ${range.from} ← ${range.to} · ${vs.length} فيديو. مجاميع الحساب من بيانات Windsor اليومية، ومقاييس الفيديو من إجمالي كل فيديو نُشر في الفترة.</p>${covNote}
+  <div class="grid kpis">
+   ${kpi('إجمالي المشاهدات (الحساب)', nf(dsum(dCur,'views')), 'Windsor · video_views (يومي)', dv('views'))}
+   ${kpi('إجمالي الإعجابات (الحساب)', nf(dsum(dCur,'likes')), 'Windsor · likes (يومي)', dv('likes'))}
+   ${kpi('إجمالي التعليقات (الحساب)', nf(dsum(dCur,'comments')), 'Windsor · comments (يومي)', dv('comments'))}
+   ${kpi('إجمالي المشاركات (الحساب)', nf(dsum(dCur,'shares')), 'Windsor · shares (يومي)', dv('shares'))}
+   ${kpi('إجمالي الحفظ (فيديوهات الفترة)', nf(sum(vs.map(v=>v.saves))), 'Windsor · video_favorites. الحفظ غير متوفر يومياً على مستوى الحساب', deltaHtml(sum(vs.map(v=>v.saves)), vsPrevOk&&pr.from>=ALL_FROM? sum(vPrev.map(v=>v.saves)):null, cmpLabel))}
+   ${kpi('إجمالي وقت المشاهدة', nf(totalHours,0)+' ساعة', 'Windsor · video_total_time_watched (بالثواني ÷ 3600)', '')}
+   ${kpi('متوسط مدة المشاهدة لكل فيديو', sec(mean(vs.map(v=>v.avgWatch))), 'متوسط video_average_time_watched', '')}
+   ${kpi('متوسط نسبة المشاهدة الكاملة', pct(mean(vs.map(v=>v.fullRate))), 'متوسط video_full_watched_rate', '')}
+   ${kpi('معدل التفاعل', pct(sum(vs.map(v=>v.likes+v.comments+v.shares+v.saves))/sum(vs.map(v=>v.views)),2), '(إعجاب+تعليق+مشاركة+حفظ) ÷ مشاهدات فيديوهات الفترة', '')}
+   ${kpi('عدد الفيديوهات المنشورة', nf(vs.length), 'Windsor · video_id حسب video_create_datetime', deltaHtml(vs.length, pr.from>=ALL_FROM? vPrev.length:null, cmpLabel))}
+   ${kpi('نمو المتابعين', fgCur==null? NA : (fgCur>=0?'+':'')+nf(fgCur), 'فرق total_followers_count بين بداية ونهاية الفترة', deltaHtml(fgCur, fgPrev, cmpLabel))}
+   ${kpi('متوسط مشاهدات الفيديو', nf(mean(vs.map(v=>v.views))), `المتوسط الحسابي لـ video_views_count · الوسيط ${nf(median(vs.map(v=>v.views)))}`, '')}
+  </div>
+  <div class="grid two" style="margin-top:12px">
+   <div class="card"><div class="chart-title"><h3>المشاهدات اليومية للحساب</h3><span class="small">Windsor · video_views</span></div><div class="chart-box"><canvas id="ovDaily"></canvas></div></div>
+   <div class="card"><div class="chart-title"><h3>إجمالي المتابعين</h3><span class="small">Windsor · total_followers_count</span></div><div class="chart-box"><canvas id="ovFollowers"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:12px"><div class="chart-title"><h3>مشاهدات كل فيديو حسب تاريخ النشر</h3><span class="small">اضغط على العمود لفتح تفاصيل الفيديو</span></div><div class="chart-box"><canvas id="ovVideos"></canvas></div></div>
+  <div class="card" style="margin-top:12px"><h3>أهم ما تقوله بيانات الفترة</h3><ul class="findings">${findings(vs,dCur).join('')}</ul></div>`;
+  $('#t-overview').innerHTML=h;
+  const dd=DATA.daily.filter(d=>inRange(d.date)&&d.date<=DAILY_MAX);
+  chart('ovDaily',{type:'line',data:{labels:dd.map(d=>d.date.slice(5)),datasets:[{label:'مشاهدات',data:dd.map(d=>d.views),borderColor:S1,backgroundColor:'rgba(57,135,229,.12)',fill:true,tension:.25}]},options:{maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{...axisTicks,maxTicksLimit:8}},y:{grid:gridOpts,ticks:axisTicks,beginAtZero:true}},plugins:{tooltip:{callbacks:{label:x=>` مشاهدات: ${nf(x.raw)}`}}}}});
+  const fd=DATA.daily.filter(d=>inRange(d.date));
+  chart('ovFollowers',{type:'line',data:{labels:fd.map(d=>d.date.slice(5)),datasets:[{label:'متابعون',data:fd.map(d=>d.totalFollowers),borderColor:S3,tension:.25}]},options:{maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{...axisTicks,maxTicksLimit:8}},y:{grid:gridOpts,ticks:axisTicks,beginAtZero:true}},plugins:{tooltip:{callbacks:{label:x=>` المتابعون: ${nf(x.raw)}`}}}}});
+  const sv=[...vs].sort((a,b)=>a.dt<b.dt?-1:1);
+  chart('ovVideos',{type:'bar',data:{labels:sv.map(v=>v.date.slice(5)),datasets:[{data:sv.map(v=>v.views),backgroundColor:S1,borderSkipped:'start',maxBarThickness:22}]},options:{maintainAspectRatio:false,onClick:(e,els)=>{ if(els[0]) openVideo(sv[els[0].index].id); },scales:{x:{grid:{display:false},ticks:{...axisTicks,maxTicksLimit:12}},y:{grid:gridOpts,ticks:axisTicks,beginAtZero:true}},plugins:{tooltip:{callbacks:{title:x=>sv[x[0].dataIndex].short,label:x=>` ${nf(x.raw)} مشاهدة`}}}}});
+}
+function findings(vs,dCur){
+  const out=[]; if(!vs.length) return ['<li class="muted">لا توجد فيديوهات في هذه الفترة.</li>'];
+  const tot=sum(vs.map(v=>v.views)); const top=[...vs].sort((a,b)=>b.views-a.views)[0];
+  out.push(`<li>أعلى فيديو: ${vlink(top)} بـ <b>${nf(top.views)}</b> مشاهدة، أي ${pct(top.views/tot)} من مشاهدات فيديوهات الفترة. الأداء مركّز في عدد قليل من الفيديوهات.</li>`);
+  const s1=spearman(vs.map(v=>v.views),vs.map(v=>v.avgWatch)), s2=spearman(vs.map(v=>v.views),vs.map(v=>v.fullRate)), s3=spearman(vs.map(v=>v.views),vs.map(v=>v.r5));
+  if(s1.r!=null) out.push(`<li>ارتباط المشاهدات بمتوسط مدة المشاهدة <b>${nf(s1.r,2)}</b>، وبالاحتفاظ عند الثانية 5 <b>${nf(s3.r,2)}</b>، وبنسبة المشاهدة الكاملة <b>${nf(s2.r,2)}</b> (معامل سبيرمان، ${s1.n} فيديو). يتوافق مع ${c('C5','C8')}، ونسبة الإكمال أضعف ارتباطاً مما يوحي به ${c('C1')}.</li>`);
+  const nv=sum(vs.map(v=>v.views)); const dv=sum(dCur.map(d=>d.views));
+  if(dCur.length && range.from>=DAILY_MIN && dv>0) out.push(`<li>مشاهدات الحساب اليومية في الفترة <b>${nf(dv)}</b>، وإجمالي مشاهدات الفيديوهات المنشورة داخل الفترة <b>${nf(nv)}</b> (مدى الحياة). ${nv<dv?`الفرق يعني أن جزءاً كبيراً من المشاهدات يأتي من فيديوهات أقدم.`:''}</li>`);
+  const s=spearman(vs.map(v=>v.views),vs.map(v=>v.shareRate)), sv=spearman(vs.map(v=>v.views),vs.map(v=>v.saveRate)), se=spearman(vs.map(v=>v.views),vs.map(v=>v.engRate));
+  if(s.r!=null) out.push(`<li>معدل المشاركة (${nf(s.r,2)}) ومعدل الحفظ (${nf(sv.r,2)}) يرتبطان بالمشاهدات أكثر بكثير من معدل التفاعل الإجمالي (${nf(se.r,2)}) الذي تغلب عليه الإعجابات ${c('C2')}.</li>`);
+  return out;
+}
+
+/* ================= 2) تحليل الفيديوهات ================= */
+let vSort={key:'views',dir:-1}, vSearch='';
+function renderVideos(){
+  const cols=[{h:'الفيديو'},{h:'التاريخ',sort:'dt'},{h:'المدة',sort:'dur',num:1},{h:'المشاهدات',sort:'views',num:1},{h:'الإعجابات',sort:'likes',num:1},{h:'التعليقات',sort:'comments',num:1},{h:'المشاركات',sort:'shares',num:1},{h:'الحفظ',sort:'saves',num:1},{h:'متوسط المشاهدة',sort:'avgWatch',num:1},{h:'الإكمال',sort:'fullRate',num:1},{h:'المتابعون المكتسبون',sort:'newFollowers',num:1},{h:'النوع'}];
+  let vs=FV().filter(v=>!vSearch || v.caption.includes(vSearch) || v.id.includes(vSearch) || typeOf(v).includes(vSearch));
+  vs.sort((a,b)=>{ const x=a[vSort.key]??-1, y=b[vSort.key]??-1; return (x<y?-1:x>y?1:0)*vSort.dir; });
+  const rows=vs.map(v=>`<tr class="click" data-v="${v.id}"><td class="cap">${esc(v.short)}</td><td class="num">${v.date} ${v.time}</td><td class="num">${v.dur?nf(v.dur,1)+'ث':'<span class="na-text">غير متوفر</span>'}</td><td class="num">${nf(v.views)}</td><td class="num">${nf(v.likes)}</td><td class="num">${nf(v.comments)}</td><td class="num">${nf(v.shares)}</td><td class="num">${nf(v.saves)}</td><td class="num">${sec(v.avgWatch)}</td><td class="num">${pct(v.fullRate)}</td><td class="num">${nf(v.newFollowers)}</td><td><span class="tag">${typeOf(v)}</span></td></tr>`);
+  $('#t-videos').innerHTML=`<h2>تحليل الفيديوهات</h2><p class="lead">كل الفيديوهات في الفترة المحددة. اضغط على عنوان العمود للترتيب، وعلى أي صف لفتح تفاصيل الفيديو. المصدر: Windsor · جدول Video.</p>
+  <div class="toolbar"><input type="search" id="vSearch" placeholder="ابحث في وصف الفيديو أو رقمه أو نوعه…" value="${esc(vSearch)}" style="flex:1;min-width:200px">
+  <label class="small">ترتيب سريع</label><select id="vQuick">${[['views','المشاهدات'],['shares','المشاركات'],['fullRate','الإكمال'],['avgWatch','متوسط المشاهدة'],['newFollowers','المتابعون المكتسبون'],['dt','الأحدث']].map(([k,l])=>`<option value="${k}" ${vSort.key===k?'selected':''}>${l}</option>`).join('')}</select>
+  <span class="small">${vs.length} فيديو</span></div>
+  ${tableHtml(cols,rows,{sortKey:vSort.key,sortDir:vSort.dir})}
+  <p class="small">مدة الفيديو 0 في Windsor لمنشورين (غالباً منشورات صور)، فتظهر "غير متوفر".</p>`;
+  const s=$('#vSearch'); s.oninput=e=>{ vSearch=e.target.value; const pos=e.target.selectionStart; renderVideos(); const n=$('#vSearch'); n.focus(); n.setSelectionRange(pos,pos); };
+  $('#vQuick').onchange=e=>{ vSort={key:e.target.value,dir:-1}; renderVideos(); };
+  document.querySelectorAll('#t-videos th.sortable').forEach(th=>th.onclick=()=>{ const k=th.dataset.sort; vSort = vSort.key===k? {key:k,dir:-vSort.dir}:{key:k,dir:-1}; renderVideos(); });
+}
+
+/* ================= 3) شنو ضرب وشنو ما ضرب ================= */
+function successReasons(v){
+  const R=[];
+  if(v.avgWatch>BASE.avgWatch) R.push(`<li><strong>وقت مشاهدة أعلى:</strong> متوسط ${sec(v.avgWatch)} مقابل وسيط الحساب ${sec(BASE.avgWatch)} (${relTag(v.avgWatch,BASE.avgWatch)}). وقت المشاهدة هو الأثقل وزناً ${c('C5')}.</li>`);
+  if(v.r5!=null && v.r5>BASE.r5) R.push(`<li><strong>بداية أقوى:</strong> ${pct(v.r5,0)} باقين عند الثانية 5 مقابل وسيط ${pct(BASE.r5,0)} ${c('C8')}.</li>`);
+  if(v.shareRate>BASE.shareRate) R.push(`<li><strong>مشاركة أعلى:</strong> ${pct(v.shareRate,2)} من المشاهدين شاركوه مقابل وسيط ${pct(BASE.shareRate,2)}. المشاركة من التفاعلات التي يتوقعها النظام ${c('C2')}.</li>`);
+  if(v.saveRate>BASE.saveRate) R.push(`<li><strong>حفظ أعلى:</strong> ${pct(v.saveRate,2)} حفظوه مقابل وسيط ${pct(BASE.saveRate,2)} ${c('C2')}.</li>`);
+  if(v.fullRate>BASE.fullRate) R.push(`<li><strong>إكمال أعلى:</strong> ${pct(v.fullRate)} شاهدوه كاملاً مقابل وسيط ${pct(BASE.fullRate)} ${c('C1')}.</li>`);
+  if(v.search>BASE.search) R.push(`<li><strong>زيارات من البحث:</strong> ${pct(v.search,0)} من المشاهدات من البحث مقابل وسيط ${pct(BASE.search,0)}. الموضوع يطابق ما يبحث عنه الناس ${c('C7','C15')}.</li>`);
+  if(v.fy>0.8) R.push(`<li><strong>توزيع For You:</strong> ${pct(v.fy,0)} من المشاهدات من صفحة For You. تيك توك يربط ذلك بإشارات مشاهدة قوية ${c('C7')}.</li>`);
+  if(v.dur && v.dur>=60 && v.avgWatch>BASE.avgWatch) R.push(`<li><strong>فيديو طويل (${nf(v.dur,0)}ث) حافظ على وقت المشاهدة</strong>، وهذا ما يصفه تيك توك للفيديوهات الأطول ${c('C12')}.</li>`);
+  if(!R.length) R.push('<li>لا يوجد مقياس متاح أعلى من وسيط الحساب يفسر الأداء. السبب غير متوفر في البيانات.</li>');
+  return R;
+}
+function flopDiagnosis(v){
+  const R=[]; const b=durBucket(v.dur); const bm=median(V.filter(x=>durBucket(x.dur)===b).map(x=>x.views));
+  R.push(`<li><strong>هل المشاهدات منخفضة؟</strong> ${v.views<BASE.views?'نعم':'لا'}: ${nf(v.views)} مقابل وسيط الحساب ${nf(BASE.views)} (${relTag(v.views,BASE.views)}).</li>`);
+  if(v.r5==null) R.push(`<li><strong>هل المشكلة في الاحتفاظ أو البداية؟</strong> ${NA}. لا يوجد منحنى احتفاظ لهذا المنشور.</li>`);
+  else R.push(`<li><strong>هل المشكلة في البداية؟</strong> ${v.r5<BASE.r5?'نعم على الأرجح':'لا'}: ${pct(v.r5,0)} باقين عند الثانية 5 (وسيط الحساب ${pct(BASE.r5,0)})${v.dropSec>0?`، ونصف المشاهدين غادروا عند الثانية <b>${v.dropSec}</b>`:''} ${c('C8','C6')}.</li>`);
+  R.push(`<li><strong>هل المشكلة في الاحتفاظ؟</strong> متوسط المشاهدة ${sec(v.avgWatch)} (وسيط ${sec(BASE.avgWatch)})، والمشاهدة الكاملة ${pct(v.fullRate)} (وسيط ${pct(BASE.fullRate)}) ${c('C5','C1')}.</li>`);
+  R.push(`<li><strong>هل المشاركة ضعيفة؟</strong> ${v.shareRate<BASE.shareRate?'نعم':'لا'}: ${pct(v.shareRate,2)} مقابل وسيط ${pct(BASE.shareRate,2)}. والحفظ ${pct(v.saveRate,2)} مقابل ${pct(BASE.saveRate,2)} ${c('C2')}.</li>`);
+  R.push(`<li><strong>هل يجلب مشاهدات بدون متابعين؟</strong> ${v.conv<BASE.conv?'نعم':'لا'}: ${nf(v.conv*1000,1)} متابع لكل 1000 مشاهدة مقابل وسيط ${nf(BASE.conv*1000,1)}.</li>`);
+  R.push(`<li><strong>هل للمدة علاقة؟</strong> المدة ${v.dur?nf(v.dur,0)+'ث':'غير متوفرة'} ضمن فئة "${b}" التي وسيط مشاهداتها ${nf(bm)}. ${v.dur&&v.dur>34?`الفيديوهات الأطول عندك إكمالها أقل (راجع صفحة المدة) ${c('C1')}.`:''}</li>`);
+  R.push(`<li class="small">ما لا تكشفه البيانات: محتوى أول ثوانٍ الفيديو نفسه (صورة، نص، صوت) غير متوفر في Windsor. راجع الفيديو عند ثانية السقوط ${c('C6')}.</li>`);
+  return R;
+}
+function metGrid(v){
+  return `<div class="mets">
+   <div class="met"><b>${nf(v.views)}</b><span>مشاهدات</span></div>
+   <div class="met"><b>${pct(v.fullRate)}</b><span>مشاهدة كاملة</span></div>
+   <div class="met"><b>${sec(v.avgWatch)}</b><span>متوسط المشاهدة</span></div>
+   <div class="met"><b>${pct(v.shareRate,2)}</b><span>معدل المشاركة</span></div>
+   <div class="met"><b>${pct(v.saveRate,2)}</b><span>معدل الحفظ</span></div>
+   <div class="met"><b>${nf(v.newFollowers)}</b><span>متابعون جلبهم</span></div>
+   <div class="met"><b>${v.dur?nf(v.dur,1)+'ث':'غير متوفر'}</b><span>المدة</span></div>
+   <div class="met"><b>${v.date}</b><span>تاريخ النشر</span></div></div>`;
+}
+function renderHits(){
+  const vs=FV(); const sorted=[...vs].sort((a,b)=>b.views-a.views);
+  const top=sorted.slice(0,5);
+  const cutoff=addDays(PULL,-3);
+  const flopPool=vs.filter(v=>v.date<=cutoff && !top.includes(v));
+  const flops=[...flopPool].sort((a,b)=>a.views-b.views).slice(0,5);
+  const recent=vs.filter(v=>v.date>cutoff);
+  const card=(v,good)=>`<div class="vcard"><div class="head"><div><span class="cap" data-v="${v.id}">${esc(v.short)}</span><div class="small">${typeOf(v)}</div></div><span class="tag ${good?'good':'bad'}">${good?'نجح':'ضعيف'}</span></div>${metGrid(v)}<ul class="reasons">${(good?successReasons(v):flopDiagnosis(v)).join('')}</ul></div>`;
+  $('#t-hits').innerHTML=`<h2>شنو ضرب وشنو ما ضرب</h2><p class="lead">الترتيب حسب المشاهدات الفعلية. كل تفسير يقارن الفيديو بوسيط حسابك (${V.length} فيديو) ويذكر معيار تيك توك الذي يستند إليه. وسيط الحساب مرجع داخلي وليس حداً من تيك توك.</p>
+  <div class="grid two"><div><h3>✅ الفيديوهات التي نجحت</h3>${top.map(v=>card(v,true)).join('')||'<p class="muted">لا توجد فيديوهات</p>'}</div>
+  <div><h3>⚠️ الفيديوهات التي لم تنجح</h3>${recent.length?`<div class="note info">استبعدت ${recent.length} فيديو نُشر خلال آخر 3 أيام من سحب البيانات (${recent.map(v=>vlink(v)).join('، ')}) لأن أرقامها لم تكتمل بعد.</div>`:''}${flops.map(v=>card(v,false)).join('')||'<p class="muted">لا توجد فيديوهات كافية</p>'}</div></div>`;
+}
+
+/* ================= 4) الـ Hook ================= */
+function avgCurve(list, len=31){ const out=[]; for(let s=0;s<len;s++){ const xs=list.map(v=>v.retention&&v.retention.length>s? v.retention[s]:null); out.push(median(xs)); } return out; }
+function renderHook(){
+  const vs=FV().filter(v=>v.r5!=null);
+  const strong=vs.filter(v=>v.r5>=BASE.r5), weak=vs.filter(v=>v.r5<BASE.r5);
+  const row=(l,g)=>`<tr><td>${l}</td><td class="num">${g.length}</td><td class="num">${nf(median(g.map(v=>v.views)))}</td><td class="num">${pct(median(g.map(v=>v.r3)),0)}</td><td class="num">${pct(median(g.map(v=>v.r5)),0)}</td><td class="num">${sec(median(g.map(v=>v.avgWatch)))}</td><td class="num">${pct(median(g.map(v=>v.fullRate)))}</td><td class="num">${nf(median(g.map(v=>v.dur)),0)}ث</td></tr>`;
+  const s5=spearman(vs.map(v=>v.r5),vs.map(v=>v.views)), s3=spearman(vs.map(v=>v.r3),vs.map(v=>v.views)), s2=spearman(vs.map(v=>v.r2),vs.map(v=>v.views));
+  const drop2 = median(vs.map(v=>1-v.r2));
+  const list=(g,asc)=>[...g].sort((a,b)=>asc?a.r5-b.r5:b.r5-a.r5).slice(0,6).map(v=>`<tr class="click" data-v="${v.id}"><td class="cap">${esc(v.short)}</td><td class="num">${pct(v.r2,0)}</td><td class="num">${pct(v.r3,0)}</td><td class="num">${pct(v.r5,0)}</td><td class="num">${v.dropSec>0?v.dropSec+'ث':'—'}</td><td class="num">${nf(v.views)}</td></tr>`);
+  const hc=[{h:'الفيديو'},{h:'باقٍ ث2',num:1},{h:'باقٍ ث3',num:1},{h:'باقٍ ث5',num:1},{h:'سقوط 50%',num:1},{h:'مشاهدات',num:1}];
+  $('#t-hook').innerHTML=`<h2>تحليل الـ Hook (أول ثوانٍ الفيديو)</h2>
+  <p class="lead">المعيار الحرفي من تيك توك: <em>"hooking the viewer within the first 5 seconds is incredibly important"</em> ${c('C8')}. البيانات: منحنى الاحتفاظ ثانية بثانية من Windsor (video_view_retention_percentage) لـ ${vs.length} فيديو.</p>
+  <div class="note">تيك توك لا يذكر نسبة احتفاظ رقمية تفصل الـ Hook القوي عن الضعيف (${NA_SRC}). عشان كذا التقسيم هنا نسبي: <b>Hook قوي</b> = الاحتفاظ عند الثانية 5 ≥ وسيط حسابك (${pct(BASE.r5,0)})، و<b>Hook ضعيف</b> = أقل منه.</div>
+  <div class="grid kpis">
+   ${kpi('وسيط من غادر خلال أول ثانيتين', pct(drop2,0), '1 − video_view_retention_percentage عند الثانية 2')}
+   ${kpi('وسيط الباقين عند الثانية 5', pct(BASE.r5,0), 'video_view_retention_percentage عند الثانية 5')}
+   ${kpi('ارتباط الاحتفاظ عند ث5 بالمشاهدات', s5.r==null?'—':nf(s5.r,2), `سبيرمان · ث3: ${s3.r==null?'—':nf(s3.r,2)} · ث2: ${s2.r==null?'—':nf(s2.r,2)} (${s5.n} فيديو)`)}
+  </div>
+  <div class="card" style="margin-top:12px"><h3>Hook قوي مقابل Hook ضعيف (الوسيط)</h3>${tableHtml([{h:'المجموعة'},{h:'عدد',num:1},{h:'مشاهدات',num:1},{h:'باقٍ ث3',num:1},{h:'باقٍ ث5',num:1},{h:'متوسط المشاهدة',num:1},{h:'مشاهدة كاملة',num:1},{h:'المدة',num:1}],[row('Hook قوي',strong),row('Hook ضعيف',weak)])}
+  <p class="small" style="margin-top:8px">${strong.length&&weak.length? `وسيط مشاهدات الـ Hook القوي ${nf(median(strong.map(v=>v.views)))} مقابل ${nf(median(weak.map(v=>v.views)))} للضعيف. يتوافق مع ${c('C8')}.`:''} الاحتفاظ عند الثانية 5 أقوى ارتباطاً بالمشاهدات من الثانية 3 (المعيار الإعلاني ${c('C9')}).</p></div>
+  <div class="grid two" style="margin-top:12px">
+   <div class="card"><h3>منحنى الاحتفاظ (الوسيط لكل مجموعة)</h3><div class="legend"><span><i style="background:${S1}"></i>Hook قوي</span><span><i style="background:${S2}"></i>Hook ضعيف</span></div><div class="chart-box"><canvas id="hkCurve"></canvas></div></div>
+   <div class="card"><h3>الاحتفاظ عند ث5 ↔ المشاهدات</h3><div class="small">كل نقطة فيديو. المحور العمودي لوغاريتمي. اضغط على النقطة لفتح الفيديو.</div><div class="chart-box"><canvas id="hkScatter"></canvas></div></div>
+  </div>
+  <div class="grid two" style="margin-top:12px">
+   <div><h3>أقوى بدايات</h3>${tableHtml(hc,list(strong,false))}</div>
+   <div><h3>أضعف بدايات</h3>${tableHtml(hc,list(weak,true))}</div>
+  </div>
+  <div class="note info">ما لا يمكن معرفته من البيانات: <b>محتوى</b> أول 5 ثوانٍ (نص على الشاشة، سؤال، صوت، ظهور شخص) غير متوفر في Windsor. المقارنة هنا بالأرقام فقط، وتحديد "ما الذي جذب" يحتاج مراجعة الفيديوهات نفسها عند ثانية السقوط ${c('C6')}.</div>`;
+  const L=31, labels=[...Array(L).keys()];
+  chart('hkCurve',{type:'line',data:{labels,datasets:[{label:'Hook قوي',data:avgCurve(strong,L),borderColor:S1},{label:'Hook ضعيف',data:avgCurve(weak,L),borderColor:S2}]},options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{title:{display:true,text:'الثانية'},grid:{display:false},ticks:{...axisTicks,maxTicksLimit:11}},y:{min:0,max:1,grid:gridOpts,ticks:{...axisTicks,callback:x=>pct(x,0)}}},plugins:{tooltip:{callbacks:{title:x=>`الثانية ${x[0].label}`,label:x=>` ${x.dataset.label}: ${pct(x.raw,0)}`}}}}});
+  chart('hkScatter',{type:'scatter',data:{datasets:[{data:vs.map(v=>({x:v.r5,y:v.views,id:v.id,t:v.short})),backgroundColor:S1,pointRadius:5,pointHoverRadius:8,pointBorderColor:'#1a1a19',pointBorderWidth:2}]},options:{maintainAspectRatio:false,interaction:{mode:'nearest',intersect:true},onClick:(e,els)=>{ if(els[0]) openVideo(els[0].element.$context.raw.id); },scales:{x:{title:{display:true,text:'باقٍ عند الثانية 5'},grid:gridOpts,ticks:{...axisTicks,callback:x=>pct(x,0)}},y:{type:'logarithmic',title:{display:true,text:'المشاهدات'},grid:gridOpts,ticks:{...axisTicks,callback:x=>[1000,10000,100000].includes(x)?nf(x):''}}},plugins:{tooltip:{callbacks:{title:x=>x[0].raw.t,label:x=>` ث5: ${pct(x.raw.x,0)} · ${nf(x.raw.y)} مشاهدة`}}}}});
+}
+
+/* ================= 5) Viral Analysis ================= */
+const VIRAL_METRICS = [
+  {k:'viewsPerFollower',l:'المشاهدات ÷ المتابعين وقت النشر',f:x=>nf(x,1)+'×',src:'video_views_count ÷ total_followers_count يوم النشر'},
+  {k:'shareRate',l:'نسبة المشاركة',f:x=>pct(x,2),src:'video_shares ÷ video_views_count'},
+  {k:'saveRate',l:'نسبة الحفظ',f:x=>pct(x,2),src:'video_favorites ÷ video_views_count'},
+  {k:'fullRate',l:'نسبة المشاهدة الكاملة',f:x=>pct(x,1),src:'video_full_watched_rate'},
+  {k:'avgWatch',l:'متوسط وقت المشاهدة',f:x=>sec(x),src:'video_average_time_watched'},
+  {k:'newFollowers',l:'المتابعون المكتسبون',f:x=>nf(x),src:'video_new_followers'},
+];
+let viralMetric='viewsPerFollower';
+function renderViral(){
+  const vs=[...FV()]; const m=VIRAL_METRICS.find(x=>x.k===viralMetric);
+  vs.sort((a,b)=>(b[m.k]??-1)-(a[m.k]??-1));
+  const b=BASE[m.k] ?? median(V.map(v=>v[m.k]));
+  const rows=vs.map(v=>`<tr class="click" data-v="${v.id}"><td class="cap">${esc(v.short)}</td><td>${NA_SRC}</td><td class="num">${v[m.k]==null?'<span class="na-text">غير متوفر</span>':m.f(v[m.k])}</td><td class="num">—</td><td class="num">${m.f(b)}</td><td>${v[m.k]==null?'—':relTag(v[m.k],b)}</td></tr>`);
+  const outliers=V.filter(v=>inRange(v.date) && v.views>=3*BASE.views).sort((a,b)=>b.views-a.views);
+  $('#t-viral').innerHTML=`<h2>Viral Analysis</h2>
+  <div class="note bad"><b>مصادر تيك توك الرسمية لا تذكر أي حد رقمي للفيروسية</b>: لا نسبة مشاهدات للمتابعين، ولا نسبة مشاركة أو حفظ أو إكمال. لذلك عمود "الحد في الملف" = غير متوفر في المصدر، والمسافة عن الحد لا يمكن حسابها. ولم أخترع حداً بديلاً.</div>
+  <p class="lead">الموجود رسمياً: تيك توك يقول إن عدد المتابعين <b>ليس عاملاً مباشراً</b> ${c('C3')}، وإن وقت المشاهدة أثقل وزناً ${c('C5')}. العمود الأخير يقارن كل فيديو بوسيط حسابك، وهذا مرجع داخلي وليس حداً للفيروسية.</p>
+  <div class="grid kpis">
+   ${kpi('سرعة نمو المشاهدات', NA, 'Windsor يعطي إجمالي مشاهدات كل فيديو فقط، بدون تطورها اليومي')}
+   ${kpi('فيديوهات ≥ 3× وسيط الحساب', nf(outliers.length), `وسيط المشاهدات ${nf(BASE.views)} · قاعدة داخلية للفرز وليست معياراً من تيك توك`)}
+   ${kpi('أعلى مشاهدات ÷ متابعين', (()=>{const t=[...V.filter(v=>inRange(v.date)&&v.viewsPerFollower!=null)].sort((a,b)=>b.viewsPerFollower-a.viewsPerFollower)[0]; return t? nf(t.viewsPerFollower,0)+'×':'—';})(), 'video_views_count ÷ total_followers_count يوم النشر. يتوافق مع C3')}
+  </div>
+  ${outliers.length?`<div class="card" style="margin-top:12px"><h3>الفيديوهات الشاذة إيجابياً (≥ 3× وسيط الحساب)</h3><div class="pill-row">${outliers.map(v=>`<span class="tag">${vlink(v)} · ${nf(v.views)}</span>`).join('')}</div></div>`:''}
+  <div class="toolbar" style="margin-top:16px"><label class="small">المقياس</label><select id="viralSel">${VIRAL_METRICS.map(x=>`<option value="${x.k}" ${x.k===viralMetric?'selected':''}>${x.l}</option>`).join('')}</select><span class="small">المصدر: ${m.src}</span></div>
+  ${tableHtml([{h:'الفيديو'},{h:'الحد المذكور في الملف'},{h:'رقم الفيديو الفعلي',num:1},{h:'المسافة عن الحد',num:1},{h:'وسيط الحساب (داخلي)',num:1},{h:'الفرق عن وسيط الحساب'}],rows)}
+  <p class="small">المشاهدات ÷ المتابعين غير متوفرة لفيديوهين نُشرا قبل ${DAILY_MIN}، لأن عدد المتابعين اليومي يبدأ من هذا التاريخ.</p>`;
+  $('#viralSel').onchange=e=>{ viralMetric=e.target.value; renderViral(); };
+}
+
+/* ================= 6) أنواع المحتوى ================= */
+function typeStats(vs){
+  return TYPES.map(t=>{ const g=vs.filter(v=>typeOf(v)===t); return {t,g,n:g.length,views:mean(g.map(v=>v.views)),mviews:median(g.map(v=>v.views)),full:mean(g.map(v=>v.fullRate)),aw:mean(g.map(v=>v.avgWatch)),sh:mean(g.map(v=>v.shares)),sv:mean(g.map(v=>v.saves)),nfw:mean(g.map(v=>v.newFollowers)),conv:g.length?sum(g.map(v=>v.newFollowers))/sum(g.map(v=>v.views)):null}; }).filter(x=>x.n);
+}
+function renderTypes(){
+  const vs=FV(); const st=typeStats(vs).sort((a,b)=>b.mviews-a.mviews);
+  const rows=st.map(s=>`<tr><td>${s.t}</td><td class="num">${s.n}</td><td class="num">${nf(s.views)}</td><td class="num">${nf(s.mviews)}</td><td class="num">${pct(s.full)}</td><td class="num">${sec(s.aw)}</td><td class="num">${nf(s.sh,1)}</td><td class="num">${nf(s.sv,1)}</td><td class="num">${nf(s.nfw,1)}</td><td class="num">${nf(s.conv*1000,1)}</td></tr>`);
+  const tagged=vs.filter(v=>personTags[v.id]===true), untagged=vs.filter(v=>personTags[v.id]===false);
+  const personBlock = (tagged.length && untagged.length) ? tableHtml([{h:'المجموعة'},{h:'عدد',num:1},{h:'وسيط المشاهدات',num:1},{h:'متوسط الإكمال',num:1},{h:'متوسط المشاهدة',num:1},{h:'متابعون/1000',num:1}],[['يظهر شخص',tagged],['لا يظهر شخص',untagged]].map(([l,g])=>`<tr><td>${l}</td><td class="num">${g.length}</td><td class="num">${nf(median(g.map(v=>v.views)))}</td><td class="num">${pct(mean(g.map(v=>v.fullRate)))}</td><td class="num">${sec(mean(g.map(v=>v.avgWatch)))}</td><td class="num">${nf(sum(g.map(v=>v.newFollowers))/sum(g.map(v=>v.views))*1000,1)}</td></tr>`))
+    : `<div class="note">"ظهور الشخص أمام الكاميرا" ${NA}. Windsor لا يوفر هذه المعلومة. علّم الفيديوهات يدوياً في الجدول تحت (نعم/لا) وتظهر المقارنة هنا تلقائياً.</div>`;
+  const edit=[...vs].sort((a,b)=>a.dt<b.dt?1:-1).map(v=>`<tr><td class="cap"><span class="vlink" data-v="${v.id}">${esc(v.short)}</span></td><td class="num">${nf(v.views)}</td><td><select data-type="${v.id}" aria-label="النوع">${TYPES.map(t=>`<option ${typeOf(v)===t?'selected':''}>${t}</option>`).join('')}</select>${typeOverrides[v.id]?' <span class="tag warn">يدوي</span>':''}</td><td><select data-person="${v.id}" aria-label="يظهر شخص"><option value="" ${personTags[v.id]==null?'selected':''}>غير محدد</option><option value="1" ${personTags[v.id]===true?'selected':''}>نعم</option><option value="0" ${personTags[v.id]===false?'selected':''}>لا</option></select></td></tr>`);
+  $('#t-types').innerHTML=`<h2>تحليل أنواع المحتوى</h2>
+  <p class="lead">Windsor لا يوفر تصنيفاً للمحتوى. التصنيف هنا <b>آلي بكلمات مفتاحية في وصف الفيديو</b> (مثل "كم يبعد" و"ريال" و"طريقة الوصول")، وتقدر تعدّله يدوياً من الجدول تحت. التعديل يُحفظ في متصفحك.</p>
+  ${tableHtml([{h:'النوع'},{h:'عدد',num:1},{h:'متوسط المشاهدات',num:1},{h:'وسيط المشاهدات',num:1},{h:'متوسط الإكمال',num:1},{h:'متوسط المشاهدة',num:1},{h:'متوسط المشاركات',num:1},{h:'متوسط الحفظ',num:1},{h:'متوسط المتابعين',num:1},{h:'متابعون/1000 مشاهدة',num:1}],rows)}
+  <p class="small">المتوسط الحسابي يتأثر بفيديو واحد كبير (مثل مكارم أجياد 155 ألف)، فالوسيط أدق للمقارنة. عدد الفيديوهات في بعض الأنواع صغير جداً، فالنتائج مؤشرات وليست حكماً نهائياً.</p>
+  <div class="card" style="margin-top:12px"><h3>وسيط المشاهدات حسب النوع</h3><div class="chart-box"><canvas id="typeBar"></canvas></div></div>
+  <div class="card" style="margin-top:12px"><h3>يظهر شخص أمام الكاميرا؟</h3>${personBlock}</div>
+  <h3 style="margin-top:20px">تعديل التصنيف يدوياً</h3>${tableHtml([{h:'الفيديو'},{h:'مشاهدات',num:1},{h:'النوع'},{h:'يظهر شخص؟'}],edit)}`;
+  chart('typeBar',{type:'bar',data:{labels:st.map(s=>s.t),datasets:[{data:st.map(s=>s.mviews),backgroundColor:S1,borderSkipped:'start',maxBarThickness:28}]},options:{indexAxis:'y',maintainAspectRatio:false,scales:{x:{grid:gridOpts,ticks:axisTicks,beginAtZero:true},y:{grid:{display:false},ticks:{...axisTicks,color:'#c3c2b7'}}},plugins:{tooltip:{callbacks:{label:x=>` وسيط ${nf(x.raw)} مشاهدة · ${st[x.dataIndex].n} فيديو`}}}}});
+  document.querySelectorAll('#t-types select[data-type]').forEach(s=>s.onchange=e=>{ const id=e.target.dataset.type, v=V.find(x=>x.id===id); if(e.target.value===v.autoType) delete typeOverrides[id]; else typeOverrides[id]=e.target.value; store.set('tt_type_over',typeOverrides); renderTypes(); });
+  document.querySelectorAll('#t-types select[data-person]').forEach(s=>s.onchange=e=>{ const id=e.target.dataset.person; if(e.target.value==='') delete personTags[id]; else personTags[id]=e.target.value==='1'; store.set('tt_person',personTags); renderTypes(); });
+}
+
+/* ================= 7) أفضل مدة ================= */
+const BUCKETS=['≤ 20 ث','21–34 ث','35–59 ث','60 ث فأكثر','غير متوفرة'];
+function durBucket(d){ if(!d) return BUCKETS[4]; return d<=20?BUCKETS[0]:d<=34?BUCKETS[1]:d<60?BUCKETS[2]:BUCKETS[3]; }
+function renderDuration(){
+  const vs=FV(); const st=BUCKETS.map(b=>{ const g=vs.filter(v=>durBucket(v.dur)===b); return {b,g,n:g.length,mv:median(g.map(v=>v.views)),av:mean(g.map(v=>v.views)),full:mean(g.map(v=>v.fullRate)),aw:mean(g.map(v=>v.avgWatch)),sh:mean(g.map(v=>v.shares)),nfw:mean(g.map(v=>v.newFollowers)),conv:g.length?sum(g.map(v=>v.newFollowers))/sum(g.map(v=>v.views)):null,wp:median(g.map(v=>v.watchPct))}; }).filter(x=>x.n);
+  const sd=spearman(vs.map(v=>v.dur),vs.map(v=>v.fullRate)), sa=spearman(vs.map(v=>v.dur),vs.map(v=>v.avgWatch)), sv=spearman(vs.map(v=>v.dur),vs.map(v=>v.views));
+  const rows=st.map(s=>`<tr><td>${s.b}${s.b===BUCKETS[1]?' '+c('C11'):''}${s.b===BUCKETS[3]?' '+c('C12'):''}</td><td class="num">${s.n}</td><td class="num">${nf(s.mv)}</td><td class="num">${nf(s.av)}</td><td class="num">${pct(s.full)}</td><td class="num">${sec(s.aw)}</td><td class="num">${pct(s.wp,0)}</td><td class="num">${nf(s.sh,1)}</td><td class="num">${nf(s.nfw,1)}</td><td class="num">${nf(s.conv*1000,1)}</td></tr>`);
+  const best=[...st].filter(s=>s.b!==BUCKETS[4]).sort((a,b)=>b.mv-a.mv)[0];
+  const c11=st.find(s=>s.b===BUCKETS[1]);
+  $('#t-duration').innerHTML=`<h2>أفضل مدة للفيديو</h2>
+  <p class="lead">الفئات مبنية على مدد فيديوهاتك الفعلية (Windsor · video_duration). فئة 21–34 ث مطابقة للنافذة الوحيدة التي ذكرتها تيك توك رقمياً ${c('C11')}، وهي نافذة <b>إعلانية لتحويل المبيعات</b> وليست لانتشار المحتوى العضوي.</p>
+  ${tableHtml([{h:'الفئة'},{h:'عدد',num:1},{h:'وسيط المشاهدات',num:1},{h:'متوسط المشاهدات',num:1},{h:'متوسط الإكمال',num:1},{h:'متوسط المشاهدة',num:1},{h:'% من المدة شوهد',num:1},{h:'متوسط المشاركات',num:1},{h:'متوسط المتابعين',num:1},{h:'متابعون/1000',num:1}],rows)}
+  <div class="grid two" style="margin-top:12px">
+   <div class="card"><h3>وسيط المشاهدات حسب المدة</h3><div class="chart-box"><canvas id="durBar"></canvas></div></div>
+   <div class="card"><h3>المدة ↔ نسبة المشاهدة الكاملة</h3><div class="small">كل نقطة فيديو</div><div class="chart-box"><canvas id="durScatter"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:12px"><h3>ماذا تقول البيانات مقابل المعايير</h3><ul class="findings">
+   <li>كلما طال الفيديو قلّت نسبة المشاهدة الكاملة (سبيرمان ${sd.r==null?'—':nf(sd.r,2)})، لكن متوسط وقت المشاهدة يرتفع (${sa.r==null?'—':nf(sa.r,2)}). وتيك توك يقول إن وقت المشاهدة أثقل وزناً ${c('C5')} وإن إكمال الفيديو الطويل إشارة قوية ${c('C1')}.</li>
+   ${best?`<li>أعلى وسيط مشاهدات عندك في فئة <b>${best.b}</b> (${nf(best.mv)}، ${best.n} فيديو)${best.n<5?'. العدد صغير، فهذا مؤشر وليس حكماً':''}.</li>`:''}
+   ${c11&&best&&best.b!==BUCKETS[1]?`<li><b>تعارض ظاهري مع ${c('C11')}:</b> فئة 21–34 ث ليست الأعلى في المشاهدات عندك (وسيط ${nf(c11.mv)}). لكن المعيار يقيس تحويل الإعلانات وليس المشاهدات العضوية، فلا يصح اعتباره قاعدة للانتشار.</li>`:''}
+   <li>الفيديوهات الأطول من دقيقة (${st.find(s=>s.b===BUCKETS[3])?.n||0}) كلها أدلة أو قوائم، وهذا الأسلوب الذي يصفه تيك توك للفيديو الطويل ${c('C12')}.</li>
+  </ul></div>`;
+  const bb=st.filter(s=>s.b!==BUCKETS[4]);
+  chart('durBar',{type:'bar',data:{labels:bb.map(s=>s.b),datasets:[{data:bb.map(s=>s.mv),backgroundColor:S1,borderSkipped:'start',maxBarThickness:48}]},options:{maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:axisTicks},y:{grid:gridOpts,ticks:axisTicks,beginAtZero:true}},plugins:{tooltip:{callbacks:{label:x=>` وسيط ${nf(x.raw)} مشاهدة · ${bb[x.dataIndex].n} فيديو`}}}}});
+  const pts=vs.filter(v=>v.dur);
+  chart('durScatter',{type:'scatter',data:{datasets:[{data:pts.map(v=>({x:v.dur,y:v.fullRate,id:v.id,t:v.short})),backgroundColor:S3,pointRadius:5,pointHoverRadius:8,pointBorderColor:'#1a1a19',pointBorderWidth:2}]},options:{maintainAspectRatio:false,interaction:{mode:'nearest',intersect:true},onClick:(e,els)=>{ if(els[0]) openVideo(els[0].element.$context.raw.id); },scales:{x:{title:{display:true,text:'المدة (ث)'},grid:gridOpts,ticks:axisTicks},y:{title:{display:true,text:'مشاهدة كاملة'},grid:gridOpts,ticks:{...axisTicks,callback:x=>pct(x,0)},beginAtZero:true}},plugins:{tooltip:{callbacks:{title:x=>x[0].raw.t,label:x=>` ${nf(x.raw.x,0)}ث · ${pct(x.raw.y)}`}}}}});
+}
+
+/* ================= 8) أوقات النشر ================= */
+let heatMetric='views';
+function activityLocal(){ const a=DATA.activityByHour; return [...Array(24).keys()].map(h=>a[((h - tz)%24+24)%24]); }
+function peakInfo(){ const a=activityLocal(); let p=0; a.forEach((x,i)=>{ if(x>a[p]) p=i; }); return {peak:p, val:a[p], from:(p-2+24)%24, arr:a}; }
+const hh = h => String(h).padStart(2,'0')+':00';
+function renderTiming(){
+  const vs=FV(); const HM={views:{l:'وسيط المشاهدات',f:g=>median(g.map(v=>v.views)),fmt:x=>nf(x)},eng:{l:'وسيط معدل التفاعل',f:g=>median(g.map(v=>v.engRate)),fmt:x=>pct(x,1)},full:{l:'وسيط المشاهدة الكاملة',f:g=>median(g.map(v=>v.fullRate)),fmt:x=>pct(x,1)}}[heatMetric];
+  const cells={}; vs.forEach(v=>{ (cells[v.day+'-'+v.hour]=cells[v.day+'-'+v.hour]||[]).push(v); });
+  const vals=Object.values(cells).map(g=>HM.f(g)); const mx=Math.max(...vals), mn=Math.min(...vals);
+  const ramp=['#104281','#184f95','#256abf','#3987e5','#6da7ec','#9ec5f4','#cde2fb'];
+  const col=x=>{ if(mx===mn) return ramp[3]; const t=(x-mn)/(mx-mn); return ramp[Math.min(ramp.length-1,Math.floor(t*ramp.length))]; };
+  const hours=[...Array(24).keys()];
+  let heat='<table><thead><tr><th></th>'+hours.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>';
+  for(let d=0;d<7;d++){ heat+=`<tr><th style="text-align:right;white-space:nowrap">${DAYS[d]}</th>`+hours.map(h=>{ const g=cells[d+'-'+h]; if(!g) return '<td class="cell empty"></td>'; const x=HM.f(g); return `<td class="cell" style="background:${col(x)};color:${(x-mn)/(mx-mn||1)>.55?'#0d0d0d':'#fff'}" title="${DAYS[d]} ${hh(h)} · ${HM.l}: ${HM.fmt(x)} · ${g.length} فيديو">${g.length}</td>`; }).join('')+'</tr>'; }
+  heat+='</tbody></table>';
+  const byDay=DAYS.map((n,d)=>{ const g=vs.filter(v=>v.day===d); return {n,g,c:g.length,mv:median(g.map(v=>v.views)),eng:median(g.map(v=>v.engRate)),full:median(g.map(v=>v.fullRate))}; });
+  const periods=[['الفجر والصباح (5–11)',h=>h>=5&&h<12],['الظهر والعصر (12–16)',h=>h>=12&&h<17],['المساء (17–20)',h=>h>=17&&h<21],['الليل (21–4)',h=>h>=21||h<5]].map(([n,f])=>{ const g=vs.filter(v=>f(v.hour)); return {n,c:g.length,mv:median(g.map(v=>v.views)),eng:median(g.map(v=>v.engRate)),full:median(g.map(v=>v.fullRate))}; });
+  const pk=peakInfo(); const hourCounts={}; vs.forEach(v=>hourCounts[v.hour]=(hourCounts[v.hour]||0)+1);
+  const topHour=Object.entries(hourCounts).sort((a,b)=>b[1]-a[1])[0];
+  const inWin=h=>{ for(let k=0;k<=2;k++) if((pk.peak-k+24)%24===h) return true; return false; };
+  const shareInWin=vs.length? vs.filter(v=>inWin(v.hour)).length/vs.length : 0;
+  $('#t-timing').innerHTML=`<h2>أفضل أوقات النشر</h2>
+  <div class="note">توقيت الساعات: Windsor لا يذكر المنطقة الزمنية. البيانات تشير إلى أنها UTC على الأرجح، فالعرض الحالي <b>${tz?'بتوقيت السعودية (UTC+3)':'كما يرسله Windsor'}</b>. تأكد بنفسك: فيديو "فندق مكارم أجياد" يظهر هنا ${V.find(v=>v.id==='7670550065517251861').time}. إذا نشرته في وقت مختلف، غيّر "توقيت العرض" في الأعلى.</div>
+  <div class="grid kpis">
+   ${kpi('ذروة نشاط متابعيك', hh(pk.peak), `Windsor · audience_activity_count، متوسط ${DATA.activityDates[0]} ← ${DATA.activityDates[DATA.activityDates.length-1]}`)}
+   ${kpi('نافذة النشر حسب معيار تيك توك', `<span dir="ltr">${hh(pk.from)}–${hh(pk.peak)}</span>`, 'قبل الذروة بساعتين كحد أقصى · C13')}
+   ${kpi('أكثر ساعة تنشر فيها', topHour? hh(+topHour[0]) : '—', `${topHour?topHour[1]:0} من ${vs.length} فيديو`)}
+   ${kpi('فيديوهات نُشرت داخل النافذة', pct(shareInWin,0), 'من فيديوهات الفترة')}
+  </div>
+  <div class="card" style="margin-top:12px"><div class="chart-title"><h3>نشاط المتابعين حسب الساعة</h3><span class="small">${c('C13')} الأعمدة الخضراء = نافذة النشر المقترحة</span></div><div class="chart-box"><canvas id="actBar"></canvas></div></div>
+  <div class="card" style="margin-top:12px"><div class="chart-title"><h3>Heatmap: يوم النشر × ساعة النشر</h3>
+   <select id="heatSel">${[['views','وسيط المشاهدات'],['eng','وسيط معدل التفاعل'],['full','وسيط المشاهدة الكاملة']].map(([k,l])=>`<option value="${k}" ${heatMetric===k?'selected':''}>${l}</option>`).join('')}</select></div>
+   <div class="small">الرقم في الخانة = عدد الفيديوهات. مرّر على الخانة لرؤية القيمة. الخانات الفارغة = لم تنشر في هذا الوقت.</div>
+   <div class="heat" style="margin-top:8px">${heat}</div><div class="scale"><span>أقل</span><span class="bar"></span><span>أعلى</span></div></div>
+  <div class="grid two" style="margin-top:12px">
+   <div>${tableHtml([{h:'اليوم'},{h:'عدد',num:1},{h:'وسيط المشاهدات',num:1},{h:'وسيط التفاعل',num:1},{h:'وسيط الإكمال',num:1}],byDay.filter(d=>d.c).map(d=>`<tr><td>${d.n}</td><td class="num">${d.c}</td><td class="num">${nf(d.mv)}</td><td class="num">${pct(d.eng,1)}</td><td class="num">${pct(d.full,1)}</td></tr>`))}</div>
+   <div>${tableHtml([{h:'الفترة'},{h:'عدد',num:1},{h:'وسيط المشاهدات',num:1},{h:'وسيط التفاعل',num:1},{h:'وسيط الإكمال',num:1}],periods.map(p=>`<tr><td>${p.n}</td><td class="num">${p.c}</td><td class="num">${p.c?nf(p.mv):'—'}</td><td class="num">${p.c?pct(p.eng,1):'—'}</td><td class="num">${p.c?pct(p.full,1):'—'}</td></tr>`))}</div>
+  </div>
+  <div class="note info">حدود البيانات: معظم فيديوهاتك منشورة في ساعة أو ساعتين متقاربتين، فلا توجد مقارنة عادلة بين الساعات من أداء الفيديوهات. لذلك توصية الوقت مبنية على <b>نشاط متابعيك</b> حسب معيار تيك توك ${c('C13')}، ومقارنة الأيام مؤشر فقط (1–9 فيديوهات لكل يوم). تيك توك لا يذكر ساعات نشر عامة (${NA_SRC}).</div>`;
+  const a=pk.arr;
+  chart('actBar',{type:'bar',data:{labels:[...Array(24).keys()].map(hh),datasets:[{data:a,backgroundColor:a.map((x,h)=>inWin(h)?S3:S1),borderSkipped:'start'}]},options:{maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{...axisTicks,maxTicksLimit:12}},y:{grid:gridOpts,ticks:axisTicks,beginAtZero:true}},plugins:{tooltip:{callbacks:{label:x=>` ${nf(x.raw)} متابع نشط${inWin(x.dataIndex)?' · داخل النافذة':''}`}}}}});
+  $('#heatSel').onchange=e=>{ heatMetric=e.target.value; renderTiming(); };
+}
+
+/* ================= 9) تحويل المتابعين ================= */
+function renderConversion(){
+  const vs=FV(); if(!vs.length){ $('#t-conversion').innerHTML='<h2>تحويل المشاهدات إلى متابعين</h2><p class="muted">لا توجد فيديوهات في الفترة.</p>'; return; }
+  const conv=sum(vs.map(v=>v.newFollowers))/sum(vs.map(v=>v.views));
+  const mv=median(vs.map(v=>v.views)), mc=median(vs.map(v=>v.conv));
+  const p25=(()=>{const s=vs.map(v=>v.views).sort((a,b)=>a-b); return s[Math.floor(s.length*.25)];})(), p75=(()=>{const s=vs.map(v=>v.views).sort((a,b)=>a-b); return s[Math.floor(s.length*.75)];})();
+  const mostF=[...vs].sort((a,b)=>b.newFollowers-a.newFollowers).slice(0,5);
+  const highLow=vs.filter(v=>v.views>=mv && v.conv<mc).sort((a,b)=>b.views-a.views).slice(0,5);
+  const midHigh=vs.filter(v=>v.views>=p25 && v.views<=p75 && v.conv>mc).sort((a,b)=>b.conv-a.conv).slice(0,5);
+  const cols=[{h:'الفيديو'},{h:'مشاهدات',num:1},{h:'متابعون',num:1},{h:'متابع/1000 مشاهدة',num:1},{h:'زيارات البروفايل',num:1},{h:'النوع'}];
+  const r=v=>`<tr class="click" data-v="${v.id}"><td class="cap">${esc(v.short)}</td><td class="num">${nf(v.views)}</td><td class="num">${nf(v.newFollowers)}</td><td class="num">${nf(v.conv*1000,1)}</td><td class="num">${nf(v.profileViews)}</td><td><span class="tag">${typeOf(v)}</span></td></tr>`;
+  const ts=typeStats(vs).filter(s=>s.n>=2).sort((a,b)=>b.conv-a.conv);
+  const dl=DATA.daily.filter(d=>inRange(d.date)); const lost=sum(dl.map(d=>d.lost));
+  $('#t-conversion').innerHTML=`<h2>تحويل المشاهدات إلى متابعين</h2>
+  <p class="lead">Followers Conversion Rate = video_new_followers ÷ video_views_count. تيك توك لا يذكر نسبة تحويل مرجعية (${NA_SRC})، فالمقارنة داخل حسابك فقط.</p>
+  <div class="grid kpis">
+   ${kpi('معدل التحويل للفترة', nf(conv*1000,2)+' لكل 1000', `مجموع المتابعين المكتسبين ${nf(sum(vs.map(v=>v.newFollowers)))} ÷ مجموع المشاهدات ${nf(sum(vs.map(v=>v.views)))}`)}
+   ${kpi('وسيط التحويل لكل فيديو', nf(mc*1000,1)+' لكل 1000', 'وسيط (video_new_followers ÷ video_views_count)')}
+   ${kpi('المتابعون المفقودون (الحساب)', dl.length?nf(lost):NA, 'Windsor · daily_lost_followers (قيم مجمّعة أسبوعياً في البيانات)')}
+  </div>
+  <div class="card" style="margin-top:12px"><h3>المشاهدات ↔ المتابعين لكل 1000 مشاهدة</h3><div class="small">المحور الأفقي لوغاريتمي. اضغط على النقطة لفتح الفيديو.</div><div class="chart-box tall"><canvas id="convScatter"></canvas></div></div>
+  <h3 style="margin-top:20px">أي فيديو جلب أكبر عدد من المتابعين؟</h3>${tableHtml(cols,mostF.map(r))}
+  <h3 style="margin-top:20px">مشاهدات عالية لكن متابعين قليلين</h3><p class="small">مشاهدات ≥ وسيط الفترة (${nf(mv)}) وتحويل أقل من الوسيط (${nf(mc*1000,1)}/1000)</p>${tableHtml(cols,highLow.map(r))}
+  <h3 style="margin-top:20px">مشاهدات متوسطة لكن تحويل أعلى</h3><p class="small">مشاهدات بين الربع الأول والثالث (${nf(p25)}–${nf(p75)}) وتحويل أعلى من الوسيط. هذي فيديوهات تجلب جمهوراً للحساب وليس مشاهدات فقط.</p>${tableHtml(cols,midHigh.map(r))}
+  <div class="card" style="margin-top:12px"><h3>التحويل حسب نوع المحتوى (نوعان فيهما فيديوهان فأكثر)</h3>${tableHtml([{h:'النوع'},{h:'عدد',num:1},{h:'متابع/1000',num:1}],ts.map(s=>`<tr><td>${s.t}</td><td class="num">${s.n}</td><td class="num">${nf(s.conv*1000,1)}</td></tr>`))}</div>
+  <div class="note">ملاحظة على البيانات: مجموع video_new_followers لكل الفيديوهات (${nf(sum(V.map(v=>v.newFollowers)))}) أكبر من صافي نمو الحساب (${nf(DATA.daily[DATA.daily.length-1].totalFollowers-DATA.daily[0].totalFollowers)} منذ ${DAILY_MIN}). السبب المحتمل: المتابعون المفقودون وأن الفيديوهات الأولى نُشرت قبل بداية البيانات اليومية.</div>`;
+  chart('convScatter',{type:'scatter',data:{datasets:[{data:vs.map(v=>({x:v.views,y:v.conv*1000,id:v.id,t:v.short})),backgroundColor:S2,pointRadius:5,pointHoverRadius:8,pointBorderColor:'#1a1a19',pointBorderWidth:2}]},options:{maintainAspectRatio:false,interaction:{mode:'nearest',intersect:true},onClick:(e,els)=>{ if(els[0]) openVideo(els[0].element.$context.raw.id); },scales:{x:{type:'logarithmic',title:{display:true,text:'المشاهدات'},grid:gridOpts,ticks:{...axisTicks,callback:x=>[1000,10000,100000].includes(x)?nf(x):''}},y:{title:{display:true,text:'متابع لكل 1000 مشاهدة'},grid:gridOpts,ticks:axisTicks,beginAtZero:true}},plugins:{tooltip:{callbacks:{title:x=>x[0].raw.t,label:x=>` ${nf(x.raw.x)} مشاهدة · ${nf(x.raw.y,1)}/1000`}}}}});
+}
+
+/* ================= 10) Action Plan ================= */
+function monthStats(prefix){ const g=V.filter(v=>v.date.startsWith(prefix)); return {n:g.length,mv:median(g.map(v=>v.views)),r5:median(g.map(v=>v.r5)),search:median(g.map(v=>v.search)),types:g.reduce((o,v)=>(o[typeOf(v)]=(o[typeOf(v)]||0)+1,o),{})}; }
+function recs(){
+  const ts=typeStats(V).filter(s=>s.n>=3).sort((a,b)=>b.mviews-a.mviews);
+  const aug=monthStats('2026-08'), sep=monthStats('2026-09');
+  const lowHook=[...V].filter(v=>v.r5!=null).sort((a,b)=>a.r5-b.r5).slice(0,4);
+  const dist=V.filter(v=>typeOf(v)===TYPES[0]);
+  const searchTop=[...V].sort((a,b)=>b.search-a.search).slice(0,4);
+  const saveTop=[...V].sort((a,b)=>b.saveRate-a.saveRate).slice(0,4);
+  const long=V.filter(v=>v.dur>=60);
+  const pk=peakInfo();
+  const offers=typeStats(V).find(s=>s.t===TYPES[1]), lists=typeStats(V).find(s=>s.t===TYPES[2]);
+  const promo=V.filter(v=>/احجز|الحجز|للحجز/.test(v.caption));
+  const nonPromo=V.filter(v=>!/احجز|الحجز|للحجز/.test(v.caption));
+  const perWeek=V.length/(daysBetween(ALL_FROM,ALL_TO)/7);
+  const sepTop=Object.entries(sep.types).sort((a,b)=>b[1]-a[1])[0];
+  const hotelTour=typeStats(V).find(s=>s.t===TYPES[4]), guides=typeStats(V).find(s=>s.t===TYPES[3]);
+  return [
+   {p:'h',t:'بداية الفيديو تخسر نصف المشاهدين بسرعة',num:`وسيط من غادر خلال أول ثانيتين ${pct(median(V.map(v=>v.r2==null?null:1-v.r2)),0)}، والباقون عند الثانية 5 وسيطهم ${pct(BASE.r5,0)}. الاحتفاظ عند ث5 أقوى مؤشر مرتبط بالمشاهدات بعد متوسط المشاهدة (سبيرمان ${nf(spearman(V.map(v=>v.r5),V.map(v=>v.views)).r,2)}).`,crit:c('C8','C6'),act:'اختبر في الفيديوهات القادمة أن تقول النتيجة أو الرقم الأهم في أول ثانيتين، مثل "4 دقائق و41 ثانية مشياً" كما في أعلى فيديو. وراجع أضعف البدايات عند ثانية السقوط.',v:lowHook},
+   {p:'h',t:`تراجع أداء فيديوهات سبتمبر`,num:`وسيط مشاهدات فيديوهات أغسطس ${nf(aug.mv)} (${aug.n} فيديو) مقابل ${nf(sep.mv)} في سبتمبر (${sep.n} فيديو). أكثر نوع نُشر في سبتمبر: "${sepTop?sepTop[0]:'—'}" (${sepTop?sepTop[1]:0}). وسيط الاحتفاظ عند ث5: أغسطس ${pct(aug.r5,0)} مقابل سبتمبر ${pct(sep.r5,0)}.`,crit:c('C2','C5','C4'),act:`أعد إدخال الأنواع الأعلى أداءً في الجدول، وقلّل تكرار نفس النوع بشكل متتالٍ. هذي فرضية تحتاج اختباراً، لأن البيانات لا تثبت أن نوع المحتوى هو سبب التراجع.`,v:V.filter(v=>v.date.startsWith('2026-09')).sort((a,b)=>a.views-b.views).slice(0,4)},
+   {p:'h',t:'"تجربة المسافة من الفندق إلى الحرم" أقوى صيغة عندك',num:dist.length?`${dist.length} فيديوهات بوسيط ${nf(median(dist.map(v=>v.views)))} مشاهدة مقابل وسيط الحساب ${nf(BASE.views)}، ومتوسط مشاهدة ${sec(median(dist.map(v=>v.avgWatch)))}.`:NA,crit:c('C5','C12'),act:'كرّر هذي الصيغة بانتظام مع فنادق مختلفة، وحط سؤال "كم يبعد؟" في البداية والجواب في آخر الفيديو (سؤال يُجاب عنه في آخره).',v:dist},
+   {p:'m',t:'البحث مصدر مشاهدات مستمر لفيديوهات الإرشادات',num:`أعلى 4 فيديوهات في نسبة زيارات البحث: ${searchTop.map(v=>`${pct(v.search,0)}`).join('، ')} من مشاهداتها من البحث. مشاهدات الحساب من 2026-09-01 إلى ${DAILY_MAX} ${nf(sum(DATA.daily.filter(d=>d.date>='2026-09-01'&&d.date<=DAILY_MAX).map(d=>d.views)))}، بينما مجموع مشاهدات فيديوهات سبتمبر الجديدة ${nf(sum(V.filter(v=>v.date.startsWith('2026-09')).map(v=>v.views)))} فقط، أي أن أغلب المشاهدات تأتي من فيديوهات أقدم.`,crit:c('C7','C15'),act:'اكتب الكلمات التي يبحث عنها المعتمر (اسم الفندق، "كم يبعد عن الحرم"، "طريقة الوصول") في النص على الشاشة والوصف، بدون حشو.',v:searchTop},
+   {p:'m',t:'الحفظ والمشاركة يرتبطان بالمشاهدات أكثر من الإعجابات',num:`سبيرمان مع المشاهدات: المشاركة ${nf(spearman(V.map(v=>v.shareRate),V.map(v=>v.views)).r,2)}، الحفظ ${nf(spearman(V.map(v=>v.saveRate),V.map(v=>v.views)).r,2)}، معدل التفاعل الإجمالي ${nf(spearman(V.map(v=>v.engRate),V.map(v=>v.views)).r,2)}.`,crit:c('C2'),act:'ركّز على محتوى "يستاهل ينحفظ" (أماكن، أبواب، خرائط، مواقف)، واختبر دعوة واضحة للحفظ في آخر الفيديو.',v:saveTop},
+   {p:'m',t:'الفيديوهات الطويلة: إكمال أقل لكن وقت مشاهدة وتحويل أعلى',num:long.length?`${long.length} فيديوهات ≥ 60ث: وسيط الإكمال ${pct(median(long.map(v=>v.fullRate)))} (الحساب ${pct(BASE.fullRate)})، ومتوسط المشاهدة ${sec(median(long.map(v=>v.avgWatch)))} (الحساب ${sec(BASE.avgWatch)})، والتحويل ${nf(sum(long.map(v=>v.newFollowers))/sum(long.map(v=>v.views))*1000,1)}/1000.`:NA,crit:c('C1','C5','C12'),act:'استخدم الطول للأدلة والقوائم فقط، مع بداية ووسط ونهاية واضحة. وقارن كل فيديو طويل بنسخة أقصر من نفس الموضوع.',v:long},
+   {p:'m',t:'وقت النشر بالنسبة لذروة متابعيك',num:`ذروة نشاط متابعيك ${hh(pk.peak)}، وأغلب فيديوهاتك تُنشر ${(()=>{const hc={};V.forEach(v=>hc[v.hour]=(hc[v.hour]||0)+1);const t=Object.entries(hc).sort((a,b)=>b[1]-a[1])[0];return hh(+t[0]);})()} (${tz?'بتوقيت السعودية':'UTC'}).`,crit:c('C13'),act:`انشر بين ${hh(pk.from)} و${hh(pk.peak)} (قبل الذروة بساعتين كحد أقصى). تأكد أولاً من المنطقة الزمنية في صفحة أوقات النشر.`,v:[]},
+   {p:'m',t:'ثبّت معدل نشر تقدر تلتزم به',num:`معدلك التاريخي ${nf(perWeek,1)} فيديو أسبوعياً (${V.length} فيديو في ${daysBetween(ALL_FROM,ALL_TO)} يوماً). أغسطس ${aug.n} فيديو مقابل سبتمبر ${sep.n} حتى ${ALL_TO}.`,crit:c('C14'),act:'حدد هدفاً يومياً أو أسبوعياً ثابتاً والتزم به. معيار تيك توك هنا موجّه للناشرين الإعلاميين، فاعتبره فرضية تختبرها.',v:[]},
+   {p:'l',t:'التحويل للمتابعين حسب نوع المحتوى',num:`${lists?`قوائم الفنادق ${nf(lists.conv*1000,1)}/1000`:''}${offers?` · العروض والأسعار ${nf(offers.conv*1000,1)}/1000`:''}${hotelTour?` · تعريف الفنادق ${nf(hotelTour.conv*1000,1)}/1000`:''}${guides?` · الإرشادات ${nf(guides.conv*1000,1)}/1000`:''}. الفيديوهات التي فيها "احجز/للحجز" وسيط مشاهداتها ${nf(median(promo.map(v=>v.views)))} مقابل ${nf(median(nonPromo.map(v=>v.views)))} لغيرها.`,crit:c('C10'),act:'اجعل المحتوى المفيد أساس الفيديو والدعوة للحجز في الخاتمة فقط (بنية Hook ثم Body ثم Close، إرشاد إعلاني).',v:promo.slice(0,4)},
+   {p:'l',t:'حوّل المواضيع الناجحة إلى سلاسل',num:(()=>{const a=V.find(v=>v.id==='7670550065517251861'), b=V.find(v=>v.id==='7678749511807749397'); return `"فندق مكارم أجياد" ${nf(a.views)} مشاهدة، ثم "فنادق منطقة أجياد" بعده بـ 22 يوماً ${nf(b.views)} مشاهدة (${nf(b.views/BASE.views,1)}× وسيط الحساب) و${nf(b.conv*1000,1)} متابع/1000.`;})(),crit:c('C3','C7'),act:'اصنع سلاسل حول المناطق والمواضيع التي أثبتت اهتماماً (أجياد، جبل عمر، برج الساعة). تيك توك يقول إن نجاح فيديو سابق ليس عاملاً مباشراً، فكل حلقة لازم تقف بنفسها ببداية قوية.',v:[V.find(v=>v.id==='7670550065517251861'),V.find(v=>v.id==='7678749511807749397'),V.find(v=>v.id==='7669116825464196372'),V.find(v=>v.id==='7679477505065094420')]},
+  ];
+}
+function renderAction(){
+  const R=recs(); const pl={h:['عالية','prio-h'],m:['متوسطة','prio-m'],l:['منخفضة','prio-l']};
+  $('#t-action').innerHTML=`<h2>Action Plan</h2><p class="lead">كل توصية فيها: المشكلة أو الفرصة، والرقم من حسابك، والمعيار من ملف تيك توك، والإجراء، والأولوية، والفيديوهات الداعمة. الأرقام محسوبة على كل البيانات (${V.length} فيديو) ولا تتغير مع الفلتر.</p>
+  ${R.map((r,i)=>`<div class="rec"><div class="rh"><h3>${i+1}. ${r.t}</h3><span class="tag ${pl[r.p][1]}">أولوية ${pl[r.p][0]}</span></div><dl>
+   <dt>الرقم من حسابك</dt><dd>${r.num}</dd><dt>المعيار</dt><dd>${r.crit}</dd><dt>الإجراء المقترح</dt><dd>${r.act}</dd>
+   <dt>فيديوهات داعمة</dt><dd>${r.v.length? r.v.map(v=>vlink(v)).join(' · ') : '<span class="muted">مبنية على بيانات الحساب لا على فيديو محدد</span>'}</dd></dl></div>`).join('')}`;
+}
+
+/* ================= 11) لوحة الاختبار ================= */
+function renderTests(){
+  const top=[...V].sort((a,b)=>b.views-a.views).slice(0,8);
+  const cnt=(arr,f)=>arr.reduce((o,v)=>(o[f(v)]=(o[f(v)]||0)+1,o),{});
+  const tt=Object.entries(cnt(top,typeOf)).sort((a,b)=>b[1]-a[1]);
+  const db=Object.entries(cnt(top,v=>durBucket(v.dur))).sort((a,b)=>b[1]-a[1]);
+  const strongHook=top.filter(v=>v.r5!=null && v.r5>=BASE.r5).length;
+  const q=top.filter(v=>/[؟?]/.test(v.caption)).length, qAll=V.filter(v=>/[؟?]/.test(v.caption));
+  const H=[
+   ['اكتب النتيجة أو الرقم في أول ثانيتين','الاحتفاظ عند ث5 مرتبط بالمشاهدات، والبداية تخسر أغلب المشاهدين','الباقون عند ث2 وث5 ومتوسط المشاهدة',c('C8','C9')],
+   ['نسخة أقصر (21–34ث) من فيديو طويل ناجح','الطويل إكماله أقل لكن وقت مشاهدته أعلى، والمعيار الرقمي الوحيد للمدة إعلاني','المشاهدة الكاملة، متوسط المشاهدة، المشاهدات',c('C1','C5','C11')],
+   ['نفس الموضوع بطريقتين: إرشادي مقابل ترويجي','فيديوهات "احجز" أضعف في الوسيط، والبيانات لا تثبت السببية','المشاهدات والتحويل للمتابعين',c('C10')],
+   ['السعر في نهاية الفيديو بدل بدايته','العروض والأسعار وسيطها أقل من الإرشادات','الاحتفاظ ث5 والمشاهدة الكاملة',c('C10','C12')],
+   ['ظهور شخص أمام الكاميرا مقابل تصوير المكان فقط',`${NA} علّم الفيديوهات يدوياً في صفحة أنواع المحتوى`,'كل المقاييس',c('C17')],
+   ['سؤال في البداية وجواب في آخر الفيديو',`${qAll.length} فيديو في وصفه سؤال، ووسيط مشاهداتها ${nf(median(qAll.map(v=>v.views)))} مقابل ${nf(BASE.views)} للحساب`,'المشاهدة الكاملة ومتوسط المشاهدة',c('C12')],
+   ['دعوة صريحة للحفظ في الخاتمة','الحفظ مرتبط بالمشاهدات أكثر من الإعجاب','معدل الحفظ والمشاهدات',c('C2','C10')],
+   ['وقت النشر داخل نافذة ما قبل الذروة','قلة التنوع في ساعات النشر تمنع المقارنة الآن','وسيط المشاهدات في أول 48 ساعة (من TikTok Studio)',c('C13')],
+  ];
+  $('#t-tests').innerHTML=`<h2>لوحة اختبار المحتوى</h2><p class="lead">هذي <b>فرضيات اختبار</b> مبنية على بياناتك، وليست حقائق مسبقة. اختبر كل فرضية على 3 فيديوهات على الأقل، وغيّر متغيراً واحداً فقط في كل مرة.</p>
+  <div class="grid two">
+   <div class="card"><h3>✅ ما الذي يجب تكراره؟ (أنماط أعلى 8 فيديوهات)</h3><ul class="findings">
+    <li>الأنواع: ${tt.map(([t,n])=>`${t} (${n})`).join('، ')}.</li>
+    <li>المدة: ${db.map(([b,n])=>`${b} (${n})`).join('، ')}.</li>
+    <li>${strongHook} من 8 بدايتهم أقوى من وسيط الحساب عند ث5 ${c('C8')}.</li>
+    <li>وسيط المشاركة ${pct(median(top.map(v=>v.shareRate)),2)} ووسيط الحفظ ${pct(median(top.map(v=>v.saveRate)),2)}، مقابل وسيط الحساب ${pct(BASE.shareRate,2)} و${pct(BASE.saveRate,2)} ${c('C2')}.</li>
+    <li>${q} من 8 في وصفها سؤال مباشر للمشاهد.</li>
+    <li>المواضيع: معلومة عملية لزائر الحرم (المسافة، الوصول، الأبواب، المصلى، المقهى).</li></ul></div>
+   <div class="card"><h3>🧪 ما الذي يجب اختباره؟</h3><div class="small">الفرضية ← لماذا (من البيانات) ← المقياس ← المعيار</div></div>
+  </div>
+  ${tableHtml([{h:'الفرضية'},{h:'لماذا (من البيانات)'},{h:'مقياس الحكم'},{h:'المعيار'}],H.map(h=>`<tr><td class="cap"><b>${h[0]}</b></td><td class="cap">${h[1]}</td><td class="cap">${h[2]}</td><td>${h[3]}</td></tr>`))}`;
+}
+
+/* ================= 12) التقويم ================= */
+function renderCalendar(){
+  const perWeek=V.length/(daysBetween(ALL_FROM,ALL_TO)/7); const posts=Math.max(1,Math.min(7,Math.round(perWeek)));
+  const byDay=DAYS.map((n,d)=>{ const g=V.filter(v=>v.day===d); return {d,n,c:g.length,mv:median(g.map(v=>v.views))}; });
+  const ranked=[...byDay].filter(x=>x.c).sort((a,b)=>b.mv-a.mv);
+  const chosen=new Set(ranked.slice(0,posts).map(x=>x.d));
+  const ts=typeStats(V).filter(s=>s.n>=3).sort((a,b)=>b.mviews-a.mviews);
+  const pool=ts.slice(0,3).map(s=>s.t); const conv=typeStats(V).filter(s=>s.n>=3).sort((a,b)=>b.conv-a.conv)[0];
+  const pk=peakInfo(); const slot=`${hh(pk.from)}–${hh(pk.peak)}`;
+  let k=0, prev=null;
+  const days=[0,1,2,3,4,5,6].map(d=>{ const info=byDay[d];
+    if(!chosen.has(d)) return `<div class="day off"><h4>${info.n}</h4><div class="small">بدون نشر مقترح</div><div class="small">وسيط المشاهدات: ${info.c?nf(info.mv):'لا يوجد نشر سابق'} (${info.c} فيديو)</div></div>`;
+    let t=pool[k%pool.length]; if(t===prev && pool.length>1){ k++; t=pool[k%pool.length]; } k++; prev=t;
+    const ts1=ts.find(s=>s.t===t);
+    return `<div class="day"><h4>${info.n}</h4><div class="time">${slot}</div><div style="margin:6px 0"><span class="tag good">${t}</span></div>
+     <div class="small">لماذا: وسيط مشاهدات ${info.n} في حسابك ${nf(info.mv)} (${info.c} فيديو). النوع وسيطه ${nf(ts1.mviews)} (${ts1.n} فيديو). الوقت قبل ذروة متابعيك ${hh(pk.peak)} ${c('C13')}. لا يتكرر نفس النوع في يومين متتاليين ${c('C4')}.</div></div>`; }).join('');
+  $('#t-calendar').innerHTML=`<h2>تقويم المحتوى المقترح (أسبوعي)</h2>
+  <p class="lead">مبني على: معدل نشرك التاريخي (${nf(perWeek,1)} أسبوعياً → ${posts} فيديوهات)، وأفضل أيامك حسب وسيط المشاهدات، ونشاط متابعيك بالساعة ${c('C13')}، والأنواع الأعلى أداءً (3 فيديوهات فأكثر)، والتنويع ${c('C4')}. الأوقات ${tz?'بتوقيت السعودية':'UTC'}.</p>
+  <div class="note">أداء الأيام مبني على 1–9 فيديوهات لكل يوم، فترتيب الأيام مؤشر ضعيف. اعتبر التقويم خطة اختبار وحدّثه بعد 4 أسابيع من النشر.</div>
+  <div class="cal">${days}</div>
+  ${conv?`<div class="note info">لجلب متابعين تحديداً: أعلى نوع في التحويل هو "${conv.t}" (${nf(conv.conv*1000,1)} متابع لكل 1000 مشاهدة، ${conv.n} فيديو). بدّله مع أحد الأيام إذا كان هدفك نمو المتابعين.</div>`:''}`;
+}
+
+/* ================= 13) المصادر ================= */
+function renderSources(){
+  const avail=[['Video Views','video_views_count','✅'],['Reach','video_reach',`✅ (${V.filter(v=>v.reach==null).length? 'غير متوفر لـ'+V.filter(v=>v.reach==null).map(v=>' فيديو '+v.date).join('،')+'، لأن تيك توك يسلّمه بعد 24–48 ساعة':'متوفر لكل الفيديوهات'})`],['Impressions','—','❌ غير متوفر في TikTok Organic'],['Likes','video_likes','✅'],['Comments','video_comments','✅'],['Shares','video_shares','✅'],['Saves/Favorites','video_favorites','✅'],['Average Watch Time','video_average_time_watched','✅'],['Total Watch Time','video_total_time_watched','✅'],['Video Completion Rate','video_full_watched_rate','✅ (نسبة من شاهد الفيديو كاملاً)'],['منحنى الاحتفاظ','video_view_retention_percentage',`✅ ثانية بثانية لـ ${V.filter(v=>v.retention).length} فيديو (غير متوفر لمنشوري الصور)`],['Followers gained (لكل فيديو)','video_new_followers','✅'],['Followers lost','daily_lost_followers','⚠️ على مستوى الحساب فقط، وقيمه تظهر مجمّعة مرة في الأسبوع'],['Engagement Rate','—','⚠️ غير متوفر جاهزاً، محسوب: (إعجاب+تعليق+مشاركة+حفظ) ÷ مشاهدات'],['مدة الفيديو','video_duration','⚠️ 0 لمنشورين (غالباً صور)'],['تاريخ ووقت النشر','video_create_datetime','⚠️ المنطقة الزمنية غير مذكورة (UTC على الأرجح)'],['المتابعون وقت النشر','total_followers_count (يومي)','⚠️ من 25 يوليو فقط'],['بيانات الحساب اليومية','video_views, likes…','⚠️ آخر 60 يوماً فقط (حد TikTok Organic)'],['إعادة المشاهدة (Rewatch)','—','❌ غير متوفر'],['تطور مشاهدات الفيديو يومياً (سرعة النمو)','—','❌ غير متوفر، فقط الإجمالي'],['ظهور شخص أمام الكاميرا / محتوى الـ Hook','—','❌ غير متوفر، يمكن تعليمه يدوياً'],['مصادر المشاهدات','video_impression_sources_*','✅'],['مشاهد جديد/عائد، متابع/غير متابع','video_audience_types_*','✅'],['نشاط المتابعين بالساعة','audience_activity_count','✅ آخر 7 أيام']];
+  const conflicts=[
+   `<b>${c('C1')} مقابل البيانات:</b> المعيار يقول إن إكمال الفيديو الطويل إشارة قوية. في حسابك نسبة المشاهدة الكاملة ضعيفة الارتباط بالمشاهدات (سبيرمان ${nf(spearman(V.map(v=>v.fullRate),V.map(v=>v.views)).r,2)})، وأعلى الفيديوهات مشاهدةً إكمالها متوسط أو منخفض. هذا لا ينقض المعيار، لكن الأرقام تتوافق أكثر مع ${c('C5')} (وقت المشاهدة أثقل وزناً).`,
+   `<b>${c('C11')} مقابل البيانات:</b> نافذة 21–34ث ليست الأعلى في المشاهدات عندك. المعيار إعلاني ويقيس تحويل المبيعات، فلا يُعتمد عليه لانتشار المحتوى العضوي.`,
+   `<b>${c('C9')} مقابل ${c('C8')}:</b> المصدر الإعلاني يذكر 3 ثوانٍ وCreator Academy يذكر 5 ثوانٍ. بياناتك تدعم الثانية 5 (ارتباط ${nf(spearman(V.map(v=>v.r5),V.map(v=>v.views)).r,2)} مقابل ${nf(spearman(V.map(v=>v.r3),V.map(v=>v.views)).r,2)} للثانية 3).`,
+   `<b>${c('C2')} وأنواع التفاعل:</b> المعيار يذكر الإعجاب والمشاركة والحفظ دون ترتيب لأوزانها. في حسابك المشاركة والحفظ مرتبطان بالمشاهدات، والإعجاب ضعيف الارتباط. هذي ملاحظة من البيانات وليست تعارضاً صريحاً.`,
+   `<b>${c('C3')}:</b> لا تعارض. ${(()=>{const t=[...V].sort((a,b)=>b.views-a.views)[0]; const late=V.filter(v=>(v.followersAtPost||0)>=1800); return `أعلى فيديو (${nf(t.views)} مشاهدة) نُشر والحساب فيه ${nf(t.followersAtPost)} متابعاً، بينما ${late.length} فيديو نُشرت والحساب فيه 1,800 متابع فأكثر ووسيط مشاهداتها ${nf(median(late.map(v=>v.views)))}.`;})()}`,
+   `<b>بيانات Windsor نفسها:</b> حقل "Daily count of gained followers" يظهر قيماً مجمّعة مرة في الأسبوع وأصفاراً بقية الأيام، فاستُخدم total_followers_count لحساب النمو بدلاً منه.`,
+  ];
+  $('#t-sources').innerHTML=`<h2>المصادر وتوفر البيانات</h2>
+  <div class="grid two">
+   <div class="card"><h3>المصدر الأول: معايير تيك توك</h3><p class="small">ملف tiktok-criteria.md، جُمع من مواقع تيك توك الرسمية فقط. 🟦 = عضوي، 🟨 = إعلاني. اضغط على أي رمز لقراءة النص الأصلي.</p><div class="pill-row">${Object.keys(CRIT).map(k=>c(k)+`<span class="small">${CRIT[k].t}</span>`).join('<br>')}</div>
+    <div class="note">حد تقني: مواقع تيك توك محجوبة عن بيئة العمل، فالنصوص مأخوذة من نتائج البحث عن الصفحات الرسمية مع روابطها. الملف المرفق أولاً (Real Talk Creative Playbook) دليل Meta لإعلانات Reels ولم يُستخدم.</div></div>
+   <div class="card"><h3>المصدر الثاني: بيانات Windsor</h3><p class="small">الكونكتور: tiktok_organic · الحساب: ${esc(DATA.account.name)} (حساب أعمال) · السحب: ${DATA.pulledAt} · ${V.length} فيديو (كل فيديوهات الحساب) · بيانات يومية ${DAILY_MIN} ← ${DAILY_MAX}.</p>
+    <div class="note">الفترة المطلوبة 90 يوماً غير ممكنة: TikTok Organic يعطي آخر 60 يوماً لبيانات الحساب، وأول فيديو في الحساب نُشر في 22 يوليو 2026.</div></div>
+  </div>
+  <h3 style="margin-top:20px">توفر كل مقياس</h3>${tableHtml([{h:'المقياس'},{h:'حقل Windsor'},{h:'الحالة'}],avail.map(a=>`<tr><td>${a[0]}</td><td style="direction:ltr;text-align:right">${a[1]}</td><td class="cap">${a[2]}</td></tr>`))}
+  <h3 style="margin-top:20px">التعارضات بين البيانات والمعايير</h3><div class="card"><ul class="findings">${conflicts.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+  <h3 style="margin-top:20px">طريقة الحساب</h3><div class="card small"><ul class="findings">
+   <li>"وسيط الحساب" = الوسيط لكل ${V.length} فيديو. يُستخدم كمرجع داخلي عند غياب حد رسمي من تيك توك، ولا يُقدَّم كمعيار من تيك توك.</li>
+   <li>الارتباط = معامل سبيرمان للرتب، ويقيس العلاقة وليس السببية.</li>
+   <li>معدل المشاركة = shares ÷ views · معدل الحفظ = favorites ÷ views · التحويل = new_followers ÷ views.</li>
+   <li>تصنيف الأنواع آلي بكلمات مفتاحية في الوصف، ويمكن تعديله يدوياً.</li></ul></div>`;
+}
+
+/* ---------- نافذة تفاصيل الفيديو ---------- */
+function openVideo(id){
+  const v=V.find(x=>x.id===id); if(!v) return;
+  const S=v.sources; const src=[['For You',S.foryou],['البحث',S.search],['البروفايل',S.profile],['المتابَعون',S.follow],['أخرى',S.others],['الرسائل',S.dm]].filter(x=>x[1]!=null);
+  $('#modalBody').innerHTML=`<h2 style="margin-inline-end:40px">${esc(v.caption)}</h2><div class="small">ID ${v.id} · ${v.date} ${v.time} · ${typeOf(v)}</div>
+   ${metGrid(v)}
+   <div class="mets">
+    <div class="met"><b>${nf(v.likes)}</b><span>إعجابات</span></div><div class="met"><b>${nf(v.comments)}</b><span>تعليقات</span></div>
+    <div class="met"><b>${nf(v.shares)}</b><span>مشاركات</span></div><div class="met"><b>${nf(v.saves)}</b><span>حفظ</span></div>
+    <div class="met"><b>${v.reach==null?'غير متوفر':nf(v.reach)}</b><span>الوصول (مشاهدون فريدون)</span></div>
+    <div class="met"><b>${nf(v.totalWatch/3600,1)} س</b><span>إجمالي وقت المشاهدة</span></div>
+    <div class="met"><b>${nf(v.profileViews)}</b><span>زيارات البروفايل</span></div>
+    <div class="met"><b>${nf(v.conv*1000,1)}</b><span>متابع/1000 مشاهدة</span></div>
+    <div class="met"><b>${v.followersAtPost==null?'غير متوفر':nf(v.followersAtPost)}</b><span>متابعون يوم النشر</span></div>
+    <div class="met"><b>${v.audience?pct(v.audience.newV,0):'غير متوفر'}</b><span>مشاهدون جدد</span></div>
+    <div class="met"><b>${pct(v.followerShare,0)}</b><span>من المشاهدين متابعون</span></div>
+    <div class="met"><b>${v.watchPct==null?'—':pct(v.watchPct,0)}</b><span>من المدة شوهد</span></div>
+   </div>
+   <h3>منحنى الاحتفاظ ${c('C6','C8')}</h3>${v.retention?`<div class="chart-box"><canvas id="mdCurve"></canvas></div>`:`<p>${NA}. منشور صور على الأرجح.</p>`}
+   <h3 style="margin-top:12px">مصادر المشاهدات ${c('C7')}</h3>${src.map(([n,x])=>`<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><span style="width:90px" class="small">${n}</span><div class="bar-inline" style="flex:1"><i style="width:${x*100}%"></i></div><span class="small" style="width:44px;text-align:left">${pct(x,1)}</span></div>`).join('')}
+   ${v.shareUrl?`<p style="margin-top:12px"><a href="${esc(v.shareUrl)}" target="_blank" rel="noopener">▶ شاهد الفيديو على تيك توك</a></p>`:''}<p class="small" style="margin-top:12px">المصدر: Windsor · tiktok_organic · جدول Video.</p>`;
+  $('#modalBg').classList.add('on'); document.body.style.overflow='hidden';
+  if(v.retention){ const labels=v.retention.map((_,i)=>i), med=avgCurve(V.filter(x=>x.retention), v.retention.length);
+    chart('mdCurve',{type:'line',data:{labels,datasets:[{label:'هذا الفيديو',data:v.retention,borderColor:S1},{label:'وسيط الحساب',data:med,borderColor:'#898781',borderWidth:1.5}]},options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:true,rtl:true,labels:{color:'#c3c2b7',boxWidth:10,boxHeight:10}},tooltip:{callbacks:{title:x=>`الثانية ${x[0].label}`,label:x=>` ${x.dataset.label}: ${pct(x.raw,0)}`}}},scales:{x:{grid:{display:false},ticks:{...axisTicks,maxTicksLimit:10}},y:{min:0,max:1,grid:gridOpts,ticks:{...axisTicks,callback:x=>pct(x,0)}}}}}); }
+}
+function openCrit(id){ const k=CRIT[id];
+  $('#modalBody').innerHTML=`<h2 style="margin-inline-end:40px">${id} · ${k.t}</h2><div class="pill-row" style="margin:6px 0"><span class="tag ${k.scope==='ads'?'warn':'good'}">${k.scope==='ads'?'إرشاد إعلاني':'محتوى عضوي'}</span></div><blockquote>${esc(k.q)}</blockquote><p><b>المعنى:</b> ${k.m}</p><p class="small">المصدر: <a href="${k.url}" target="_blank" rel="noopener">${esc(k.src)}</a></p>`;
+  $('#modalBg').classList.add('on'); document.body.style.overflow='hidden'; }
+function closeModal(){ $('#modalBg').classList.remove('on'); document.body.style.overflow=''; if(charts.mdCurve){ charts.mdCurve.destroy(); delete charts.mdCurve; } }
+$('#modalX').onclick=closeModal; $('#modalBg').onclick=e=>{ if(e.target.id==='modalBg') closeModal(); };
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+document.addEventListener('click',e=>{ const cr=e.target.closest('.crit'); if(cr){ e.stopPropagation(); openCrit(cr.dataset.c); return; } const vl=e.target.closest('[data-v]'); if(vl && !e.target.closest('select')){ openVideo(vl.dataset.v); } });
+
+/* ---------- التبويبات والتشغيل ---------- */
+const RENDER={overview:renderOverview,videos:renderVideos,hits:renderHits,hook:renderHook,viral:renderViral,types:renderTypes,duration:renderDuration,timing:renderTiming,conversion:renderConversion,action:renderAction,tests:renderTests,calendar:renderCalendar,sources:renderSources};
+let current=store.get('tt_tab','overview'); if(!RENDER[current]) current='overview';
+function showTab(t){ current=t; store.set('tt_tab',t);
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on',s.id==='t-'+t));
+  RENDER[t](); }
+function renderAll(){ $('#rangeLabel').textContent=`${range.from} ← ${range.to} · ${FV().length} فيديو`; RENDER[current](); }
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{ showTab(b.dataset.t); window.scrollTo({top:0}); });
+document.querySelectorAll('#presetSeg button').forEach(b=>b.onclick=()=>setPreset(b.dataset.p));
+$('#dFrom').onchange=e=>{ range.from=e.target.value||ALL_FROM; renderAll(); };
+$('#dTo').onchange=e=>{ range.to=e.target.value||ALL_TO; renderAll(); };
+$('#dFrom').min=$('#dTo').min=ALL_FROM; $('#dFrom').max=$('#dTo').max=ALL_TO;
+$('#tzSel').value=String(tz); $('#tzSel').onchange=e=>{ tz=+e.target.value; store.set('tt_tz',tz); localize(); renderAll(); };
+$('#accName').textContent=DATA.account.name;
+$('#pulledLine').textContent=`بيانات Windsor · TikTok Organic · سُحبت ${DATA.pulledAt} · ${V.length} فيديو`;
+setPreset('all'); showTab(current);
+</script>
+</body>
+</html>
