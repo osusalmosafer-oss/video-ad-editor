@@ -289,7 +289,7 @@ const V = DATA.videos.map(v => {
 const FOLLOWERS = Object.fromEntries(DATA.daily.map(d=>[d.date,d.totalFollowers]));
 V.forEach(v => { const f = FOLLOWERS[v.dt.slice(0,10)]; v.followersAtPost = f ?? null; v.viewsPerFollower = f ? v.views/f : null; });
 const PULL = DATA.pulledAt;
-const DAILY_MIN = DATA.daily[0].date, DAILY_MAX = '2026-09-22';
+const DAILY_MIN = DATA.daily[0].date, DAILY_MAX = DATA.daily[DATA.daily.length-1].date;
 
 // وسيط الحساب (كل الفيديوهات) — مرجع داخلي وليس معياراً من تيك توك
 const BASE = {};
@@ -303,7 +303,7 @@ function localize(){
 localize();
 
 /* ---------- الفلتر الزمني ---------- */
-const ALL_FROM = '2026-07-22', ALL_TO = '2026-09-22';
+const ALL_FROM = DATA.range.from, ALL_TO = DATA.range.to;
 let range = {preset:'all', from:ALL_FROM, to:ALL_TO};
 const addDays = (s,n) => { const d=new Date(s+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
 const daysBetween = (a,b) => Math.round((new Date(b+'T00:00:00Z')-new Date(a+'T00:00:00Z'))/864e5)+1;
@@ -367,7 +367,7 @@ function renderOverview(){
   const curCovered = range.from>=DAILY_MIN;
   const dsum = (arr,k)=>sum(arr.map(d=>d[k]));
   const followersAt = d => FOLLOWERS[d] ?? null;
-  const fg = (f,t) => { const a=followersAt(addDays(f,-1))??followersAt(f), b=followersAt(t); return a!=null&&b!=null? b-a : null; };
+  const fg = (f,t) => { if(t>DAILY_MAX) t=DAILY_MAX; const a=followersAt(addDays(f,-1))??followersAt(f), b=followersAt(t); return a!=null&&b!=null? b-a : null; };
   const vPrev=V.filter(v=>inRange(v.date,pr.from,pr.to));
   const cmpLabel = `بالـ${pr.n} يوم السابقة`;
   const dv = (k)=> deltaHtml(dsum(dCur,k), prevCovered? dsum(dPrev,k):null, cmpLabel);
@@ -480,7 +480,7 @@ function renderHits(){
   const flops=[...flopPool].sort((a,b)=>a.views-b.views).slice(0,5);
   const recent=vs.filter(v=>v.date>cutoff);
   const card=(v,good)=>`<div class="vcard"><div class="head"><div><span class="cap" data-v="${v.id}">${esc(v.short)}</span><div class="small">${typeOf(v)}</div></div><span class="tag ${good?'good':'bad'}">${good?'نجح':'ضعيف'}</span></div>${metGrid(v)}<ul class="reasons">${(good?successReasons(v):flopDiagnosis(v)).join('')}</ul></div>`;
-  $('#t-hits').innerHTML=`<h2>شنو ضرب وشنو ما ضرب</h2><p class="lead">الترتيب حسب المشاهدات الفعلية. كل تفسير يقارن الفيديو بوسيط حسابك (45 فيديو) ويذكر معيار تيك توك الذي يستند إليه. وسيط الحساب مرجع داخلي وليس حداً من تيك توك.</p>
+  $('#t-hits').innerHTML=`<h2>شنو ضرب وشنو ما ضرب</h2><p class="lead">الترتيب حسب المشاهدات الفعلية. كل تفسير يقارن الفيديو بوسيط حسابك (${V.length} فيديو) ويذكر معيار تيك توك الذي يستند إليه. وسيط الحساب مرجع داخلي وليس حداً من تيك توك.</p>
   <div class="grid two"><div><h3>✅ الفيديوهات التي نجحت</h3>${top.map(v=>card(v,true)).join('')||'<p class="muted">لا توجد فيديوهات</p>'}</div>
   <div><h3>⚠️ الفيديوهات التي لم تنجح</h3>${recent.length?`<div class="note info">استبعدت ${recent.length} فيديو نُشر خلال آخر 3 أيام من سحب البيانات (${recent.map(v=>vlink(v)).join('، ')}) لأن أرقامها لم تكتمل بعد.</div>`:''}${flops.map(v=>card(v,false)).join('')||'<p class="muted">لا توجد فيديوهات كافية</p>'}</div></div>`;
 }
@@ -541,7 +541,7 @@ function renderViral(){
   <div class="grid kpis">
    ${kpi('سرعة نمو المشاهدات', NA, 'Windsor يعطي إجمالي مشاهدات كل فيديو فقط، بدون تطورها اليومي')}
    ${kpi('فيديوهات ≥ 3× وسيط الحساب', nf(outliers.length), `وسيط المشاهدات ${nf(BASE.views)} · قاعدة داخلية للفرز وليست معياراً من تيك توك`)}
-   ${kpi('أعلى مشاهدات ÷ متابعين', (()=>{const t=[...V.filter(v=>inRange(v.date)&&v.viewsPerFollower!=null)].sort((a,b)=>b.viewsPerFollower-a.viewsPerFollower)[0]; return t? nf(t.viewsPerFollower,0)+'×':'—';})(), 'فيديو مكارم أجياد نُشر والحساب فيه 321 متابعاً. يتوافق مع C3')}
+   ${kpi('أعلى مشاهدات ÷ متابعين', (()=>{const t=[...V.filter(v=>inRange(v.date)&&v.viewsPerFollower!=null)].sort((a,b)=>b.viewsPerFollower-a.viewsPerFollower)[0]; return t? nf(t.viewsPerFollower,0)+'×':'—';})(), 'video_views_count ÷ total_followers_count يوم النشر. يتوافق مع C3')}
   </div>
   ${outliers.length?`<div class="card" style="margin-top:12px"><h3>الفيديوهات الشاذة إيجابياً (≥ 3× وسيط الحساب)</h3><div class="pill-row">${outliers.map(v=>`<span class="tag">${vlink(v)} · ${nf(v.views)}</span>`).join('')}</div></div>`:''}
   <div class="toolbar" style="margin-top:16px"><label class="small">المقياس</label><select id="viralSel">${VIRAL_METRICS.map(x=>`<option value="${x.k}" ${x.k===viralMetric?'selected':''}>${x.l}</option>`).join('')}</select><span class="small">المصدر: ${m.src}</span></div>
@@ -695,18 +695,18 @@ function recs(){
    {p:'h',t:'بداية الفيديو تخسر نصف المشاهدين بسرعة',num:`وسيط من غادر خلال أول ثانيتين ${pct(median(V.map(v=>v.r2==null?null:1-v.r2)),0)}، والباقون عند الثانية 5 وسيطهم ${pct(BASE.r5,0)}. الاحتفاظ عند ث5 أقوى مؤشر مرتبط بالمشاهدات بعد متوسط المشاهدة (سبيرمان ${nf(spearman(V.map(v=>v.r5),V.map(v=>v.views)).r,2)}).`,crit:c('C8','C6'),act:'اختبر في الفيديوهات القادمة أن تقول النتيجة أو الرقم الأهم في أول ثانيتين، مثل "4 دقائق و41 ثانية مشياً" كما في أعلى فيديو. وراجع أضعف البدايات عند ثانية السقوط.',v:lowHook},
    {p:'h',t:`تراجع أداء فيديوهات سبتمبر`,num:`وسيط مشاهدات فيديوهات أغسطس ${nf(aug.mv)} (${aug.n} فيديو) مقابل ${nf(sep.mv)} في سبتمبر (${sep.n} فيديو). أكثر نوع نُشر في سبتمبر: "${sepTop?sepTop[0]:'—'}" (${sepTop?sepTop[1]:0}). وسيط الاحتفاظ عند ث5: أغسطس ${pct(aug.r5,0)} مقابل سبتمبر ${pct(sep.r5,0)}.`,crit:c('C2','C5','C4'),act:`أعد إدخال الأنواع الأعلى أداءً في الجدول، وقلّل تكرار نفس النوع بشكل متتالٍ. هذي فرضية تحتاج اختباراً، لأن البيانات لا تثبت أن نوع المحتوى هو سبب التراجع.`,v:V.filter(v=>v.date.startsWith('2026-09')).sort((a,b)=>a.views-b.views).slice(0,4)},
    {p:'h',t:'"تجربة المسافة من الفندق إلى الحرم" أقوى صيغة عندك',num:dist.length?`${dist.length} فيديوهات بوسيط ${nf(median(dist.map(v=>v.views)))} مشاهدة مقابل وسيط الحساب ${nf(BASE.views)}، ومتوسط مشاهدة ${sec(median(dist.map(v=>v.avgWatch)))}.`:NA,crit:c('C5','C12'),act:'كرّر هذي الصيغة بانتظام مع فنادق مختلفة، وحط سؤال "كم يبعد؟" في البداية والجواب في آخر الفيديو (سؤال يُجاب عنه في آخره).',v:dist},
-   {p:'m',t:'البحث مصدر مشاهدات مستمر لفيديوهات الإرشادات',num:`أعلى 4 فيديوهات في نسبة زيارات البحث: ${searchTop.map(v=>`${pct(v.search,0)}`).join('، ')} من مشاهداتها من البحث. مشاهدات الحساب من 1 إلى 22 سبتمبر ${nf(sum(DATA.daily.filter(d=>d.date>='2026-09-01'&&d.date<=DAILY_MAX).map(d=>d.views)))}، بينما مجموع مشاهدات فيديوهات سبتمبر الجديدة ${nf(sum(V.filter(v=>v.date.startsWith('2026-09')).map(v=>v.views)))} فقط، أي أن أغلب المشاهدات تأتي من فيديوهات أقدم.`,crit:c('C7','C15'),act:'اكتب الكلمات التي يبحث عنها المعتمر (اسم الفندق، "كم يبعد عن الحرم"، "طريقة الوصول") في النص على الشاشة والوصف، بدون حشو.',v:searchTop},
+   {p:'m',t:'البحث مصدر مشاهدات مستمر لفيديوهات الإرشادات',num:`أعلى 4 فيديوهات في نسبة زيارات البحث: ${searchTop.map(v=>`${pct(v.search,0)}`).join('، ')} من مشاهداتها من البحث. مشاهدات الحساب من 2026-09-01 إلى ${DAILY_MAX} ${nf(sum(DATA.daily.filter(d=>d.date>='2026-09-01'&&d.date<=DAILY_MAX).map(d=>d.views)))}، بينما مجموع مشاهدات فيديوهات سبتمبر الجديدة ${nf(sum(V.filter(v=>v.date.startsWith('2026-09')).map(v=>v.views)))} فقط، أي أن أغلب المشاهدات تأتي من فيديوهات أقدم.`,crit:c('C7','C15'),act:'اكتب الكلمات التي يبحث عنها المعتمر (اسم الفندق، "كم يبعد عن الحرم"، "طريقة الوصول") في النص على الشاشة والوصف، بدون حشو.',v:searchTop},
    {p:'m',t:'الحفظ والمشاركة يرتبطان بالمشاهدات أكثر من الإعجابات',num:`سبيرمان مع المشاهدات: المشاركة ${nf(spearman(V.map(v=>v.shareRate),V.map(v=>v.views)).r,2)}، الحفظ ${nf(spearman(V.map(v=>v.saveRate),V.map(v=>v.views)).r,2)}، معدل التفاعل الإجمالي ${nf(spearman(V.map(v=>v.engRate),V.map(v=>v.views)).r,2)}.`,crit:c('C2'),act:'ركّز على محتوى "يستاهل ينحفظ" (أماكن، أبواب، خرائط، مواقف)، واختبر دعوة واضحة للحفظ في آخر الفيديو.',v:saveTop},
    {p:'m',t:'الفيديوهات الطويلة: إكمال أقل لكن وقت مشاهدة وتحويل أعلى',num:long.length?`${long.length} فيديوهات ≥ 60ث: وسيط الإكمال ${pct(median(long.map(v=>v.fullRate)))} (الحساب ${pct(BASE.fullRate)})، ومتوسط المشاهدة ${sec(median(long.map(v=>v.avgWatch)))} (الحساب ${sec(BASE.avgWatch)})، والتحويل ${nf(sum(long.map(v=>v.newFollowers))/sum(long.map(v=>v.views))*1000,1)}/1000.`:NA,crit:c('C1','C5','C12'),act:'استخدم الطول للأدلة والقوائم فقط، مع بداية ووسط ونهاية واضحة. وقارن كل فيديو طويل بنسخة أقصر من نفس الموضوع.',v:long},
    {p:'m',t:'وقت النشر بالنسبة لذروة متابعيك',num:`ذروة نشاط متابعيك ${hh(pk.peak)}، وأغلب فيديوهاتك تُنشر ${(()=>{const hc={};V.forEach(v=>hc[v.hour]=(hc[v.hour]||0)+1);const t=Object.entries(hc).sort((a,b)=>b[1]-a[1])[0];return hh(+t[0]);})()} (${tz?'بتوقيت السعودية':'UTC'}).`,crit:c('C13'),act:`انشر بين ${hh(pk.from)} و${hh(pk.peak)} (قبل الذروة بساعتين كحد أقصى). تأكد أولاً من المنطقة الزمنية في صفحة أوقات النشر.`,v:[]},
-   {p:'m',t:'ثبّت معدل نشر تقدر تلتزم به',num:`معدلك التاريخي ${nf(perWeek,1)} فيديو أسبوعياً (${V.length} فيديو في ${daysBetween(ALL_FROM,ALL_TO)} يوماً). أغسطس ${aug.n} فيديو مقابل سبتمبر ${sep.n} حتى 22 سبتمبر.`,crit:c('C14'),act:'حدد هدفاً يومياً أو أسبوعياً ثابتاً والتزم به. معيار تيك توك هنا موجّه للناشرين الإعلاميين، فاعتبره فرضية تختبرها.',v:[]},
+   {p:'m',t:'ثبّت معدل نشر تقدر تلتزم به',num:`معدلك التاريخي ${nf(perWeek,1)} فيديو أسبوعياً (${V.length} فيديو في ${daysBetween(ALL_FROM,ALL_TO)} يوماً). أغسطس ${aug.n} فيديو مقابل سبتمبر ${sep.n} حتى ${ALL_TO}.`,crit:c('C14'),act:'حدد هدفاً يومياً أو أسبوعياً ثابتاً والتزم به. معيار تيك توك هنا موجّه للناشرين الإعلاميين، فاعتبره فرضية تختبرها.',v:[]},
    {p:'l',t:'التحويل للمتابعين حسب نوع المحتوى',num:`${lists?`قوائم الفنادق ${nf(lists.conv*1000,1)}/1000`:''}${offers?` · العروض والأسعار ${nf(offers.conv*1000,1)}/1000`:''}${hotelTour?` · تعريف الفنادق ${nf(hotelTour.conv*1000,1)}/1000`:''}${guides?` · الإرشادات ${nf(guides.conv*1000,1)}/1000`:''}. الفيديوهات التي فيها "احجز/للحجز" وسيط مشاهداتها ${nf(median(promo.map(v=>v.views)))} مقابل ${nf(median(nonPromo.map(v=>v.views)))} لغيرها.`,crit:c('C10'),act:'اجعل المحتوى المفيد أساس الفيديو والدعوة للحجز في الخاتمة فقط (بنية Hook ثم Body ثم Close، إرشاد إعلاني).',v:promo.slice(0,4)},
    {p:'l',t:'حوّل المواضيع الناجحة إلى سلاسل',num:(()=>{const a=V.find(v=>v.id==='7670550065517251861'), b=V.find(v=>v.id==='7678749511807749397'); return `"فندق مكارم أجياد" ${nf(a.views)} مشاهدة، ثم "فنادق منطقة أجياد" بعده بـ 22 يوماً ${nf(b.views)} مشاهدة (${nf(b.views/BASE.views,1)}× وسيط الحساب) و${nf(b.conv*1000,1)} متابع/1000.`;})(),crit:c('C3','C7'),act:'اصنع سلاسل حول المناطق والمواضيع التي أثبتت اهتماماً (أجياد، جبل عمر، برج الساعة). تيك توك يقول إن نجاح فيديو سابق ليس عاملاً مباشراً، فكل حلقة لازم تقف بنفسها ببداية قوية.',v:[V.find(v=>v.id==='7670550065517251861'),V.find(v=>v.id==='7678749511807749397'),V.find(v=>v.id==='7669116825464196372'),V.find(v=>v.id==='7679477505065094420')]},
   ];
 }
 function renderAction(){
   const R=recs(); const pl={h:['عالية','prio-h'],m:['متوسطة','prio-m'],l:['منخفضة','prio-l']};
-  $('#t-action').innerHTML=`<h2>Action Plan</h2><p class="lead">كل توصية فيها: المشكلة أو الفرصة، والرقم من حسابك، والمعيار من ملف تيك توك، والإجراء، والأولوية، والفيديوهات الداعمة. الأرقام محسوبة على كل البيانات (45 فيديو) ولا تتغير مع الفلتر.</p>
+  $('#t-action').innerHTML=`<h2>Action Plan</h2><p class="lead">كل توصية فيها: المشكلة أو الفرصة، والرقم من حسابك، والمعيار من ملف تيك توك، والإجراء، والأولوية، والفيديوهات الداعمة. الأرقام محسوبة على كل البيانات (${V.length} فيديو) ولا تتغير مع الفلتر.</p>
   ${R.map((r,i)=>`<div class="rec"><div class="rh"><h3>${i+1}. ${r.t}</h3><span class="tag ${pl[r.p][1]}">أولوية ${pl[r.p][0]}</span></div><dl>
    <dt>الرقم من حسابك</dt><dd>${r.num}</dd><dt>المعيار</dt><dd>${r.crit}</dd><dt>الإجراء المقترح</dt><dd>${r.act}</dd>
    <dt>فيديوهات داعمة</dt><dd>${r.v.length? r.v.map(v=>vlink(v)).join(' · ') : '<span class="muted">مبنية على بيانات الحساب لا على فيديو محدد</span>'}</dd></dl></div>`).join('')}`;
@@ -769,13 +769,13 @@ function renderCalendar(){
 
 /* ================= 13) المصادر ================= */
 function renderSources(){
-  const avail=[['Video Views','video_views_count','✅'],['Reach','video_reach','✅ (غير متوفر لفيديو 22 سبتمبر، لأن تيك توك يسلّمه بعد 24–48 ساعة)'],['Impressions','—','❌ غير متوفر في TikTok Organic'],['Likes','video_likes','✅'],['Comments','video_comments','✅'],['Shares','video_shares','✅'],['Saves/Favorites','video_favorites','✅'],['Average Watch Time','video_average_time_watched','✅'],['Total Watch Time','video_total_time_watched','✅'],['Video Completion Rate','video_full_watched_rate','✅ (نسبة من شاهد الفيديو كاملاً)'],['منحنى الاحتفاظ','video_view_retention_percentage','✅ ثانية بثانية لـ 43 فيديو (غير متوفر لمنشوري الصور)'],['Followers gained (لكل فيديو)','video_new_followers','✅'],['Followers lost','daily_lost_followers','⚠️ على مستوى الحساب فقط، وقيمه تظهر مجمّعة مرة في الأسبوع'],['Engagement Rate','—','⚠️ غير متوفر جاهزاً، محسوب: (إعجاب+تعليق+مشاركة+حفظ) ÷ مشاهدات'],['مدة الفيديو','video_duration','⚠️ 0 لمنشورين (غالباً صور)'],['تاريخ ووقت النشر','video_create_datetime','⚠️ المنطقة الزمنية غير مذكورة (UTC على الأرجح)'],['المتابعون وقت النشر','total_followers_count (يومي)','⚠️ من 25 يوليو فقط'],['بيانات الحساب اليومية','video_views, likes…','⚠️ آخر 60 يوماً فقط (حد TikTok Organic)'],['إعادة المشاهدة (Rewatch)','—','❌ غير متوفر'],['تطور مشاهدات الفيديو يومياً (سرعة النمو)','—','❌ غير متوفر، فقط الإجمالي'],['ظهور شخص أمام الكاميرا / محتوى الـ Hook','—','❌ غير متوفر، يمكن تعليمه يدوياً'],['مصادر المشاهدات','video_impression_sources_*','✅'],['مشاهد جديد/عائد، متابع/غير متابع','video_audience_types_*','✅'],['نشاط المتابعين بالساعة','audience_activity_count','✅ آخر 7 أيام']];
+  const avail=[['Video Views','video_views_count','✅'],['Reach','video_reach',`✅ (${V.filter(v=>v.reach==null).length? 'غير متوفر لـ'+V.filter(v=>v.reach==null).map(v=>' فيديو '+v.date).join('،')+'، لأن تيك توك يسلّمه بعد 24–48 ساعة':'متوفر لكل الفيديوهات'})`],['Impressions','—','❌ غير متوفر في TikTok Organic'],['Likes','video_likes','✅'],['Comments','video_comments','✅'],['Shares','video_shares','✅'],['Saves/Favorites','video_favorites','✅'],['Average Watch Time','video_average_time_watched','✅'],['Total Watch Time','video_total_time_watched','✅'],['Video Completion Rate','video_full_watched_rate','✅ (نسبة من شاهد الفيديو كاملاً)'],['منحنى الاحتفاظ','video_view_retention_percentage',`✅ ثانية بثانية لـ ${V.filter(v=>v.retention).length} فيديو (غير متوفر لمنشوري الصور)`],['Followers gained (لكل فيديو)','video_new_followers','✅'],['Followers lost','daily_lost_followers','⚠️ على مستوى الحساب فقط، وقيمه تظهر مجمّعة مرة في الأسبوع'],['Engagement Rate','—','⚠️ غير متوفر جاهزاً، محسوب: (إعجاب+تعليق+مشاركة+حفظ) ÷ مشاهدات'],['مدة الفيديو','video_duration','⚠️ 0 لمنشورين (غالباً صور)'],['تاريخ ووقت النشر','video_create_datetime','⚠️ المنطقة الزمنية غير مذكورة (UTC على الأرجح)'],['المتابعون وقت النشر','total_followers_count (يومي)','⚠️ من 25 يوليو فقط'],['بيانات الحساب اليومية','video_views, likes…','⚠️ آخر 60 يوماً فقط (حد TikTok Organic)'],['إعادة المشاهدة (Rewatch)','—','❌ غير متوفر'],['تطور مشاهدات الفيديو يومياً (سرعة النمو)','—','❌ غير متوفر، فقط الإجمالي'],['ظهور شخص أمام الكاميرا / محتوى الـ Hook','—','❌ غير متوفر، يمكن تعليمه يدوياً'],['مصادر المشاهدات','video_impression_sources_*','✅'],['مشاهد جديد/عائد، متابع/غير متابع','video_audience_types_*','✅'],['نشاط المتابعين بالساعة','audience_activity_count','✅ آخر 7 أيام']];
   const conflicts=[
    `<b>${c('C1')} مقابل البيانات:</b> المعيار يقول إن إكمال الفيديو الطويل إشارة قوية. في حسابك نسبة المشاهدة الكاملة ضعيفة الارتباط بالمشاهدات (سبيرمان ${nf(spearman(V.map(v=>v.fullRate),V.map(v=>v.views)).r,2)})، وأعلى الفيديوهات مشاهدةً إكمالها متوسط أو منخفض. هذا لا ينقض المعيار، لكن الأرقام تتوافق أكثر مع ${c('C5')} (وقت المشاهدة أثقل وزناً).`,
    `<b>${c('C11')} مقابل البيانات:</b> نافذة 21–34ث ليست الأعلى في المشاهدات عندك. المعيار إعلاني ويقيس تحويل المبيعات، فلا يُعتمد عليه لانتشار المحتوى العضوي.`,
    `<b>${c('C9')} مقابل ${c('C8')}:</b> المصدر الإعلاني يذكر 3 ثوانٍ وCreator Academy يذكر 5 ثوانٍ. بياناتك تدعم الثانية 5 (ارتباط ${nf(spearman(V.map(v=>v.r5),V.map(v=>v.views)).r,2)} مقابل ${nf(spearman(V.map(v=>v.r3),V.map(v=>v.views)).r,2)} للثانية 3).`,
    `<b>${c('C2')} وأنواع التفاعل:</b> المعيار يذكر الإعجاب والمشاركة والحفظ دون ترتيب لأوزانها. في حسابك المشاركة والحفظ مرتبطان بالمشاهدات، والإعجاب ضعيف الارتباط. هذي ملاحظة من البيانات وليست تعارضاً صريحاً.`,
-   `<b>${c('C3')}:</b> لا تعارض. أعلى فيديو (155 ألف مشاهدة) نُشر والحساب فيه 321 متابعاً، وآخر فيديوهات سبتمبر نُشرت بأكثر من 1,800 متابع وجلبت أقل من 2,000 مشاهدة.`,
+   `<b>${c('C3')}:</b> لا تعارض. ${(()=>{const t=[...V].sort((a,b)=>b.views-a.views)[0]; const late=V.filter(v=>(v.followersAtPost||0)>=1800); return `أعلى فيديو (${nf(t.views)} مشاهدة) نُشر والحساب فيه ${nf(t.followersAtPost)} متابعاً، بينما ${late.length} فيديو نُشرت والحساب فيه 1,800 متابع فأكثر ووسيط مشاهداتها ${nf(median(late.map(v=>v.views)))}.`;})()}`,
    `<b>بيانات Windsor نفسها:</b> حقل "Daily count of gained followers" يظهر قيماً مجمّعة مرة في الأسبوع وأصفاراً بقية الأيام، فاستُخدم total_followers_count لحساب النمو بدلاً منه.`,
   ];
   $('#t-sources').innerHTML=`<h2>المصادر وتوفر البيانات</h2>
@@ -788,7 +788,7 @@ function renderSources(){
   <h3 style="margin-top:20px">توفر كل مقياس</h3>${tableHtml([{h:'المقياس'},{h:'حقل Windsor'},{h:'الحالة'}],avail.map(a=>`<tr><td>${a[0]}</td><td style="direction:ltr;text-align:right">${a[1]}</td><td class="cap">${a[2]}</td></tr>`))}
   <h3 style="margin-top:20px">التعارضات بين البيانات والمعايير</h3><div class="card"><ul class="findings">${conflicts.map(x=>`<li>${x}</li>`).join('')}</ul></div>
   <h3 style="margin-top:20px">طريقة الحساب</h3><div class="card small"><ul class="findings">
-   <li>"وسيط الحساب" = الوسيط لكل 45 فيديو. يُستخدم كمرجع داخلي عند غياب حد رسمي من تيك توك، ولا يُقدَّم كمعيار من تيك توك.</li>
+   <li>"وسيط الحساب" = الوسيط لكل ${V.length} فيديو. يُستخدم كمرجع داخلي عند غياب حد رسمي من تيك توك، ولا يُقدَّم كمعيار من تيك توك.</li>
    <li>الارتباط = معامل سبيرمان للرتب، ويقيس العلاقة وليس السببية.</li>
    <li>معدل المشاركة = shares ÷ views · معدل الحفظ = favorites ÷ views · التحويل = new_followers ÷ views.</li>
    <li>تصنيف الأنواع آلي بكلمات مفتاحية في الوصف، ويمكن تعديله يدوياً.</li></ul></div>`;
@@ -814,7 +814,7 @@ function openVideo(id){
    </div>
    <h3>منحنى الاحتفاظ ${c('C6','C8')}</h3>${v.retention?`<div class="chart-box"><canvas id="mdCurve"></canvas></div>`:`<p>${NA}. منشور صور على الأرجح.</p>`}
    <h3 style="margin-top:12px">مصادر المشاهدات ${c('C7')}</h3>${src.map(([n,x])=>`<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><span style="width:90px" class="small">${n}</span><div class="bar-inline" style="flex:1"><i style="width:${x*100}%"></i></div><span class="small" style="width:44px;text-align:left">${pct(x,1)}</span></div>`).join('')}
-   <p class="small" style="margin-top:12px">المصدر: Windsor · tiktok_organic · جدول Video.</p>`;
+   ${v.shareUrl?`<p style="margin-top:12px"><a href="${esc(v.shareUrl)}" target="_blank" rel="noopener">▶ شاهد الفيديو على تيك توك</a></p>`:''}<p class="small" style="margin-top:12px">المصدر: Windsor · tiktok_organic · جدول Video.</p>`;
   $('#modalBg').classList.add('on'); document.body.style.overflow='hidden';
   if(v.retention){ const labels=v.retention.map((_,i)=>i), med=avgCurve(V.filter(x=>x.retention), v.retention.length);
     chart('mdCurve',{type:'line',data:{labels,datasets:[{label:'هذا الفيديو',data:v.retention,borderColor:S1},{label:'وسيط الحساب',data:med,borderColor:'#898781',borderWidth:1.5}]},options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:true,rtl:true,labels:{color:'#c3c2b7',boxWidth:10,boxHeight:10}},tooltip:{callbacks:{title:x=>`الثانية ${x[0].label}`,label:x=>` ${x.dataset.label}: ${pct(x.raw,0)}`}}},scales:{x:{grid:{display:false},ticks:{...axisTicks,maxTicksLimit:10}},y:{min:0,max:1,grid:gridOpts,ticks:{...axisTicks,callback:x=>pct(x,0)}}}}}); }

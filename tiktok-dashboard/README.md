@@ -2,12 +2,12 @@
 
 - `tiktok-dashboard.html`: الداشبورد النهائي. ملف واحد يعمل بدون إنترنت (Chart.js مضمّن داخله).
 - `tiktok-criteria.md`: ملف معايير تيك توك (المصدر الأول)، من مواقع تيك توك الرسمية.
-- `data/videos.py`: نسخة من بيانات Windsor (tiktok_organic) المسحوبة في 2026-09-23.
-- `data/windsor_retention_raw.json`: منحنيات الاحتفاظ الخام من Windsor.
+- `data/raw/*.json`: نتائج Windsor (tiktok_organic) كما هي بدون تعديل.
+- `data/daily.py`: بيانات الحساب اليومية.
 - `src/template.html`: قالب الداشبورد.
 
-إعادة البناء بعد تحديث البيانات:
+إعادة البناء بعد تحديث ملفات `data/raw`:
 
 ```bash
-cd tiktok-dashboard/data && python3 build.py windsor_retention_raw.json
+cd tiktok-dashboard/data && python3 build.py
 ```
