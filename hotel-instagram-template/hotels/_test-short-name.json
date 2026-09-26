@@ -1,0 +1,15 @@
+{
+  "hotelName": "فندق رفال",
+  "roomType": "غرفة فردي",
+  "pricePerNight": 99,
+  "currency": "ريال",
+  "meals": null,
+  "offerDate": null,
+  "distanceFromHaram": null,
+  "hotelPhoto": "assets/doubletree-building.jpg",
+  "roomPhoto": null,
+  "hotelLogo": "assets/doubletree-logo.png",
+  "agencyLogo": "assets/osus-logo.png",
+  "whatsapp": "+966566403938",
+  "location": "مكة المكرمة"
+}
