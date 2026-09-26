@@ -1,0 +1,1687 @@
+<title>تدريب وإدارة الحجوزات</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#EFF3F1; --surface:#FFFFFF; --surface-2:#E4EAE7; --paper:#F4F0E5;
+    --ink:#132320; --ink-2:#4E615B; --ink-3:#7E8F89; --line:#D2DCD8;
+    --accent:#0D6B57; --accent-ink:#FFFFFF; --accent-soft:#D6E9E1;
+    --gold:#8A6220; --gold-soft:#EFE4CC;
+    --good:#1C7A4E; --warn:#A5691E; --bad:#A83A33;
+    --shadow:0 1px 2px rgba(19,35,32,.05), 0 10px 26px rgba(19,35,32,.05);
+    --f-display:"Reem Kufi","IBM Plex Sans Arabic",system-ui,sans-serif;
+    --f-body:"IBM Plex Sans Arabic",system-ui,"Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0C1412; --surface:#15201D; --surface-2:#1C2926; --paper:#1F2620;
+      --ink:#E7EEEB; --ink-2:#A4B5AF; --ink-3:#7C8D87; --line:#293733;
+      --accent:#41B296; --accent-ink:#052019; --accent-soft:#15322B;
+      --gold:#D2A44E; --gold-soft:#2C2718;
+      --good:#4BB07C; --warn:#D2963F; --bad:#D66159;
+      --shadow:0 1px 2px rgba(0,0,0,.40), 0 10px 26px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0C1412; --surface:#15201D; --surface-2:#1C2926; --paper:#1F2620;
+    --ink:#E7EEEB; --ink-2:#A4B5AF; --ink-3:#7C8D87; --line:#293733;
+    --accent:#41B296; --accent-ink:#052019; --accent-soft:#15322B;
+    --gold:#D2A44E; --gold-soft:#2C2718;
+    --good:#4BB07C; --warn:#D2963F; --bad:#D66159;
+    --shadow:0 1px 2px rgba(0,0,0,.40), 0 10px 26px rgba(0,0,0,.28);
+  }
+
+  body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.75;}
+  .app{direction:rtl; max-width:1120px; margin:0 auto; padding-inline:16px; padding-block:0 48px;}
+  h1,h2,h3{font-family:var(--f-display); font-weight:600; text-wrap:balance; margin:0;}
+  p{margin:0;}
+  button{font-family:inherit; font-size:inherit; color:inherit;}
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:4px;}
+
+  /* ---------- رأس الصفحة ---------- */
+  .top{padding-block:24px 18px; border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; justify-content:space-between;}
+  .eyebrow{font-size:11.5px; letter-spacing:.14em; color:var(--gold); font-weight:600;}
+  .top h1{font-size:clamp(25px,5vw,34px); line-height:1.3; margin-top:4px;}
+  .top .lede{color:var(--ink-2); font-size:14px; max-width:52ch; margin-top:6px;}
+  .meter{display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-l,18px); padding:10px 14px; box-shadow:var(--shadow);}
+  .ring{width:46px; height:46px; flex:none;}
+  .ring text{font-family:var(--f-body); font-weight:600; font-size:13px; fill:var(--ink);}
+  .meter b{display:block; font-size:13px; font-weight:600;}
+  .meter span{display:block; font-size:12px; color:var(--ink-3);}
+
+  /* ---------- التنقل ---------- */
+  .shell{display:grid; gap:24px; margin-top:22px; grid-template-columns:1fr;}
+  .rail{display:flex; gap:8px; overflow-x:auto; padding-block:4px; scrollbar-width:thin; position:sticky; top:env(safe-area-inset-top,0px); background:var(--bg); z-index:5;}
+  .rail button{white-space:nowrap; background:var(--surface); border:1px solid var(--line); color:var(--ink-2); padding:8px 14px; border-radius:999px; cursor:pointer; font-weight:500;}
+  .rail button[aria-selected="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+  .rail .num{font-size:11px; opacity:.7; margin-inline-start:6px;}
+  @media (min-width:900px){
+    .shell{grid-template-columns:214px 1fr; align-items:start;}
+    .rail{flex-direction:column; overflow:visible; position:sticky; top:calc(env(safe-area-inset-top,0px) + 16px); gap:4px; background:transparent;}
+    .rail button{text-align:start; border-radius:10px; border-color:transparent; background:transparent;}
+    .rail button:hover{background:var(--surface-2);}
+    .rail button[aria-selected="true"]{background:var(--accent); border-color:var(--accent);}
+  }
+
+  /* ---------- عناصر عامة ---------- */
+  .sec-head{margin-bottom:16px;}
+  .sec-head h2{font-size:22px;}
+  .sec-head p{color:var(--ink-2); font-size:14px; margin-top:4px; max-width:62ch;}
+  .grid{display:grid; gap:14px;}
+  @media (min-width:640px){ .grid.two{grid-template-columns:repeat(2,1fr);} }
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow);}
+  .card h3{font-size:16px; margin-bottom:8px;}
+  .card ul{margin:0; padding-inline-start:18px; color:var(--ink-2);}
+  .card li{margin-block:4px;}
+  .tag{display:inline-block; font-size:11.5px; font-weight:600; padding:2px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent);}
+  .tag.gold{background:var(--gold-soft); color:var(--gold);}
+  .tag.bad{background:color-mix(in srgb, var(--bad) 14%, transparent); color:var(--bad);}
+  .kv{display:flex; justify-content:space-between; gap:12px; padding-block:7px; border-bottom:1px dashed var(--line); font-size:14px;}
+  .kv:last-child{border-bottom:0;}
+  .kv span:last-child{color:var(--ink-2); font-variant-numeric:tabular-nums; text-align:start;}
+
+  /* ---------- خطة الأيام ---------- */
+  .day{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow); border-inline-start:4px solid var(--accent);}
+  .day .head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:10px;}
+  .day .n{font-family:var(--f-display); font-size:13px; color:var(--accent); font-weight:700;}
+  .day h3{font-size:17px;}
+  .task{display:flex; gap:10px; align-items:flex-start; padding-block:6px; cursor:pointer;}
+  .task input{margin-top:6px; accent-color:var(--accent); width:16px; height:16px; flex:none;}
+  .task span{font-size:14px; color:var(--ink-2);}
+  .task input:checked + span{color:var(--ink-3); text-decoration:line-through;}
+  .win{margin-top:10px; padding:9px 12px; background:var(--accent-soft); border-radius:10px; font-size:13px; color:var(--ink);}
+  .win b{color:var(--accent);}
+
+  /* ---------- السكربتات ---------- */
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px;}
+  input[type="search"], input[type="text"], textarea{font-family:inherit; font-size:14px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:9px 12px; width:100%; max-width:100%;}
+  textarea{min-height:70px; resize:vertical;}
+  .chip{background:var(--surface); border:1px solid var(--line); color:var(--ink-2); border-radius:999px; padding:6px 12px; font-size:13px; cursor:pointer;}
+  .chip[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink);}
+  .script{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; box-shadow:var(--shadow);}
+  .script .row{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;}
+  .script h3{font-size:15px;}
+  .bubble{background:var(--paper); border:1px solid var(--line); border-start-start-radius:4px; border-start-end-radius:14px; border-end-end-radius:14px; border-end-start-radius:14px; padding:12px 14px; white-space:pre-wrap; font-size:14px; line-height:1.85; color:var(--ink);}
+  .copy{background:var(--accent-soft); color:var(--accent); border:0; border-radius:8px; padding:6px 12px; font-size:13px; font-weight:600; cursor:pointer; flex:none;}
+  .copy.done{background:var(--good); color:#fff;}
+
+  /* ---------- الاعتراضات ---------- */
+  details.obj{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:0; box-shadow:var(--shadow); overflow:hidden;}
+  details.obj summary{cursor:pointer; padding:13px 16px; font-weight:600; font-size:15px; list-style:none; display:flex; justify-content:space-between; gap:10px; align-items:center;}
+  details.obj summary::-webkit-details-marker{display:none;}
+  details.obj summary::after{content:"+"; color:var(--accent); font-weight:700;}
+  details.obj[open] summary::after{content:"−";}
+  details.obj .body{padding:0 16px 16px; border-top:1px solid var(--line); padding-top:12px;}
+  .say{background:var(--paper); border-radius:10px; padding:11px 13px; white-space:pre-wrap; font-size:14px; line-height:1.85;}
+  .never{margin-top:10px; font-size:13.5px; color:var(--bad);}
+  .never b{font-weight:600;}
+
+  /* ---------- التمارين ---------- */
+  .drill{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow);}
+  .drill .row{display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px;}
+  .lvl{font-size:12px; color:var(--gold); letter-spacing:.1em;}
+  .cust{background:var(--surface-2); border-radius:12px; padding:12px 14px; font-size:14.5px; line-height:1.8;}
+  .cust b{display:block; font-size:11.5px; letter-spacing:.1em; color:var(--ink-3); margin-bottom:4px; font-weight:600;}
+  .meta{display:grid; gap:6px; margin-top:10px; font-size:13.5px; color:var(--ink-2);}
+  .reveal{margin-top:12px; background:transparent; border:1px dashed var(--accent); color:var(--accent); border-radius:10px; padding:8px 14px; font-weight:600; cursor:pointer;}
+  .model{margin-top:12px;}
+
+  /* ---------- التقييم ---------- */
+  .axis{display:grid; gap:6px; padding-block:11px; border-bottom:1px solid var(--line);}
+  .axis .line{display:flex; justify-content:space-between; gap:10px; align-items:baseline;}
+  .axis label{font-weight:600; font-size:14.5px;}
+  .axis .hint{font-size:12.5px; color:var(--ink-3); line-height:1.6;}
+  .axis output{font-variant-numeric:tabular-nums; font-weight:700; color:var(--accent); font-size:15px;}
+  input[type="range"]{width:100%; accent-color:var(--accent);}
+  .total{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; background:var(--accent-soft); border-radius:14px; padding:14px 18px; margin-block:16px;}
+  .total .num{font-family:var(--f-display); font-size:38px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums;}
+  .total .num small{font-size:15px; color:var(--ink-2); font-weight:500;}
+  .verdict{font-weight:700; font-size:15px; padding:6px 14px; border-radius:999px; background:var(--surface); border:1px solid var(--line);}
+  .fatal{display:flex; gap:9px; align-items:flex-start; padding-block:5px; font-size:13.5px; color:var(--ink-2); cursor:pointer;}
+  .fatal input{margin-top:5px; accent-color:var(--bad); width:15px; height:15px; flex:none;}
+  .btn{background:var(--accent); color:var(--accent-ink); border:0; border-radius:10px; padding:10px 18px; font-weight:600; cursor:pointer;}
+  .btn[disabled]{opacity:.5; cursor:not-allowed;}
+  .btn.ghost{background:transparent; color:var(--ink-2); border:1px solid var(--line);}
+  .note{font-size:13px; color:var(--ink-3); margin-top:10px;}
+  .rec{display:flex; justify-content:space-between; gap:12px; align-items:flex-start; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--surface); margin-top:8px;}
+  .rec .who{font-weight:600; font-size:14.5px;}
+  .rec .when{font-size:12px; color:var(--ink-3);}
+  .rec .sc{font-family:var(--f-display); font-size:22px; font-weight:700; font-variant-numeric:tabular-nums;}
+  .rec .nt{font-size:13px; color:var(--ink-2); margin-top:4px; max-width:60ch;}
+  .field{display:grid; gap:5px; margin-bottom:10px;}
+  .field label{font-size:13px; font-weight:600; color:var(--ink-2);}
+  footer{margin-top:32px; padding-top:16px; border-top:1px solid var(--line); font-size:12.5px; color:var(--ink-3);}
+
+  /* ---------- دليل الفنادق ---------- */
+  .hotel{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; box-shadow:var(--shadow); display:grid; gap:8px;}
+  .hotel .top-row{display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap;}
+  .hotel h3{font-size:16px; line-height:1.4;}
+  .hotel .en{font-size:12px; color:var(--ink-3); display:block; margin-top:2px; direction:ltr; text-align:start;}
+  .stars{color:var(--gold); font-size:13px; letter-spacing:.06em; white-space:nowrap;}
+  .facts{display:flex; flex-wrap:wrap; gap:6px;}
+  .fact{font-size:12.5px; padding:3px 10px; border-radius:999px; background:var(--surface-2); color:var(--ink-2); font-variant-numeric:tabular-nums;}
+  .fact.near{background:var(--accent-soft); color:var(--accent); font-weight:600;}
+  .fact.rate{background:var(--gold-soft); color:var(--gold); font-weight:600;}
+  .rooms{font-size:13.5px; color:var(--ink-2); line-height:1.8; background:var(--paper); border-radius:10px; padding:9px 12px;}
+  .rooms b{color:var(--ink); font-weight:600;}
+  .rooms.none{background:transparent; color:var(--ink-3); padding:0;}
+  .polbox{font-size:13.5px; color:var(--ink-2); line-height:1.8; background:var(--gold-soft); border-radius:10px; padding:9px 12px;}
+  .polbox b{color:var(--gold); font-weight:700;}
+  .polbox.none{background:transparent; color:var(--ink-3); padding:0;}
+  .links{display:flex; gap:14px; flex-wrap:wrap; font-size:13px;}
+  .links a{color:var(--accent); text-decoration:none; font-weight:600;}
+  .links a:hover{text-decoration:underline;}
+  select{font-family:inherit; font-size:14px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:8px 12px;}
+  .count{font-size:13px; color:var(--ink-3); margin-bottom:10px; font-variant-numeric:tabular-nums;}
+  @media (prefers-reduced-motion:no-preference){ .sec{animation:rise .18s ease-out;} }
+  @keyframes rise{from{opacity:.4; transform:translateY(4px);} to{opacity:1; transform:none;}}
+</style>
+
+<div class="app" lang="ar" dir="rtl">
+  <header class="top">
+    <div>
+      <div class="eyebrow">وكالة سفر وسياحة · حجز وحدات الضيافة بمكة</div>
+      <h1>تدريب وإدارة الحجوزات</h1>
+      <p class="lede">تدريب موظف وكالة سفر وسياحة على حجز وحدات الضيافة بمكة عبر الواتساب: أنت وسيط لا فندق — تبيع حجزاً بفندق ما تملكه، فتعرف حدود ما تضمنه. محاكي محادثات، سكربتات، دليل فنادق بالسياسات، وأداء موحّد للفريق.</p>
+    </div>
+    <div class="meter" id="meter" title="تقدّمك في خطة الأيام الخمسة">
+      <svg class="ring" viewBox="0 0 40 40" aria-hidden="true">
+        <circle cx="20" cy="20" r="16" fill="none" stroke="var(--surface-2)" stroke-width="5"></circle>
+        <circle id="ringFill" cx="20" cy="20" r="16" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="0 100" transform="rotate(-90 20 20)" pathLength="100"></circle>
+      </svg>
+      <div>
+        <b id="meterNum">0٪ من الخطة</b>
+        <span id="meterSub">ابدأ باليوم الأول</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav class="rail" id="rail" aria-label="أقسام التدريب"></nav>
+    <main id="main">
+      <section class="sec" id="sec-plan"></section>
+      <section class="sec" id="sec-basics" hidden></section>
+      <section class="sec" id="sec-scripts" hidden></section>
+      <section class="sec" id="sec-objections" hidden></section>
+      <section class="sec" id="sec-drills" hidden></section>
+      <section class="sec" id="sec-hotels" hidden></section>
+      <section class="sec" id="sec-sim" hidden></section>
+      <section class="sec" id="sec-team" hidden></section>
+      <section class="sec" id="sec-score" hidden></section>
+    </main>
+  </div>
+
+  <footer>
+    المواضع المكتوبة بين قوسين تُملأ من سياسات المنشأة (الأسعار، العربون، الإلغاء، أوقات الدخول، الحساب الرسمي). البنود النظامية — تسجيل النزلاء والفوترة — تُراجع مع الجهة المختصة قبل اعتمادها؛ هذه واجهة تدريب لا مرجع نظامي.
+  </footer>
+</div>
+
+<script>
+/* ===================== المحتوى ===================== */
+const DAYS = [
+  { n:"اليوم الأول", t:"المنتج: الفنادق والمزوّدون",
+    items:["يحفظ فنادق مكة اللي نبيعها: الحي، المسافة من الحرم مشياً، فئات الغرف، السياسات",
+           "يعرف من أين نشتري كل فندق: تعاقد مباشر، مزوّد جملة، أو منصة — ومن يصدر رقم التأكيد",
+           "يفرّق بين ما نضمنه (نوع الغرفة · عدد النزلاء · التواريخ) وما لا نضمنه (الدور · التجاور · الإطلالة · الدخول المبكر)",
+           "يعرف هامش الوكالة وما الذي يشمله السعر: ضريبة، رسوم خدمة، فطور"],
+    win:"يجاوب خلال 10 ثوانٍ: «كم يبعد [الفندق] عن الحرم؟ ومن مزوّده؟ ووش نضمنه فيه؟»" },
+  { n:"اليوم الثاني", t:"أسلوب الوكالة بالواتساب",
+    items:["الأسئلة الستة قبل أي سعر، ومنها أعمار الأطفال وأسماء النزلاء",
+           "صياغة العرض: سعر إجمالي + ما يشمله + حدود الضمان + مدة صلاحية السعر",
+           "جملة الطلب الخاص: «أرفعه للفندق ولا أقدر أضمنه»",
+           "تمرين: عشر رسائل عملاء حقيقية يرد عليها ويصحّحها المشرف"],
+    win:"ثماني ردود من عشر تمرّ بلا تعديل، وبلا أي وعد خارج ما نملكه" },
+  { n:"اليوم الثالث", t:"دورة الحجز في الوكالة",
+    items:["طلب ← فحص إتاحة ← عرض بمدة صلاحية ← تحصيل ← إصدار ← فوتشر الوكالة ← رقم تأكيد الفندق حين يصل",
+           "إدخال حجز تجريبي بالنظام وإصدار فوتشر كامل بلا بند ناقص",
+           "توثيق الطلبات الخاصة مكتوبة مع الحجز",
+           "متى يُلغى الحجز تلقائياً عند المزوّد ومتى تنتهي مهلة السداد"],
+    win:"فوتشر تجريبي لعائلة 5 أشخاص، 4 ليالٍ، وصول متأخر — فيه رقم تأكيد الفندق وسياسة الإلغاء كاملة" },
+  { n:"اليوم الرابع", t:"المواقف الصعبة بين العميل والفندق",
+    items:["الفندق ما عنده الحجز · رفض الدخول المبكر · غرفة غير مطابقة · طلب تجاور مرفوض",
+           "شكاوى النظافة والصيانة: التوثيق والتصعيد بدل الحلول الميدانية",
+           "الإلغاء والتعديل بسياسة الفندق + رسوم الوكالة",
+           "ست جولات لعب أدوار تتصاعد صعوبتها"],
+    win:"لا يعد بشيء لا تملكه الوكالة مهما ارتفع الضغط، ويوثّق كل خطوة" },
+  { n:"اليوم الخامس", t:"وردية حقيقية تحت الإشراف",
+    items:["ثلاث ساعات: المشرف يقرأ كل ردّ قبل الإرسال",
+           "ثلاث ساعات: المشرف يقرأ بعد الإرسال",
+           "إصدار حجز حقيقي كامل مع فوتشر ومتابعة ما قبل الوصول",
+           "مراجعة نتائج المحاكي وبطاقة التقييم"],
+    win:"يُعتمد للحجوزات الفردية، ويبقى التصعيد إلزامياً في: المالي، المجموعات، وأي شكوى مكتوبة" }
+];
+
+const BASICS = [
+  { t:"أنت وكالة، لا فندق", tag:"الأساس اللي يغيّر كل ردّ",
+    list:["أنت ما تملك الوحدة: تشتريها من الفندق أو المالك أو المزوّد وتبيعها للعميل.",
+          "اللي تملكه: المعلومة الصحيحة، السعر، التأكيد الموثّق، والمتابعة.",
+          "اللي ما تملكه: الدور · تجاور الغرف · الدخول المبكر · الترقية · جودة النظافة يوم الوصول.",
+          "الإطلالة استثناء: إذا حجزتها كفئة بفارق سعر (إطلالة حرم/كعبة) فهي مضمونة ومكتوبة بالفوتشر — أما ترقية الإطلالة مجاناً فلا.",
+          "كل واحد من هذي «طلب خاص يُرفع للفندق ولا يُضمن» — تقولها بوضوح من أول رسالة."] },
+  { t:"سلسلة التأكيد", tag:"لا تكسرها أبداً",
+    list:["طلب العميل ← فحص الإتاحة ← عرض بسعر صالح لمدة محددة ← تحصيل المبلغ ← إصدار الحجز ← فوتشر الوكالة للعميل ← رقم تأكيد الفندق يُضاف أول ما يصل.",
+          "«متاح» قبل ساعة لا تعني متاحاً الآن — افحص قبل كل وعد.",
+          "تأكيد العميل يصير بفوتشر الوكالة بعد تأكيد الإصدار. ورقم تأكيد الفندق قد يصل متأخراً — أحياناً قبل الوصول بيوم أو نفس اليوم، وهذا طبيعي بمكة.",
+          "قل للعميل هذا مسبقاً عشان ما يقلق: «حجزك مؤكد عندنا، ورقم الفندق يوصلك قبل موعدك.»",
+          "لا تترك حجزاً بلا رقم تأكيد فندق قبل 48 ساعة من الوصول — تابعه بنفسك.",
+          "الفوتشر هو مستند العميل عند الاستقبال: اسم النزيل كما بالهوية/الجواز، الفندق، نوع الغرفة، التواريخ، عدد النزلاء، رقم التأكيد، وما يشمله السعر."] },
+  { t:"الأسئلة الخمسة قبل أي سعر", tag:"لا تُرسل رقماً قبلها",
+    list:["تاريخ الدخول والخروج وكم ليلة","عدد الأشخاص: كبار وأطفال","عدد الغرف ونوعها (مزدوجة/ثلاثية/رباعية/جناح)","الأولوية: الأقرب للحرم أو الأوفر أو الأوسع","الميزانية التقريبية للإقامة كاملة"] },
+  { t:"بيانات الإصدار", tag:"لا تطلب أكثر من اللازم",
+    list:["الأساس: اسم النزيل الرئيسي كما بالهوية/الجواز + رقم جواله. هذا ما يحتاجه الفندق عند التأكيد.",
+          "أعمار الأطفال: تُطلب فقط إذا كان وجودهم يؤثر على السعر أو السعة، أو إذا اشترطها الفندق.",
+          "أسماء كل النزلاء: تُطلب عند الحجز عبر [TBO] أو أي مزوّد يشترطها بالإصدار.",
+          "دقّق الاسم قبل الإصدار: الاسم غير المطابق للهوية يعطّل الدخول بالاستقبال."] },
+  { t:"الطلبات الخاصة", tag:"أشهر سبب خلاف بمكة", bad:true,
+    list:["«غرف بنفس الدور» و«جنب بعض» و«دور مرتفع» — الفندق يقررها يوم الوصول حسب الإشغال.",
+          "الإطلالة ليست طلباً خاصاً: تُحجز كفئة بفارق سعر فتصير مضمونة — إما نحجزها أو ما نوعد بها.",
+          "دورك: ترفعها كـ Special Request مكتوبة، وتؤكد للعميل أنها أمنية لا ضمان.",
+          "بعض الوحدات منفصلة بمبانٍ مختلفة — لا توهم العميل أنها بمبنى واحد قبل التحقق.",
+          "الضمان الوحيد الممكن: نوع الغرفة وعدد النزلاء والتواريخ — هذي المكتوبة بالفوتشر."] },
+  { t:"ممنوعات الوكالة", tag:"تسقط الثقة والمال", bad:true,
+    list:["تأكيد حجز قبل تأكيد الإصدار فعلياً (وجود إتاحة وسداد) — أما رقم تأكيد الفندق فقد يتأخر ويُتابع.",
+          "وعد بدور أو تجاور أو إطلالة أو دخول مبكر أو ترقية.",
+          "تحويل لحساب شخصي أو استقبال بيانات بطاقة بالواتساب — حساب الوكالة الرسمي فقط.",
+          "وعد باسترجاع أو تعويض قبل اعتماد المحاسبة والإدارة — **إلا** في حالتين: عدم توفر إتاحة بعد التحويل، أو خطأ من طرفنا، فالاسترجاع الكامل فوري وسياسة معتمدة ويُقال للعميل بلا تردد.",
+          "إرسال صور من موقع الفندق كأنها الوحدة المحجوزة بالضبط دون ذكر الفئة."] },
+  { t:"لما تصير مشكلة داخل الفندق", tag:"أنت متابع لا مشغّل",
+    list:["ما تقول «نرسل لك فريق النظافة» — الفريق ليس فريقك.",
+          "تقول: «أتواصل مع الفندق الآن وأتابع معك حتى يُحل، وأرجع لك خلال [مدة].»",
+          "وثّق: صورة/مقطع من النزيل + وقت البلاغ + اسم موظف الفندق اللي كلّمته.",
+          "إن ما استجاب الفندق: صعّد لمسؤول الحجوزات بالفندق، ثم لجهة الحجز، ثم لإدارتك — واعرض بديلاً إن توفر. (كل هذا داخلي — العميل يسمع «أتابع مع الفندق» فقط.)"] },
+  { t:"ما لا يُذكر أمام العميل", tag:"لغة الوكالة", bad:true,
+    list:["لا تذكر اسم المزوّد أو منصة الحجز أو وكالة أخرى — العميل تعامل معنا لا معهم، وذكرهم يفتح له باب التخطّي ويضعف موقفنا.",
+          "قل «أتأكد من الفندق» أو «أتأكد من الإتاحة» بدل «أتأكد من المزوّد».",
+          "لا تذكر السعر الصافي ولا هامش الوكالة ولا أن الحجز جاء من نظام وسيط.",
+          "لا تلوم زميلاً ولا النظام أمام العميل: «صار خطأ من طرفنا وأنا أتولاه»."] },
+  { t:"وضع الفريق الصغير", tag:"إذا كنتم اثنين أو ثلاثة",
+    list:["ثلاث لمسات إلزامية فقط: (1) فوتشر عند الإصدار، (2) تذكير قبل الوصول بيوم، (3) رسالة بعد الدخول بساعتين.",
+          "الباقي يُؤتمت: ردود سريعة محفوظة بواتساب بزنس، وتذكيرات بالتقويم لكل حجز، وقالب فوتشر واحد.",
+          "قائمة يومية واحدة: من يصل اليوم · من يغادر · حجز بلا رقم تأكيد فندق · شكوى مفتوحة.",
+          "ما ليس على هذي القائمة ينتظر — أفضل من متابعة ناقصة للكل."] },
+  { t:"ثلاث جُمل تنقذك", tag:"احفظها حرفياً",
+    list:["«هذا طلب خاص أرفعه للفندق، وأخبرك بردّهم — لكن ما أقدر أضمنه لك.»","«أتأكد من الفندق وأرجع لك خلال [وقت محدد].»","«هذا خارج صلاحيتي، وأرفعه لمسؤولي حالاً وأتابعه معك.»"] },
+  { t:"ثلاث لحظات تصنع التقييم", tag:"أمسكها",
+    list:["عند الإصدار: فوتشر كامل + رقم تأكيد الفندق + رقم تواصل الوكالة للطوارئ.",
+          "قبل الوصول بيوم: تذكير بالفندق والموقع ووقت الدخول وما يحتاجه عند الاستقبال.",
+          "بعد الدخول بساعتين: «استلمتوا الغرفة؟ مطابقة للحجز؟» — هنا تُكتشف المشكلة قبل ما تصير تقييماً."] }
+];
+
+const SCRIPTS = [
+  { c:"فتح", t:"الردّ الأول على استفسار جديد", b:"حياك الله، معك [الاسم] من [اسم الوكالة] — وكالة سفر وسياحة مرخّصة.\nعشان أرشّح لك الأنسب وأعطيك السعر النهائي:\n• تاريخ الدخول والخروج؟\n• كم شخص (كبار/أطفال مع أعمارهم)؟\n• كم غرفة ونوعها؟\n• تفضّل الأقرب للحرم أو الأوفر؟\n• الميزانية التقريبية للإقامة كاملة؟" },
+  { c:"فتح", t:"خارج الدوام", b:"وصلتنا رسالتك، شكراً لتواصلك مع [اسم الوكالة].\nفريق الحجوزات يستقبل الطلبات من [الساعة] إلى [الساعة]، وبنرد عليك أول الدوام بإذن الله.\nلو عندك حجز قائم وتحتاج طارئاً: [رقم الطوارئ]." },
+  { c:"تسعير", t:"عرض فندق مع حدود الضمان", b:"[اسم الفندق] — [الحي]\n🕌 يبعد عن الحرم [x] دقائق مشياً\n🛏️ [نوع الغرفة] · تتسع [عدد] أشخاص\n📅 من [التاريخ] إلى [التاريخ] = [عدد] ليالٍ\n💰 الإجمالي: [المبلغ] ريال — شامل سعر الفندق ورسوم خدمتنا\n\nملاحظة مهمة: الدور والإطلالة وتجاور الغرف يحددها الفندق عند الوصول حسب إشغاله، نرفعها كطلب خاص ولا تُضمن.\nالسعر صالح حتى [الساعة] والإتاحة تتغير لحظياً. أصدر لك الحجز؟" },
+  { c:"تسعير", t:"خياران للمقارنة", b:"عندي لكم خيارين:\n1) [الفندق أ] — [x] دقائق مشياً · [نوع الغرفة] · إجمالي [المبلغ]\n2) [الفندق ب] — [y] دقائق مشياً · [نوع الغرفة] · إجمالي [المبلغ]\nالفرق بينهما: [جملة صادقة واحدة].\nأيّهما أصدر لكم؟" },
+  { c:"تسعير", t:"العميل يقارن بسعر الفندق المباشر", b:"سعر الفندق المباشر يتغير حسب توفر الغرف وخطة السعر.\nسعرنا يشمل: [ما يشمله] ومعه متابعتنا معك من الحجز حتى المغادرة، وتعديل أو حل أي مشكلة من طرفنا بلا ما تتواصل أنت مع الفندق.\nوإن كان الفرق كبيراً أرسل لي لقطة العرض وأقارن لك بصدق." },
+  { c:"تأكيد", t:"تثبيت الطلب قبل الإصدار", b:"ممتاز. عشان أصدر الحجز أحتاج:\n• اسم النزيل الرئيسي كما بالهوية/الجواز + رقم جواله\n[[وإن كان الحجز يتطلب أسماء الجميع: أسماء بقية النزلاء]]\n• تحويل [المبلغ] على حساب [اسم الوكالة] الرسمي:\n[اسم الحساب + الآيبان]\nوترسل لي صورة الإشعار.\nملاحظة: السعر والإتاحة محجوزان حتى [الساعة]، وما أقدر أضمنهما بعدها." },
+  { c:"تأكيد", t:"الفوتشر — رسالة التأكيد الكاملة", b:"✅ تم إصدار حجزكم\nرقم حجز الوكالة: [الرقم]\nرقم تأكيد الفندق: [الرقم — أو: يوصلك قبل موعد وصولك]\nالفندق: [الاسم] — [الحي]\nنوع الغرفة: [النوع] · عدد الغرف: [العدد]\nالنزيل الرئيسي: [الاسم كما بالهوية]\nالدخول: [التاريخ] من [الوقت] · الخروج: [التاريخ] قبل [الوقت]\nالإجمالي: [المبلغ] · المدفوع: [المبلغ] · المتبقي: [المبلغ] يُسدّد [متى]\nيشمل: [الفطور/الضريبة/لا يشمل كذا]\nسياسة الإلغاء: [نص سياسة الفندق] + [رسوم خدمة الوكالة]\nطلبات خاصة مرفوعة للفندق (غير مضمونة): [الطلب]\nالموقع: [رابط]\nللطوارئ: [رقم الوكالة]\nأرجو حفظ هذي الرسالة وعرضها عند الاستقبال." },
+  { c:"تأكيد", t:"الاعتذار عن عدم الإتاحة", b:"للأسف [الفندق] غير متاح لهذي التواريخ عند إصدار الحجز — الإتاحة تتغير لحظياً وما أحب أأكد لك شيئاً غير مضمون.\nالمتاح الآن: [البديل] — [المسافة] · [نوع الغرفة] · إجمالي [المبلغ].\nيناسبك؟ وإلا أسجّل طلبك وأخبرك أول ما يفتح." },
+  { c:"متابعة", t:"تذكير قبل الوصول بيوم", b:"تذكير بحجزكم غداً [التاريخ] — [الفندق].\n📍 الموقع: [رابط]\n🧾 اعرض الفوتشر ورقم التأكيد [الرقم] عند الاستقبال\n🪪 هوية أو جواز لكل نزيل\n🕓 الدخول من [الوقت] — إن وصلتم قبلها الاستقبال يحفظ الأمانات حسب سياسته\nوصولكم تقريباً الساعة كم؟ أبلّغ الفندق." },
+  { c:"متابعة", t:"بعد الدخول بساعتين", b:"اطمأنّيت عليكم — استلمتوا الغرفة؟\nمطابقة للحجز من ناحية النوع وعدد النزلاء؟\nأي ملاحظة خبّرني الحين وأتواصل مع الفندق فوراً." },
+  { c:"متابعة", t:"صباح المغادرة", b:"صباح الخير. تذكير: الخروج اليوم قبل الساعة [الوقت] حسب سياسة الفندق.\nتحتاجون تأخير خروج؟ أرفع الطلب للفندق وأخبرك بردّهم — قد يكون برسوم وحسب الإشغال.\nتقبّل الله طاعتكم." },
+  { c:"متابعة", t:"طلب التقييم", b:"سعدنا بخدمتكم. لو الإقامة كانت على قدر توقعكم، تقييمكم يفرق معنا كثير:\n[رابط التقييم]\nوإن كان فيه ملاحظة على الفندق أو علينا، أرسلها لي أولاً وأتابعها شخصياً." },
+  { c:"شكاوى", t:"شكوى داخل الفندق", b:"آسف على هذا، وأتابعه معكم الحين.\nفهمت المشكلة: [أعد صياغتها].\nتواصلت مع [اسم موظف الفندق] بقسم [القسم] الساعة [الوقت]، ووعدوا بـ[الإجراء] خلال [المدة].\nأرجع لك بتحديث الساعة [الوقت]، وإن ما التزموا أرفع الموضوع لإدارة الفندق ومزوّدنا مباشرة." },
+  { c:"شكاوى", t:"الفندق يقول ما فيه حجز باسمكم", b:"لا يهمّك، معي إثبات الحجز.\nرقم تأكيد الفندق: [الرقم] · تاريخ الإصدار: [التاريخ] · باسم [الاسم].\nأرسلت الفوتشر ونسخة التأكيد لموظف الاستقبال الحين، وأكلّمهم مباشرة على [الرقم].\nابقَ بالاستقبال ولا تدفع أي مبلغ ثانٍ لحد ما أتواصل معهم." },
+  { c:"شكاوى", t:"طلب تعديل أو إلغاء", b:"وصلني طلبك، وأتعامل معه حسب سياسة الفندق لا حسب رغبتنا:\n• سياسة الإلغاء للحجز: [النص]\n• رسوم خدمة الوكالة: [المبلغ]\nأرفع الطلب للفندق الحين وأرجع لك بالردّ الرسمي خلال [المدة]، وما أوعدك بمبلغ قبل اعتمادهم." },
+  { c:"شكاوى", t:"تسليم الحل", b:"تم حلّ [المشكلة] الساعة [الوقت] مع [اسم من تواصلت معه بالفندق].\nوما اعتُمد من طرفنا: [ما اعتمدته الإدارة فقط].\nتأكّد لي إن كل شي صار تمام الآن؟" }
+];
+
+const OBJECTIONS = [
+  { t:"«أبي الغرف بنفس الدور وجنب بعض»", say:"أرفعه للفندق كطلب خاص مكتوب مع الحجز، وأتابعه قبل وصولكم بيوم.\nبس أكون صريحاً معك: توزيع الأدوار يقرره الفندق يوم الوصول حسب الإشغال، وما أقدر أضمنه — اللي أضمنه لكم نوع الغرف وعددها والتواريخ.\nوإن كان التجاور شرطاً أساسياً، فيه خيارات [شقق/أجنحة بغرفتين] تضمن لكم البقاء بوحدة واحدة.",
+    never:"«أكيد جنب بعض» · «ابشر نفس الدور» · أي ضمان لا تملكه" },
+  { t:"«أبي إطلالة على الحرم»", say:"الإطلالة تُحجز كفئة بفارق سعر: [فئة إطلالة الحرم] بـ[المبلغ] و[فئة المدينة] بـ[المبلغ].\nإذا حجزناها فهي مضمونة ومثبّتة بالفوتشر. وإذا حجزنا فئة المدينة فما أوعدك بإطلالة.",
+    never:"وعد بإطلالة على فئة مدينة · وعد بترقية مجانية" },
+  { t:"«ليش أغلى من موقع الفندق؟»", say:"سعر الفندق المباشر يتغير بخطة السعر والإتاحة. سعرنا يشمل [ما يشمله] ومعه متابعتنا: أي تعديل أو مشكلة نتولاها عنك مع الفندق.\nأرسل لي لقطة العرض وأقارن لك بصدق، وإذا كان فعلاً أوفر لك أقولها لك.",
+    never:"التقليل من الفندق أو المنصات · تخفيض من عندك بلا اعتماد" },
+  { t:"«غالي»", say:"أقدّر وضوحك. السعر يقابل [المسافة] و[نوع الغرفة] و[ما يشمله].\nوإن كانت الميزانية محدّدة، عندي [البديل] بـ[المبلغ] — أبعد قليلاً بنفس عدد الأشخاص.",
+    never:"خصم من عندك · وعد بسعر أقل قبل اعتماد الإدارة" },
+  { t:"«بفكر وأرد عليك»", say:"خذ راحتك. بس خبّرك بصراحة: السعر والإتاحة عند الفندق يتغيران لحظياً، وما أقدر أحجزهما لك بلا إصدار.\nأعيد لك التسعير أول ما تقرر.",
+    never:"الوعد بتثبيت سعر بلا إصدار · الإلحاح" },
+  { t:"طلب إلغاء بعد الإصدار", say:"تم، وأتفهّم الظرف.\nالإلغاء يتبع سياسة الفندق المذكورة بالفوتشر: [النص]، ومعها رسوم خدمة الوكالة [المبلغ].\nأرفع الطلب رسمياً الحين وأرجع لك بردّهم خلال [المدة]. وقبلها — يناسبك تغيير التواريخ بدل الإلغاء؟",
+    never:"الوعد باسترجاع كامل · الرفض القاطع بلا رفع الطلب" },
+  { t:"«الفندق رفض يدخلني قبل الموعد»", say:"الدخول المبكر قرار الفندق وحسب جاهزية الغرف، وأنا رفعته لهم مسبقاً.\nأتواصل معهم الحين وأشوف أقرب وقت ممكن، وإلى ذلك يحفظون لكم الأمانات وتستريحون بالاستقبال.",
+    never:"لوم النزيل · وعد بدخول مبكر مسبقاً" },
+  { t:"شكوى نظافة أو عطل بالغرفة", say:"آسف على هذا، وأتابعه بنفسي مع الفندق الحين.\nأرسل لي صورة إن تيسّر، وأكلّم قسم [الاستقبال/الصيانة] وأرجع لك بتحديث خلال [المدة].\nوإن ما عالجوها، أطلب تغيير الغرفة رسمياً وأصعّدها لإدارة الفندق.",
+    never:"«نرسل لك فريقنا» — الفريق ليس فريقك · تجاهل التوثيق" },
+  { t:"«الفندق يقول ما عندهم حجز باسمي»", say:"معي رقم تأكيد الفندق [الرقم] وتاريخ الإصدار، وأرسله لهم الحين وأكلّمهم مباشرة.\nابقَ بالاستقبال ولا تدفع أي مبلغ إضافي لين ما أرجع لك.",
+    never:"مطالبة النزيل بالدفع ثم المطالبة لاحقاً · إنهاء المكالمة بلا حل" },
+  { t:"«الغرفة أصغر من الصور»", say:"الصور بالمواقع تكون لفئة الغرفة عموماً وقد تختلف بالمساحة والتأثيث بين غرفة وأخرى بنفس الفئة.\nخبّرني وش الناقص بالضبط: إن كانت الغرفة غير مطابقة لنوع الحجز أطالب الفندق بتصحيحها فوراً، وإن كانت مطابقة أشوف لك ترقية وفرقها.",
+    never:"إنكار بلا تحقق · وعد بترقية مجانية" },
+  { t:"«أبي أضيف شخصاً للغرفة»", say:"السعة النظامية للغرفة [عدد] أشخاص، والزيادة يقررها الفندق وقد تكون برسوم سرير إضافي.\nأرفع الطلب وأرجع لك بالسعر والموافقة قبل الوصول، عشان ما تنصدمون بالاستقبال.",
+    never:"«ادخلوا ما أحد يسأل» — تعريض النزيل للحرج والرفض" },
+  { t:"مجموعة أو حملة", say:"أخذ منكم: اسم منسّق المجموعة ورقمه، التواريخ، توزيع الأشخاص على الغرف، واسم منسّق المجموعة كما بالهوية [وأسماء الجميع إن كان الإصدار يشترطها].\nتسعير المجموعات يُعتمد من الإدارة ومن الفندق، وأرجع لكم بعرض رسمي خلال [المدة]. وتوزيع الأدوار يبقى قرار الفندق.",
+    never:"تسعير من عندك · وعد بوحدات متجاورة أو بمبنى واحد قبل التأكيد" },
+  { t:"«تقدرون تسوون تأشيرة ونقل وبرنامج؟»", say:"خدماتنا المعتمدة: [اذكر ما ترخّص به وكالتكم فعلاً — حجوزات، نقل، برامج].\nاللي خارج خدماتنا ما أقدر أضمنه، وأرشّح لك جهة معتمدة.",
+    never:"وعد بخدمة خارج ترخيص الوكالة" },
+  { t:"تحويل لحساب شخصي أو رابط دفع مجهول", say:"للأمان: الدفع يكون فقط على حساب [اسم الوكالة] الرسمي [الآيبان] أو رابط الدفع الرسمي من نظامنا.\nأي حساب شخصي أو رابط ثانٍ ما يمثّلنا، ولا نستقبل بيانات بطاقة بالواتساب.",
+    never:"قبول إشعار لحساب غير رسمي · تأكيد حجز على دفع غير مؤكد" }
+];
+
+const DRILLS = [
+  { l:1, t:"استفسار مبهم", msg:"السلام عليكم، الأسعار؟", want:"لا يُرسل سعراً. يجمع الأسئلة الستة برسالة واحدة ويعرّف بالوكالة.", trap:"يرسل «من [المبلغ] ريال» فيفقد التأهيل والمقارنة.",
+    model:"حياك الله، معك [الاسم] من [اسم الوكالة].\nعشان أرشّح لك الأنسب وأعطيك السعر النهائي:\n• تاريخ الدخول والخروج؟\n• كم شخص (كبار وأطفال)؟\n• كم غرفة ونوعها؟\n• الأقرب للحرم أو الأوفر؟\n• الميزانية التقريبية للإقامة؟" },
+  { l:1, t:"طلب واضح", msg:"نبي غرفتين من 12 إلى 16، أربع كبار وطفلين، الأقرب للحرم.", want:"فحص الإتاحة، خياران، سعر إجمالي، ذكر حدود الضمان، سؤال إغلاق.", trap:"عرض بلا فحص إتاحة، أو وعد بغرف متجاورة.",
+    model:"أبشر، أفحص المتاح وأرجع لك خلال [المدة].\n1) [فندق أ] — [x] دقائق مشياً · غرفتان [النوع] · إجمالي [المبلغ]\n2) [فندق ب] — [y] دقائق · إجمالي [المبلغ]\nتوزيع الأدوار وتجاور الغرف يقرره الفندق عند الوصول، أرفعه كطلب خاص. أيّهما أصدر؟" },
+  { l:2, t:"«أبيهم جنب بعض ونفس الدور»", msg:"أبي الغرفتين جنب بعض ونفس الدور، ممكن؟", want:"رفع الطلب + التصريح بعدم الضمان + عرض بديل يضمن البقاء معاً (جناح/شقة).", trap:"«أكيد أرتبها لك» — وعد بما لا يملكه.",
+    model:"أرفعه للفندق كطلب خاص مكتوب مع الحجز وأتابعه قبل الوصول.\nبس بصراحة: توزيع الأدوار قرار الفندق يوم الوصول حسب إشغاله، وما أقدر أضمنه.\nوإن كان البقاء سوا شرطاً، عندي [جناح بغرفتين / شقة] يضمن لكم وحدة واحدة بـ[المبلغ]." },
+  { l:2, t:"«ليش أغلى من موقع الفندق؟»", msg:"دخلت موقع الفندق ولقيته أرخص من سعركم.", want:"شرح اختلاف خطط الأسعار + ما يشمله سعرنا + طلب لقطة العرض للمقارنة بصدق.", trap:"التقليل من الفندق أو المنصات، أو خفض السعر من عنده.",
+    model:"طبيعي يختلف: أسعار الفنادق تتغير بخطة السعر والإتاحة لحظياً.\nسعرنا يشمل [ما يشمله] ومعه متابعتنا معك من الحجز للمغادرة.\nأرسل لي لقطة العرض وأقارن لك بصدق، وإذا كان أنسب لك فعلاً أقولها لك." },
+  { l:2, t:"الفندق يقول ما فيه حجز", msg:"أنا بالاستقبال والموظف يقول ما عندهم حجز باسمي!", want:"طمأنة + رقم تأكيد الفندق + تواصل مباشر + منع الدفع المزدوج.", trap:"مطالبة النزيل بالدفع ثم «نرجعه لك لاحقاً».",
+    model:"لا يهمّك، معي إثبات الحجز.\nرقم تأكيد الفندق [الرقم] باسم [الاسم] صادر بتاريخ [التاريخ].\nأرسلت الفوتشر للاستقبال وأكلّمهم الحين مباشرة.\nابقَ عندهم ولا تدفع أي مبلغ ثانٍ لين ما أرجع لك." },
+  { l:2, t:"شكوى نظافة", msg:"دخلنا الغرفة والحمام مو نظيف.", want:"اعتذار + توثيق + تواصل مع الفندق بمدة محددة + تصعيد إن لم يُعالج.", trap:"«نرسل لك فريق النظافة» — فريق لا يملكه، أو تجاهل التوثيق.",
+    model:"آسف على هذا وأتابعه بنفسي الحين.\nلو تيسّر أرسل لي صورة، وأكلّم الاستقبال وأطلب معالجة فورية أو تغيير الغرفة.\nأرجع لك بتحديث خلال [المدة]، وإن ما التزموا أرفع الموضوع لإدارة الفندق ومزوّدنا." },
+  { l:2, t:"إلغاء بعد الإصدار", msg:"ظرف طارئ، أبي ألغي وأسترد المبلغ كامل.", want:"تعاطف + سياسة الفندق كما هي + رسوم الوكالة + عرض التأجيل + رفع الطلب بلا وعد.", trap:"«أكيد بنرجعه كامل» أو «ما فيه استرجاع» — كلاهما خطأ.",
+    model:"الله يسهّل، وأتفهّم الظرف.\nالإلغاء يتبع سياسة الفندق بالفوتشر: [النص]، ومعها رسوم خدمة الوكالة [المبلغ].\nقبلها: يناسبك تغيير التواريخ بدل الإلغاء؟\nوإن كان القرار الإلغاء، أرفعه رسمياً وأرجع لك بردّهم خلال [المدة]." },
+  { l:3, t:"إلغاء حجز مؤكد من جهة الحجز", msg:"(داخلي) وصلك إلغاء لحجز مؤكد لعدم توفر الغرفة، والعميل يصل بعد يومين.", want:"إبلاغ العميل بمبادرة منك قبل أن يكتشف + بديل مساوٍ أو أفضل + تحمّل الفرق حسب سياسة الوكالة + تصعيد.", trap:"الانتظار، أو تحميل العميل فرق السعر.",
+    model:"أبلغ الإدارة فوراً، ثم للعميل:\n«أعتذر منك، الفندق ألغى الغرفة من طرفه لظرف تشغيلي عندهم.\nما تركتك: حجزت لك [البديل] — [المسافة] ومساوٍ أو أفضل، والفرق علينا لا عليك، والفوتشر الجديد وصلك.\nوإن ما ناسبك، الاسترجاع كامل وأتابعه شخصياً.»" },
+  { l:3, t:"غرفة غير مطابقة", msg:"حجزنا غرفة رباعية وأعطونا غرفة بسريرين فقط!", want:"التحقق من الفوتشر + مطالبة الفندق بالتصحيح + عدم قبول التسوية على حساب النزيل + توثيق.", trap:"«شوفوا معهم» — رمي المسؤولية على النزيل.",
+    model:"هذا غير مقبول، والحجز عندي مكتوب [النوع] لـ[عدد] أشخاص.\nأكلّم الاستقبال الحين وأطالبهم بتصحيح الغرفة أو غرفة إضافية بلا فرق عليكم.\nأرسل لي صورة الغرفة ورقم الغرفة، وأرجع لك خلال [المدة] بردّ رسمي." },
+  { l:3, t:"مجموعة بموسم", msg:"حملة 24 شخص، ست غرف برمضان، أفضل سعر كم؟", want:"منسّق واحد + أسماء وتوزيع + تصعيد التسعير للإدارة + توضيح أن الأدوار والتجاور قرار الفندق.", trap:"تسعير من عنده أو وعد بمبنى واحد/أدوار متجاورة.",
+    model:"حيّاكم الله. أحتاج: اسم منسّق المجموعة ورقمه، التواريخ، توزيع الأشخاص على الغرف، وأسماء النزلاء كما بالهوية.\nتسعير المجموعات يُعتمد من الإدارة ومن الفندق، وأرجع لكم بعرض رسمي خلال [المدة].\nوتوزيع الأدوار والتجاور يبقى قرار الفندق يوم الوصول." },
+  { l:3, t:"تهديد بتقييم سيئ", msg:"إذا ما رجعتوا نص المبلغ بكتب تقييم يفضحكم.", want:"عدم المساومة على التقييم + التركيز على المشكلة + تصعيد مع نسخة المحادثة والفوتشر.", trap:"عرض تعويض مقابل حذف التقييم أو وعد باسترجاع.",
+    model:"حقك تكتب رأيك، واللي يهمّني أصلح اللي صار.\nالمشكلة عندي موثّقة: [المشكلة]، وأرفعها للإدارة وللفندق وأرجع لك بردّ رسمي خلال [المدة].\nواللي أقدر أسويه الآن: [الإجراء الفوري]." },
+  { l:3, t:"دفع مشبوه", msg:"جاني رابط دفع من رقم ثاني يقول إنه منكم وحوّلت.", want:"إيقاف الدفع + تأكيد القناة الرسمية + طلب الإشعار + تصعيد فوري + عدم تأكيد الحجز.", trap:"تأكيد الحجز على تحويل لم يصل لحساب الوكالة.",
+    model:"خلّني أتأكد فوراً: الدفع عندنا فقط على حساب [اسم الوكالة] [الآيبان] أو رابط نظامنا الرسمي.\nأرسل لي صورة الإشعار وأتحقق من المحاسبة الحين وأرفعه للإدارة.\nولا تحوّل أي مبلغ ثانٍ لين ما نتأكد — وحجزك ما يتأكد إلا بعد وصول المبلغ لحسابنا." }
+];
+
+const AXES = [
+  { k:"speed", label:"السرعة", max:20, hint:"أول ردّ خلال 5 دقائق · لا رسالة مقروءة بلا ردّ · الالتزام بالموعد الذي وعد به" },
+  { k:"qualify", label:"التأهيل", max:15, hint:"الأسئلة الخمسة قبل أي سعر · فهم الأولوية الحقيقية للعميل" },
+  { k:"accuracy", label:"دقة المعلومة", max:20, hint:"المسافة من الحرم · السعة · الإتاحة · السعر الإجمالي · السياسات كما هي مكتوبة" },
+  { k:"complete", label:"اكتمال الرسائل", max:15, hint:"رسالة التأكيد بكل بنودها · الموقع والمستقبِل · توثيق أي وعد كتابةً" },
+  { k:"tone", label:"النبرة", max:15, hint:"احترام ووضوح · بلا تبرير داخلي · بلا جفاف · بلا إلحاح" },
+  { k:"close", label:"الإغلاق والمتابعة", max:15, hint:"سؤال إغلاق واضح · متابعة واحدة للمتردّد · إغلاق الحالة أو تصعيدها" }
+];
+
+const FATALS = [
+  "وعد بشيء خارج صلاحيته (استرجاع، خصم، ترقية غير مؤكدة)",
+  "سعر أو سياسة خاطئة أُرسلت للعميل",
+  "طلب تحويل لحساب غير رسمي أو استقبال بيانات بطاقة",
+  "رسالة تأكيد ناقصة تسبّبت في خلاف",
+  "تجاهل شكوى أو تأخير تصعيد عاجل"
+];
+
+const HOTELS = [{"n":"سويس أوتيل المقام مكة","en":"Swissotel Al Maqam","s":4,"d":"أبراج البيت","addr":"مجمع أبراج البيت","lat":21.420188,"lng":39.825321,"score":8.7,"rev":25509,"bk":"https://www.booking.com/hotel/sa/swissotel-al-maqam-makkah.html","m":273,"walk":5,"rooms":"كلاسيك توين (مع خيار سرير ثالث) · كلاسيك ثلاثية ورباعية بإطلالة مدينة · كلاسيك كنج بإطلالة حرم جزئية · بريمير · جونيور وريزيدنشال وأجنحة عائلية — الغرف تتسع حتى 3 بالغين","gm":"https://www.google.com/maps/search/?api=1&query=21.420188,39.825321","pol":"الدخول 16:00 (18:00 في رمضان) · الخروج 12:00 · حتى سنتين مهد مجاناً · حتى 12 سنة مجاناً بسرير حالي · 13–17 سنة 160 ريال/ليلة · سرير إضافي: حتى 11 سنة 250 ريال، ومن 12 سنة 500 ريال"},{"n":"الصفوة البرج الأول","en":"Al Safwah Royale Orchid","s":4,"d":"أبراج الصفوة / أجياد","addr":"أمام بوابة الملك عبدالعزيز رقم 1","lat":21.420038,"lng":39.826781,"score":8.8,"rev":6487,"bk":"https://www.booking.com/hotel/sa/al-safwah.html","m":280,"walk":5,"rooms":"ديلوكس بإطلالة الكعبة · إطلالة حرم جانبية · ستوديو بإطلالة الحرم · إطلالة داخلية — 471 غرفة، وأقرب موقع لساحات الحرم","gm":"https://www.google.com/maps/search/?api=1&query=21.420038,39.826781","pol":"الدخول 15:00 · الخروج 12:00 · حتى سنة مهد مجاناً · حتى 6 سنوات مجاناً بسرير حالي · من 7 سنوات يُحتسب بالغاً · جليسة أطفال مجانية"},{"n":"سويس أوتيل مكة","en":"Swissotel Makkah","s":5,"d":"أبراج البيت / أجياد","addr":"مجمع أبراج البيت — تقاطع أم القرى","lat":21.419763,"lng":39.826089,"score":8.9,"rev":22869,"bk":"https://www.booking.com/hotel/sa/swissotel-makkah.html","m":305,"walk":5,"rooms":"كلاسيك كنج (إطلالة حرم جزئية) · كلاسيك توين · كلاسيك ثلاثية · كلاسيك رباعية (إطلالة مدينة) · جونيور سويت بطاولة طعام لستة — 1487 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.419763,39.826089","pol":"الدخول 16:00 (يتأخر إلى 18:00 في المواسم) · الخروج حتى 14:00 · الأطفال بكل الأعمار مرحّب بهم ومن 18 سنة بالغ · الإلغاء يختلف بخطة السعر ويشتدّ في الحج والعمرة · في موسم الحج الإقامة لحاملي التصريح النظامي فقط"},{"n":"صفوة الغفران مكة","en":"Al Ghufran Safwah Hotel","s":5,"d":"أجياد","addr":"أمام بوابة الملك عبدالعزيز — شارع أجياد","lat":21.419698,"lng":39.82661,"score":9.4,"rev":5781,"bk":"https://www.booking.com/hotel/sa/dar-al-ghufran-makkah.html","rooms":"غرف مزدوجة وثلاثية ورباعية وغرف عائلية وأجنحة · فئات إطلالة على الحرم وأخرى داخلية — تحقّق من الفئة بالضبط عند الحجز","m":314,"walk":5,"pol":"الدخول 16:00 · الخروج 12:00 · من 6 سنوات يُحتسب بالغاً · مهد مجاني · الدخول المبكر والخروج المتأخر برسوم وحسب التوفر","gm":"https://www.google.com/maps/search/?api=1&query=21.419698,39.82661"},{"n":"فندق ساعة مكة فيرمونت","en":"Makkah Clock Royal Tower, A Fairmont Hotel","s":5,"d":"أبراج البيت","addr":"وقف الملك عبدالعزيز — أبراج البيت","lat":21.419696,"lng":39.825583,"score":8.8,"rev":17879,"bk":"https://www.booking.com/hotel/sa/makkah-clock-royal-tower-a-fairmont.html","rooms":"سيجنتشر 42م² بإطلالة الكعبة (كنج أو توين) · جناح ريزيدنشال 92م² بصالة ودورتي مياه · جناح دوبلكس بغرفتين 138م² · جناح بغرفتين 172م² · أجنحة ملكية ورئاسية · طابق Fairmont Gold بمدخل وصالة خاصة — 1662 غرفة وجناح، وسماعات بث الحرم بالغرف","m":318,"walk":5,"pol":"الدخول 16:00 · الخروج 12:00 · حتى طفلين (6 سنوات فأقل) مجاناً بالأسرّة الحالية · من 18 سنة يُحتسب بالغاً · المهد والسرير الإضافي برسوم وحسب التوفر","gm":"https://www.google.com/maps/search/?api=1&query=21.419696,39.825583"},{"n":"بولمان زمزم مكة","en":"Pullman ZamZam Makkah","s":4,"d":"أبراج البيت","addr":"مجمع أبراج البيت","lat":21.419683,"lng":39.825571,"score":8.2,"rev":12152,"bk":"https://www.booking.com/hotel/sa/zamzam-grand-suites-managed-by-pullman.html","rooms":"كلاسيك 37م² بثلاثة أسرّة مفردة (إطلالة ساحة الحرم) · كلاسيك 37م² بأربعة أسرّة مفردة (إطلالة مدينة) · غرف مزدوجة · أجنحة · الفئات: كعبة جزئية / حرم مباشرة / مدينة — 1315 غرفة وجناح بسماعات بث الحرم","m":320,"walk":5,"pol":"الدخول 16:00 · الخروج 12:00 (بعض المصادر تذكر 14:00/10:00 — أكّدها) · حتى 3 سنوات مجاناً بمهد · حتى 11 سنة مجاناً بسرير حالي · من 12 سنة بالغ · بلّغ الفندق بوقت الوصول قبل 24 ساعة","gm":"https://www.google.com/maps/search/?api=1&query=21.419683,39.825571"},{"n":"موفنبيك برج هاجر مكة","en":"Movenpick Hajar Tower","s":4,"d":"أبراج البيت","addr":"أبراج البيت — قرب بوابة الملك عبدالعزيز","lat":21.419671,"lng":39.825594,"score":8.6,"rev":11081,"bk":"https://www.booking.com/hotel/sa/movenpick-residence-hajar-tower-makkah.html","m":321,"walk":5,"rooms":"كلاسيك (كنج أو ثلاثة أسرّة، تتسع 4) · ديلوكس سويت بغرفة نوم (تتسع 4) · سوبيريور كنج وكوين · ثلاثية · جناح ملكي 150م² · إطلالات جزئية على الحرم والكعبة","gm":"https://www.google.com/maps/search/?api=1&query=21.419671,39.825594","pol":"الدخول 16:00 · الخروج 11:30 · طفل حتى 11 سنة مجاناً بالأسرّة الحالية · من 12 سنة بالغ · مهد داخل الغرفة وجليسة أطفال برسوم · الدخول المبكر والخروج المتأخر برسوم"},{"n":"المروة ريحان من روتانا","en":"Al Marwa Rayhaan by Rotana","s":4,"d":"أبراج البيت","addr":"أبراج البيت","lat":21.419651,"lng":39.825591,"score":8.5,"rev":9712,"bk":"https://www.booking.com/hotel/sa/al-marwa-rayhaan-makkah.html","rooms":"غرف 35–37م² (كنج أو توين) بإطلالة مدينة أو حرم جزئية أو كعبة جزئية · جناح بغرفة نوم 70–75م² · أجنحة بغرفتين · أجنحة عائلية · جناح ملكي بإطلالة بانورامية","m":323,"walk":5,"pol":"الدخول 16:00 · الخروج 12:00 · حتى 4 سنوات مهد مجاناً · حتى 6 سنوات مجاناً بسرير حالي · 7–12 سنة 150 ريال/ليلة بسرير حالي · 7–16 سنة 150 ريال بسرير إضافي · كل سرير إضافي بموافقة الإدارة","gm":"https://www.google.com/maps/search/?api=1&query=21.419651,39.825591"},{"n":"قصر مكة رافلز","en":"Raffles Makkah Palace","s":5,"d":"أبراج البيت","addr":"وقف الملك عبدالعزيز — أبراج البيت","lat":21.419643,"lng":39.825566,"score":9.2,"rev":2364,"bk":"https://www.booking.com/hotel/sa/raffles-makkah-palace.html","rooms":"فندق أجنحة بالكامل — 219 جناحاً · أجنحة فاخرة بغرفة نوم وصالة · أجنحة قصر ومتعددة الغرف · جناح رئاسي بغرفتين 120م² · الفئات بالإطلالة: كعبة / حرم / مدينة · خدمة بتلر وسماعات بث الحرم","m":324,"walk":5,"pol":"الدخول 16:00 (18:00 في رمضان) · الخروج 12:00 · دخول مبكر برسم 250 ريال حسب التوفر · حتى طفلين (6 سنوات فأقل) مجاناً بالأسرّة الحالية · من 12–13 سنة يُحتسب بالغاً · سرير إضافي 150–200 ريال","gm":"https://www.google.com/maps/search/?api=1&query=21.419643,39.825566"},{"n":"إنتركونتيننتال دار التوحيد مكة","en":"InterContinental Dar Al Tawhid","s":5,"d":"إبراهيم الخليل","addr":"شارع إبراهيم الخليل","lat":21.420622,"lng":39.822443,"score":8.8,"rev":3711,"bk":"https://www.booking.com/hotel/sa/dar-al-tawhid-intercontinental-makkah.html","m":441,"walk":7,"rooms":"كلاسيك 30–49م² · جونيور سويت 93–114م² · تنفيذي 138–149م² · ملكي 232–309م² · دبلوماسي · رئاسي 282م² · أجنحة من غرفة إلى أربع غرف — 600 غرفة وجناح، وسماعات لبث الأذان","gm":"https://www.google.com/maps/search/?api=1&query=21.420622,39.822443","pol":"الدخول 16:00 · الخروج 12:00 · حتى 4 سنوات مجاناً بمهد · حتى 17 سنة مجاناً بالأسرّة الحالية · من 18 سنة بالغ"},{"n":"حياة ريجنسي جبل عمر مكة","en":"Hyatt Regency Makkah","s":5,"d":"جبل عمر","addr":"جبل عمر، شارع إبراهيم الخليل","lat":21.420344,"lng":39.822398,"score":8.8,"rev":21615,"bk":"https://www.booking.com/hotel/sa/hyatt-regency-makkah.html","m":461,"walk":8,"rooms":"توين وكنج 38م² بإطلالة حرم جزئية · مفردة/مزدوجة/ثلاثية/رباعية · أجنحة عائلية · جناح ملكي 190م² بإطلالة الكعبة · بنتهاوس 4 غرف نوم 410م² — 656 غرفة منها 25 جناحاً","gm":"https://www.google.com/maps/search/?api=1&query=21.420344,39.822398","pol":"الدخول 15:00 · الخروج 12:00 · سياسة الأطفال تختلف بين المصادر (طفل حتى 6 سنوات مجاناً بالأسرّة الحالية) — أكّدها قبل الوعد"},{"n":"هيلتون الأجنحة جبل عمر مكة","en":"Hilton Suites Makkah","s":4,"d":"جبل عمر","addr":"شارع إبراهيم الخليل","lat":21.421326,"lng":39.82161,"score":9.0,"rev":6713,"bk":"https://www.booking.com/hotel/sa/hilton-suites-makkah.html","m":493,"walk":8,"rooms":"غرفة كنج بإطلالة مدينة · غرفة توين بإطلالة حرم جزئية · جناح بغرفة نوم توين · جناح عائلي بغرفتي نوم — 484 غرفة وجناح، أغلبها تطل على الحرم، وسماعات أذان بكل غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.421326,39.82161","pol":"الدخول 16:00 · الخروج 12:00 · حتى طفلين (6 سنوات فأقل) مجاناً بالأسرّة الحالية · من 13 سنة بالغ · سرير إضافي برسوم ومهد مجاني"},{"n":"إيلاف كندة","en":"Elaf Kinda Hotel","s":4,"d":"أجياد","addr":"شارع أجياد — قرب بوابة الملك عبدالعزيز","lat":21.418355,"lng":39.823793,"score":8.3,"rev":5727,"bk":"https://www.booking.com/hotel/sa/ilaf-kinda.html","rooms":"ثلاثية 27م² بثلاثة أسرّة مفردة · رباعية 36م² بإطلالة الحرم · جناح عائلي بغرفتين 50م² (يتسع 4) · جونيور سويت بإطلالة الحرم 37م² (يتسع 3) — 240 غرفة وجناح","m":524,"walk":9,"pol":"الدخول 16:00 · الخروج 12:00 (مصدر يذكر 12:30 — أكّدها) · حتى 5 سنوات مجاناً بسرير حالي (مصدر آخر: حتى 12 سنة) · المهود والأسرّة الإضافية بالغرف الكبيرة فقط ومحدودة وبرسوم","gm":"https://www.google.com/maps/search/?api=1&query=21.418355,39.823793"},{"n":"روتانا جبل عمر مكة","en":"Rotana Jabal Omar Makkah","s":5,"d":"جبل عمر","addr":"طريق إبراهيم الخليل","lat":21.420362,"lng":39.821396,"score":9.1,"rev":1519,"bk":"https://www.booking.com/hotel/sa/rotana-jabal-omar.html","m":551,"walk":9,"rooms":"غرف بإطلالة مدينة وأخرى بإطلالة حرم جزئية · أجنحة تنفيذية ورئاسية وملكية وعائلية — 655 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.420362,39.821396","pol":"الدخول من 16:00 (يستقبل حتى 02:00) · الخروج 12:00 · مهد مجاني · الفطور مجاني لمن هم 6 سنوات فأقل، وبعدها نحو 55 ريالاً للطفل"},{"n":"جميرا جبل عمر مكة","en":"Jumeirah Jabal Omar Makkah","s":5,"d":"جبل عمر / أجياد","addr":"طريق إبراهيم الخليل","lat":21.418897,"lng":39.822237,"score":8.9,"rev":14950,"bk":"https://www.booking.com/hotel/sa/jabal-omar-jumeirah-makkah.html","m":573,"walk":10,"rooms":"ديلوكس 35م² حتى الأجنحة الملكية 120م² · جناح عائلي بغرفتي نوم بإطلالة الحرم · شقق وريزيدنسز — 1033 غرفة وجناح + 88 شقة","gm":"https://www.google.com/maps/search/?api=1&query=21.418897,39.822237","pol":"الدخول 16:00 · الخروج 12:00 · الدخول المبكر والخروج المتأخر حسب التوفر · مهد مجاني حسب التوفر ورسوم الأسرّة الإضافية غير مشمولة بالسعر"},{"n":"كونراد جبل عمر مكة","en":"Conrad Makkah","s":5,"d":"جبل عمر","addr":"شارع إبراهيم الخليل","lat":21.419191,"lng":39.821746,"score":8.9,"rev":5764,"bk":"https://www.booking.com/hotel/sa/conrad-makkah.html","m":590,"walk":10,"rooms":"ديلوكس كنج وتوين · غرف تنفيذية · فئة إطلالة الكعبة وفئة إطلالة الحرم · أجنحة بصالة منفصلة تتسع حتى 6 أشخاص · دخول الصالة التنفيذية","gm":"https://www.google.com/maps/search/?api=1&query=21.419191,39.821746","pol":"الدخول 16:00 · الخروج 12:00 (خروج متأخر عند الطلب) · من هم دون 18 لا يسجّلون إلا مع ولي أمر · الأطفال حتى 18 سنة مجاناً بالأسرّة الحالية على سعر الغرفة فقط · الوجبات: حتى 5 سنوات مجاناً، 6–11 خصم 50٪، من 12 بالغ · مهد مجاني ولا تتوفر أسرّة إضافية"},{"n":"هيلتون المؤتمرات جبل عمر مكة","en":"Hilton Makkah Convention","s":5,"d":"جبل عمر","addr":"جبل عمر","lat":21.423,"lng":39.820047,"score":8.5,"rev":12620,"bk":"https://www.booking.com/hotel/sa/hilton-makkah-convention.html","m":639,"walk":11,"rooms":"مفردة/مزدوجة/توين/ثلاثية/رباعية · غرف تنفيذية توين وكنج بإطلالة الحرم 80م² بصالة منفصلة · أجنحة تنفيذية 160م² بغرفتي نوم ودورتي مياه — أكثر من 764 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.423,39.820047","pol":"الدخول 16:00 · الخروج 12:00 · دون 18 سنة لا يسجّل إلا مع ولي أمر · الأطفال حتى 18 سنة مجاناً بالأسرّة الحالية على سعر الغرفة · حتى سنتين مهد مجاناً · الوجبات: حتى 5 سنوات مجاناً، 6–11 خصم 50٪، من 12 بالغ"},{"n":"مكارم أجياد مكة","en":"Makarem Ajyad Makkah","s":5,"d":"أجياد","addr":"شارع أجياد","lat":21.41706,"lng":39.828258,"score":8.4,"rev":7408,"bk":"https://www.booking.com/hotel/sa/ajyad-makkah-makarim.html","m":641,"walk":11,"rooms":"سوبيريور كنج (2) · سوبيريور توين (2) · سوبيريور بسريري كوين (4) · ثلاثية (3) · رباعية (4) · جونيور سويت (3) · ديلوكس سويت (5) · جناح عائلي (4) · بريميوم (2) · ملكي (2) — 411 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.41706,39.828258","pol":"الدخول 16:00 · الخروج 12:00 (مصدر يذكر 12:30) · الأطفال 10 سنوات فأقل مجاناً بالأسرّة الحالية · من 13 سنة بالغ · مهود مجانية عند الطلب · لا يوجد استقبال بعد ساعات العمل"},{"n":"أنجم مكة","en":"Anjum Hotel Makkah","s":5,"d":"أجياد / شارع أم القرى","addr":"شارع أم القرى","lat":21.424129,"lng":39.819591,"score":9.4,"rev":16538,"bk":"https://www.booking.com/hotel/sa/anjum-makkah.html","m":708,"walk":12,"rooms":"مفردة · توين · ثلاثية · رباعية (تتسع 4) · جونيور سويت (3) · أجنحة تنفيذية ودبلوماسية (4) · الفئات بالإطلالة: مدينة / حرم جزئية / كعبة مباشرة","gm":"https://www.google.com/maps/search/?api=1&query=21.424129,39.819591","pol":"الدخول من 16:00 حتى 23:30 · الخروج قبل 11:30 · طفلان (6 سنوات فأقل) مجاناً بالغرفة · الوجبات: حتى 6 سنوات مجاناً و7–11 خصم 50٪ · من 12 سنة بالغ · الدخول المبكر بطلب خاص وحسب التوفر"},{"n":"ماريوت جبل عمر مكة","en":"Marriott Hotel Jabal Omar","s":5,"d":"جبل عمر","addr":"طريق أم القرى","lat":21.423563,"lng":39.819402,"score":8.9,"rev":12525,"bk":"https://www.booking.com/hotel/sa/makkah-marriott.html","m":714,"walk":12,"rooms":"مزدوجة بإطلالة حرم جزئية · مزدوجة إطلالة مدينة · ديلوكس ثلاثية بإطلالة حرم جزئية · ثلاثية ورباعية إطلالة مدينة · أجنحة كنج بصالة — 426 غرفة و52 جناحاً · الديلوكس توين/كنج تتسع لبالغَين وطفلين لا لأربعة بالغين","gm":"https://www.google.com/maps/search/?api=1&query=21.423563,39.819402","pol":"الدخول 16:00 · الخروج 12:00 · حتى طفلين (6 سنوات فأقل) مجاناً بالأسرّة الحالية · من 12 سنة بالغ · سرير إضافي 200 ريال/ليلة · مهد مجاني"},{"n":"العنوان جبل عمر مكة","en":"Address Jabal Omar Makkah","s":5,"d":"جبل عمر / أجياد","addr":"طريق الأمير محمد بن سلمان","lat":21.422407,"lng":39.819156,"score":8.6,"rev":19952,"bk":"https://www.booking.com/hotel/sa/address-jabal-omar-makkah.html","m":729,"walk":12,"rooms":"ديلوكس توين/كنج 42م² (إطلالة مدينة) · ديلوكس بإطلالة حرم · ديلوكس بإطلالة كعبة جزئية · كلوب ديلوكس وكلوب بريمير 45م² · أجنحة بانورامية — 1268 غرفة و212 جناحاً","gm":"https://www.google.com/maps/search/?api=1&query=21.422407,39.819156","pol":"تأمين 500 ريال نقداً عند الوصول يُعاد عند المغادرة · لا تتوفر أسرّة إضافية والمهد حسب نوع الغرفة والتوفر · لا يوجد استقبال بعد ساعات العمل الرسمية · الحيوانات ممنوعة · أوقات الدخول والخروج تُؤكَّد مع الفندق"},{"n":"تلال جبل الكعبة","en":"Tilal Jabal Al Kabah (Shaza)","s":5,"d":"جبل الكعبة / الشامية","addr":"طريق جبل الكعبة","lat":21.425705,"lng":39.819571,"score":8.5,"rev":3928,"bk":"https://www.booking.com/hotel/sa/shaza-makkah.html","m":773,"walk":13,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.425705,39.819571","pol":"الدخول 16:00 · الخروج 12:00 · الأطفال بكل الأعمار مرحّب بهم وفيه نادي أطفال · الدخول المبكر والخروج المتأخر برسوم · أعمار احتساب الطفل بالغاً تُؤكَّد مع الفندق"},{"n":"شيراتون مكة جبل الكعبة","en":"Sheraton Makkah Jabal Al Kaaba","s":4,"d":"جبل الكعبة","addr":"جبل الكعبة","lat":21.426273,"lng":39.819497,"score":8.2,"rev":3219,"bk":"https://www.booking.com/hotel/sa/sheraton-makkah-jabal-al-kaaba.html","m":811,"walk":14,"rooms":"ديلوكس 30م² حتى الأجنحة التنفيذية 60م² · غرف كلوب · 110 شقق فندقية · إطلالات على توسعة الحرم أو المدينة — 412 غرفة وجناح، وجسر مشاة مكيّف للحرم","gm":"https://www.google.com/maps/search/?api=1&query=21.426273,39.819497","pol":"الدخول 16:00 · الخروج 12:00 · حتى 3 سنوات مهد مجاناً · حتى 17 سنة مجاناً بسرير حالي · من 12 سنة 100 ريال/ليلة على السرير الإضافي · من 18 سنة بالغ"},{"n":"دبل تري باي هيلتون جبل عمر","en":"DoubleTree by Hilton Jabal Omar","s":4,"d":"جبل عمر","addr":"جبل عمر","lat":21.423,"lng":39.818293,"score":8.5,"rev":9260,"bk":"https://www.booking.com/hotel/sa/doubletree-by-hilton-makkah-jabal-omar.html","m":820,"walk":14,"rooms":"توين (شخصان) · ديلوكس كنج (حتى 3) · جونيور سويت · غرف عائلية توين (4) وغرف متصلة — 668 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.423,39.818293","pol":"الدخول 16:00 حتى 23:59 · الخروج 12:00 · حتى سنتين مهد مجاناً · حتى 12 سنة مجاناً بسرير حالي · 3–16 سنة 240 ريال/ليلة بسرير إضافي · دون 18 لا يسجّل إلا مع ولي أمر · الوجبات: حتى 5 مجاناً و6–11 خصم 50٪"},{"n":"فوكو مكة","en":"voco Makkah by IHG","s":4,"d":"المسفلة","addr":"شارع إبراهيم الخليل، المسفلة","lat":21.407782,"lng":39.81849,"score":8.7,"rev":16925,"bk":"https://www.booking.com/hotel/sa/voco-makkah.html","m":1821,"walk":31,"rooms":"ديلوكس كنج · ديلوكس بثلاثة أسرّة مفردة 30م² · ديلوكس رباعية 30م² · جناح بغرفة نوم كوين · جناح بغرفة نوم 60م² · غرف عائلية كبيرة","gm":"https://www.google.com/maps/search/?api=1&query=21.407782,39.81849","pol":"الدخول 15:00 · الخروج 12:00 · حتى طفلين (12 سنة فأقل) مجاناً بالأسرّة الحالية · مهد مجاني · السرير الإضافي يختلف بالمصدر ويُؤكَّد مع الفندق"},{"n":"كورت يارد باي ماريوت مكة","en":"Courtyard by Marriott Makkah","s":4,"d":"الروابي / شارع أجياد","addr":"شارع أجياد، حي الروابي","lat":21.404347,"lng":39.830539,"score":8.5,"rev":4834,"bk":"https://www.booking.com/hotel/sa/courtyard-by-marriott-makkah.html","m":2068,"walk":35,"rooms":"غرف تصل إلى أربعة أسرّة مفردة (رباعية مناسبة للمجموعات) · الثلاثية = مزدوجة + سرير إضافي · أجنحة تنفيذية ودبلوماسية بصالة منفصلة وشرفة — 438 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.404347,39.830539","pol":"الدخول 16:00 · الخروج 12:00 · طفلان دون 6 سنوات مجاناً · من 18 سنة بالغ · المهود والأسرّة الإضافية برسوم وحسب التوفر ولا تدخل بالسعر"},{"n":"مكارم أم القرى","en":"Makarem Umm Al Qura","s":4,"d":"أجياد","addr":"شارع أجياد","lat":21.402693,"lng":39.830442,"score":8.1,"rev":6893,"bk":"https://www.booking.com/hotel/sa/umm-alqura-makarim.html","m":2246,"walk":38,"rooms":"سوبيريور ثلاثية 22م² (ثلاثة أسرّة مفردة) · سوبيريور رباعية 25م² (أربعة أسرّة مفردة) · غرف وأجنحة عائلية","gm":"https://www.google.com/maps/search/?api=1&query=21.402693,39.830442","pol":"الدخول 16:00 · الخروج 12:00 · من 7 سنوات يُحتسب بالغاً · مهود مجانية عند الطلب · الخروج المتأخر يُناقش مع الاستقبال مبكراً"},{"n":"راديسون مكة ذاخر سيتي","en":"Radisson Hotel Makkah Thakher City","s":4,"d":"ذاخر","addr":"ريع الكحل — ذاخر سيتي","lat":21.44449,"lng":39.834132,"score":9.6,"rev":29,"bk":"https://www.booking.com/hotel/sa/radisson-hotel-makkah-thakher-city.html","m":2579,"walk":44,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.44449,39.834132","pol":"الدخول 16:00 · الخروج 12:00 · رسوم الأطفال على السرير الحالي تختلف بنوع الغرفة · المهود متاحة لكل الفئات برسوم غير مشمولة بالسعر — أكّد التفاصيل مع الفندق"},{"n":"نوفوتيل مكة ذاخر سيتي","en":"Novotel Makkah Thakher City","s":4,"d":"الأندلس / ذاخر","addr":"حي الأندلس","lat":21.444701,"lng":39.833971,"score":8.1,"rev":12377,"bk":"https://www.booking.com/hotel/sa/novotel-makkah-thaker-city.html","m":2596,"walk":44,"rooms":"مزدوجة · ثلاثية · غرف عائلية حتى ستة أسرّة · أجنحة عائلية وغرف متصلة · الأطفال دون 11 سنة يقيمون مجاناً بغرفة الوالدين","gm":"https://www.google.com/maps/search/?api=1&query=21.444701,39.833971","pol":"الدخول 16:00 حتى 23:59 · الخروج 12:00 · دخول مبكر من 11:00 وخروج متأخر حتى 14:00 مجاناً حسب التوفر (عرض معلن حتى 30 يونيو 2026) · طفل واحد دون 11 سنة إقامة وفطور مجاناً · من 11 سنة بالغ · يلزم هوية وبطاقة عند الوصول وإبلاغ الفندق بوقت الوصول"},{"n":"إم مكة من ميلينيوم","en":"M Hotel Makkah by Millennium","s":4,"d":"التقوى / إبراهيم الخليل","addr":"طريق إبراهيم الخليل — حي التقوى","lat":21.400633,"lng":39.815123,"score":8.1,"rev":10083,"bk":"https://www.booking.com/hotel/sa/m-makkah-by-millennium.html","rooms":"ستاندرد ثلاثية 24م² (ثلاثة أسرّة) · كلاسيك رباعية 25م² (أربعة أسرّة) · مفردة ومزدوجة وتوين · أجنحة عائلية وغرف متصلة تتسع 4–6 · مهود وأسرّة إضافية عند الطلب","m":2688,"walk":45,"pol":"الدخول 16:00 · الخروج 12:00 · طفلان (12 سنة فأقل) مجاناً بالأسرّة الحالية · بعض الخطط تحتسب 40 ريالاً/ليلة للطفل حتى 11 سنة · من 12 سنة بالغ · الدخول المبكر والخروج المتأخر برسوم وباتفاق مسبق","gm":"https://www.google.com/maps/search/?api=1&query=21.400633,39.815123"},{"n":"دبل تري باي هيلتون مكة العزيزية","en":"DoubleTree by Hilton Makkah Aziziyah","s":4,"d":"العزيزية / الجامعة","addr":"طريق الملك خالد، حي الجامعة","lat":21.401062,"lng":39.872649,"score":8.7,"rev":5864,"bk":"https://www.booking.com/hotel/sa/doubletree-by-hilton-makkah-aziziyah.html","m":5367,"walk":91,"rooms":"مزدوجة · توين · ثلاثية · رباعية · غرف عائلية · أجنحة — 381 غرفة","gm":"https://www.google.com/maps/search/?api=1&query=21.401062,39.872649","pol":"الدخول 16:00 · الخروج 14:00 (مصدر آخر 12:00 — أكّدها) · الأطفال حتى 7 سنوات مجاناً على سعر الغرفة · الوجبات: حتى 5 مجاناً و6–11 خصم 50٪ ومن 12 بالغ ويدفع السرير الإضافي · دون 18 مع ولي أمر"},{"n":"تايم ربا للفنادق والأجنحة","en":"TIME Ruba Hotel & Suites","s":4,"d":"وادي جليل / طريق الحج","addr":"وادي جليل، طريق الحج","lat":21.470878,"lng":39.843513,"score":8.4,"rev":11284,"bk":"https://www.booking.com/hotel/sa/time-ruba-rayhan.html","m":5670,"walk":96,"rooms":"ديلوكس كنج (2) · ديلوكس توين (2) · ديلوكس ثلاثية (3) · ديلوكس رباعية (4) · جناح تنفيذي (2) · غرفة عائلية (5) — 770 غرفة وجناح","gm":"https://www.google.com/maps/search/?api=1&query=21.470878,39.843513","pol":"الدخول 16:00 حتى منتصف الليل · الخروج 12:00 · من 6 سنوات يُحتسب بالغاً · 6–12 سنة خصم 50٪ على الوجبات · يلزم هوية وبطاقة عند الوصول مع إبلاغ الفندق بوقت الوصول"},{"n":"بارك إن باي راديسون مكة العزيزية","en":"Park Inn by Radisson Makkah Aziziyah","s":5,"d":"العزيزية","addr":"طريق المسجد الحرام، حي العزيزية","lat":21.401386,"lng":39.879247,"score":8.1,"rev":11801,"bk":"https://www.booking.com/hotel/sa/park-inn-by-radisson-makkah-azizyah.html","m":5972,"walk":101,"rooms":"ستاندرد بسريرين (تتسع 3) · سوبيريور توين أو كنج (تتسع حتى 6) · سوبيريور بدور مرتفع · جناح بغرفة نوم (5) · جناح بغرفتي نوم (7)","gm":"https://www.google.com/maps/search/?api=1&query=21.401386,39.879247","pol":"الدخول 16:00 · الخروج 12:00 · تأمين 500 ريال عند الوصول يُعاد عند المغادرة · المهود والأسرّة الإضافية برسوم غير مشمولة · تتوفر جليسة أطفال"},{"n":"بارك إن باي راديسون مكة النسيم","en":"Park Inn by Radisson Makkah Al Naseem","s":4,"d":"النسيم","addr":"حي النسيم","lat":21.381832,"lng":39.871477,"score":8.3,"rev":8749,"bk":"https://www.booking.com/hotel/sa/park-inn-by-radisson-makkah-al-naseem.html","m":6513,"walk":110,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.381832,39.871477","pol":"الدخول 15:00 · الخروج 12:00 · طفلان (12 سنة فأقل) مجاناً بالأسرّة الحالية · من 12 سنة بالغ · مهود وبوابات أمان للأطفال متوفرة"},{"n":"ميلينيوم مكة النسيم","en":"Millennium Makkah Al Naseem","s":4,"d":"النسيم","addr":"طريق الطائف، حي النسيم","lat":21.380843,"lng":39.872262,"score":8.1,"rev":9488,"bk":"https://www.booking.com/hotel/sa/millennium-makkah-al-naseem.html","m":6648,"walk":112,"rooms":"ستاندرد · ديلوكس بإطلالة مدينة · ثلاثية (ثلاثة أسرّة) · رباعية · جونيور سويت · جناح تنفيذي — 1307 غرف","gm":"https://www.google.com/maps/search/?api=1&query=21.380843,39.872262","pol":"الدخول 16:00 · الخروج 12:00 · 1–3 سنوات مهد مجاناً · حتى 6 سنوات مجاناً بسرير حالي · 7–17 سنة 50 ريال/ليلة بسرير حالي · الفطور 35 ريالاً للفرد"},{"n":"كوبثورن مكة النسيم","en":"Copthorne Makkah Al Naseem","s":4,"d":"النسيم","addr":"طريق الطائف، حي النسيم","lat":21.38074,"lng":39.872503,"score":7.8,"rev":2949,"bk":"https://www.booking.com/hotel/sa/copthorne-makkah-al-naseem.html","m":6674,"walk":113,"rooms":"","gm":"https://www.google.com/maps/search/?api=1&query=21.38074,39.872503","pol":"الدخول 16:00 حتى 18:00 · الخروج 12:00 · حتى 3 سنوات مهد مجاناً · حتى 6 سنوات مجاناً بسرير حالي · 7–17 سنة 50 ريال/ليلة · من 18 سنة بالغ · كل سرير إضافي بموافقة الإدارة"},{"n":"فور بوينتس باي شيراتون مكة النسيم","en":"Four Points by Sheraton Makkah Al Naseem","s":4,"d":"النسيم","addr":"الطريق الدائري الثالث، خلف جامع الراجحي","lat":21.38081,"lng":39.874312,"score":8.1,"rev":10278,"bk":"https://www.booking.com/hotel/sa/four-points-by-sheraton-makkah-al-naseem.html","m":6804,"walk":115,"rooms":"كلاسيك توين/كنج (2) · كلاسيك بثلاثة أسرّة (3) · ديلوكس (2) · جونيور سويت (2) · جناح بريميوم بغرفتي نوم (4)","gm":"https://www.google.com/maps/search/?api=1&query=21.38081,39.874312","pol":"الدخول 16:00 · الخروج 12:00 · المصادر تختلف: مصدر يقول من 13 سنة بالغ وآخر يقول الأطفال حتى 17 مجاناً بالأسرّة الحالية — أكّدها قبل الوعد · مهد مجاني بالطلب · سرير إضافي 50 ريال/ليلة"}];
+
+/* ===================== بنك أسئلة العملاء + المحاكي ===================== */
+const SIMQ = [
+ {c:"تسعير", l:1, q:"السلام عليكم، الأسعار؟",
+  ok:[["سأل عن التواريخ",["تاريخ","الدخول","الخروج","ليله","ليالي"]],["سأل عن عدد الأشخاص",["كم شخص","عدد الاشخاص","كبار","اطفال"]],["سأل عن عدد الغرف ونوعها",["كم غرفه","عدد الغرف","نوع الغرفه","غرفتين"]],["سأل عن الأولوية أو الميزانية",["الاقرب","الاوفر","الميزانيه","تفضل"]],["عرّف بنفسه وبالوكالة",["معك","من وكاله","حياك","اهلا"]]],
+  no:[["أرسل سعراً قبل التأهيل",["~[0-9]{2,}\\s*ريال"]]],
+  m:"حياك الله، معك [الاسم] من [اسم الوكالة].\nعشان أرشّح لك الأنسب وأعطيك السعر النهائي:\n• تاريخ الدخول والخروج؟\n• كم شخص وأعمار الأطفال؟\n• كم غرفة ونوعها؟\n• الأقرب للحرم أو الأوفر؟\n• الميزانية التقريبية للإقامة كاملة؟"},
+ {c:"تسعير", l:2, q:"دخلت موقع الفندق ولقيت أرخص منكم بمئة ريال.",
+  ok:[["شرح اختلاف خطط الأسعار والإتاحة",["خطه","تتغير","الاتاحه","لحظي","حسب التوفر"]],["ذكر ما يشمله سعر الوكالة",["يشمل","شامل","متابعتنا","خدمتنا"]],["طلب لقطة العرض للمقارنة",["ارسل لي","لقطه","صوره العرض","اقارن"]]],
+  no:[["قلّل من الفندق أو المنصة",["مايسوى","مو مضمون عندهم","لا تحجز منهم"]],["خفّض السعر من عنده",["اخصم لك","انزله لك","اخر سعر مني"]]],
+  m:"طبيعي يختلف: سعر الفندق يتغير بخطة السعر والإتاحة لحظياً.\nسعرنا يشمل [ما يشمله] ومعه متابعتنا معك من الحجز للمغادرة وأي تعديل نتولاه عنك.\nأرسل لي لقطة العرض وأقارن لك بصدق — وإذا كان أوفر لك فعلاً أقولها لك."},
+ {c:"تسعير", l:2, q:"غالي، ما فيه أرخص؟",
+  ok:[["ذكر القيمة: المسافة أو نوع الغرفة أو ما يشمله",["دقايق","مشيا","تتسع","يشمل","نوع الغرفه"]],["عرض بديلاً أوفر بوضوح",["بديل","اوفر","خيار ثاني","ابعد شوي"]],["ربط القرار بالميزانية",["الميزانيه","كم تفضل","حدد لي"]]],
+  no:[["خصم من عنده",["اخصم لك","خصم خاص","اخر سعر مني"]]],
+  m:"أقدّر وضوحك. السعر يقابل [المسافة] و[نوع الغرفة] و[ما يشمله].\nوإن كانت الميزانية محدّدة، عندي [البديل] بـ[المبلغ] — أبعد قليلاً وبنفس عدد الأشخاص.\nكم الميزانية اللي مريحة لكم للإقامة كاملة؟"},
+ {c:"دفع وفواتير", l:1, q:"السعر شامل كل شي؟ ولا فيه رسوم تضاف؟",
+  ok:[["وضّح ما يشمله السعر بدقة",["شامل","يشمل","يضاف","رسوم الخدمه"]],["ذكر الإجمالي النهائي",["الاجمالي","النهائي","المبلغ الكلي"]],["عرض إرسال التفصيل مكتوباً",["ارسل لك","مكتوب","بالفوتشر","فاتوره"]]],
+  no:[["أجاب بتخمين",["اظن","يمكن","تقريبا شامل"]]],
+  m:"السعر اللي أرسلته نهائي: يشمل سعر الفندق ورسوم خدمتنا، وما يُضاف عليه شي من طرفنا.\nاللي قد يُطلب منك بالفندق مباشرة: مبلغ التأمين المسترجع [إن وُجد] وأي خدمات تطلبها هناك.\nالإجمالي [المبلغ] ريال ويوصلك مفصّلاً بالفوتشر مع الفاتورة."},
+ {c:"تسعير", l:2, q:"ثبّت لي السعر أسبوع وأنا برد عليك.",
+  ok:[["وضّح أن السعر والإتاحة يتغيران لحظياً",["تتغير","لحظي","ما اقدر اثبت","الاتاحه"]],["عرض مهلة واقعية أو إصداراً بسياسة مرنة",["حتى الساعه","مهله","خطه قابله للالغاء","اصدر لك"]],["لم يضغط على العميل",["خذ راحتك","براحتك","ودي","متى ما","بلا استعجال"]]],
+  no:[["وعد بتثبيت السعر بلا إصدار",["مثبت لك اسبوع","ابشر ثبته","محجوز لك بدون دفع"]]],
+  m:"ودّي، بس ما أقدر أثبّت سعراً بلا إصدار — السعر والإتاحة عند الفندق يتغيران لحظياً.\nاللي أقدر عليه: أمسك لك العرض حتى [الساعة]، أو نصدر بخطة قابلة للإلغاء المجاني حتى [التاريخ] وتلغيها بلا رسوم إن تغيّرت خططك."},
+ {c:"طلبات خاصة", l:2, q:"أبي الغرفتين جنب بعض ونفس الدور.",
+  ok:[["وعد برفع الطلب للفندق",["ارفعه","طلب خاص","اكتبه مع الحجز","اطلبه من الفندق"]],["صرّح بعدم الضمان",["ما اقدر اضمن","غير مضمون","يقرره الفندق","حسب الاشغال"]],["عرض بديلاً يضمن البقاء معاً",["جناح","شقه","بغرفتين","وحده وحده"]]],
+  no:[["وعد بالتجاور أو بالدور",["اكيد جنب بعض","ابشر نفس الدور","اضمن لك نفس الدور","مضمون متجاورين"]]],
+  m:"أرفعه للفندق كطلب خاص مكتوب مع الحجز وأتابعه قبل وصولكم.\nبصراحة: توزيع الأدوار قرار الفندق يوم الوصول حسب إشغاله وما أقدر أضمنه.\nوإن كان بقاؤكم سوا شرطاً أساسياً، [جناح بغرفتين/شقة] يضمن لكم وحدة واحدة بـ[المبلغ]."},
+ {c:"طلبات خاصة", l:2, q:"أبي غرفة إطلالتها على الحرم.",
+  ok:[["وضّح أن الإطلالة فئة سعرية تُحجز",["فئه","نحجزها","فئه سعريه","تحجز كفئه"]],["ذكر فرق السعر بين الفئات",["الفرق","بـ","المبلغ","سعر الفئه"]],["أكّد أنها مضمونة إذا حُجزت كفئة",["مضمونه","مكتوبه بالفوتشر","تحجزها","نثبتها"]]],
+  no:[["وعد بإطلالة غير محجوزة",["اكيد بتطل على الحرم","اطلب لك ترقيه مجانيه","ابشر تشوفون الكعبه"]]],
+  m:"الإطلالة تُحجز كفئة سعرية: [فئة إطلالة الحرم] بـ[المبلغ]، و[فئة المدينة] بـ[المبلغ].\nإذا حجزنا فئة الإطلالة فهي مضمونة ومكتوبة بالفوتشر — وإذا حجزنا فئة المدينة فما أقدر أوعدك بإطلالة.\nأي فئة أثبّت لكم؟"},
+ {c:"طلبات خاصة", l:2, q:"نبي دور مرتفع وبعيد عن المصعد.",
+  ok:[["رفع الطلب كتابةً",["ارفعه","اكتبه","طلب خاص"]],["توضيح أنه غير مضمون",["ما اضمن","ما اقدر اضمن","حسب الاشغال","اشغال الفندق","يقرره الفندق","يعتمد على"]],["وعد بالمتابعة قبل الوصول",["اتابعه","قبل الوصول","اذكرهم"]]],
+  no:[["وعد بتنفيذه",["ابشر دور مرتفع","مضمون بعيد عن المصعد","اكيد نرتبه"]]],
+  m:"سجّلته كطلب خاص وأرفعه للفندق مع الحجز، وأذكّرهم فيه قبل وصولكم بيوم.\nلكن تنفيذه يعتمد على إشغال الفندق يوم الدخول، فما أقدر أضمنه لك."},
+ {c:"طلبات خاصة", l:3, q:"أبي أضيف شخصاً خامساً بالغرفة الرباعية، ما أحد بيسأل صح؟",
+  ok:[["ذكر السعة النظامية",["السعه","نظامي","الحد","تتسع"]],["أوضح أن الزيادة قرار الفندق وقد تكون برسوم",["يقرره الفندق","سرير اضافي","برسوم","موافقه"]],["عرض رفع الطلب مسبقاً",["ارفع الطلب","اتاكد قبل","قبل الوصول"]]],
+  no:[["شجّع على المخالفة",["ما احد يسال","ادخلوه عادي","دخلوه معكم"]]],
+  m:"السعة النظامية للغرفة [عدد] أشخاص، والزيادة يقررها الفندق وغالباً برسوم سرير إضافي.\nأرفع الطلب الحين وأرجع لك بالسعر والموافقة قبل الوصول — أفضل من أن يُرفض عند الاستقبال قدّام العائلة."},
+ {c:"إتاحة وإصدار", l:2, q:"حجزت عندكم أمس، وش صار؟ ما وصلني شي.",
+  ok:[["تحقق من حالة الطلب",["اتحقق","افحص","اشوف الحاله","النظام"]],["فرّق بين الطلب والإصدار",["ما صدر","تحت الاصدار","بعد وصول المبلغ","فوتشر","مؤكد عندنا"]],["حدّد موعد الرد",["خلال","ارجع لك","الساعه"]]],
+  no:[["أكّد وجود حجز بلا تحقق",["حجزك مؤكد","تم كل شي","ابشر جاهز"]]],
+  m:"أتحقق من حالة طلبك الحين.\nللعلم: الحجز يصير مؤكداً عندنا بعد وصول المبلغ وإصدار الحجز، ويوصلك فوتشر منّا. ورقم تأكيد الفندق يصل غالباً قبل موعد وصولك وقد يكون بنفس اليوم.\nأرجع لك خلال [المدة] بحالته بالضبط."},
+ {c:"إتاحة وإصدار", l:2, q:"الفندق اللي عرضته لي أمس، أبي أحجزه الحين.",
+  ok:[["إعادة فحص الإتاحة والسعر",["افحص","اتاكد","الاتاحه","السعر تغير"]],["لم يفترض بقاء السعر",["قد يكون تغير","لحظي","اتحقق"]],["طلب بيانات الإصدار",["اسم النزيل","الهويه","الجواز","رقم الجوال"]]],
+  no:[["أكّد نفس السعر بلا فحص",["ابشر نفس السعر","مضمون نفس السعر","محفوظ لك بنفس","السعر ثابت لك"]]],
+  m:"أفحص الإتاحة والسعر مع الفندق الحين لأنهما يتغيران لحظياً، وأرجع لك خلال [المدة].\nوجهّز لي اسم النزيل الرئيسي كما بالهوية/الجواز ورقم جواله عشان أصدر مباشرة إذا كان متاحاً بنفس السعر."},
+ {c:"إتاحة وإصدار", l:1, q:"وش الفرق بين حجزكم وحجزي من التطبيق؟",
+  ok:[["ذكر المتابعة نيابة عن العميل",["نتابع","اتابع","نتولى","اتولى","اتولاها","نيابه عنك","نتواصل مع الفندق"]],["ذكر الفوتشر وإثبات الحجز",["فوتشر","رقم تاكيد","مستند"]],["لم يقلّل من المنصات",[]]],
+  no:[["هاجم المنصات",["مو مضمونه","نصب","لا تثق فيهم"]]],
+  m:"الفرق بالخدمة بعد الحجز: أنت تتعامل معي أنا لا مع نظام.\nيوصلك فوتشر برقم تأكيد الفندق، وأي تعديل أو مشكلة عند الوصول أتولاها معهم نيابة عنك، وبالمواسم هذا يفرق كثيراً."},
+ {c:"دفع وفواتير", l:1, q:"كيف أدفع؟",
+  ok:[["ذكر حساب الوكالة الرسمي",["حساب الوكاله","الحساب الرسمي","الايبان","رابط الدفع الرسمي"]],["طلب إشعار التحويل",["اشعار","صوره التحويل","السند"]],["ربط التأكيد بوصول المبلغ",["بعد وصول المبلغ","بعد تاكيد المحاسبه","اصدر الحجز","نصدر","فوتشر"]]],
+  no:[["طلب بيانات بطاقة بالواتساب",["رقم البطاقه","البطاقه الائتمانيه","cvv","الرقم السري"]],["طلب التحويل لحساب شخصي",["حول على حسابي","على حسابي الشخصي","باسمي انا"]]],
+  m:"الدفع على حساب [اسم الوكالة] الرسمي:\n[اسم الحساب + الآيبان]\nأو رابط الدفع الرسمي من نظامنا.\nترسل لي صورة الإشعار، وبعد تأكيد المحاسبة أصدر الحجز ويوصلك الفوتشر مباشرة — ورقم تأكيد الفندق يوصلك أول ما يصلنا، وغالباً قبل موعد وصولك."},
+ {c:"دفع وفواتير", l:2, q:"أدفع نصف الآن والباقي عند الوصول؟",
+  ok:[["ربط الدفع بسياسة خطة السعر",["حسب الخطه","سياسه","الفندق يشترط","خطه السعر"]],["عرض ما هو ممكن فعلاً",["اقدر","خطه تسمح","دفعه مقدمه"]],["وعد بالتحقق قبل الوعد",["اتاكد","ارجع لك"]]],
+  no:[["وافق بلا صلاحية",["تمام ادفع نص","ولا يهمك نصف المبلغ","اتفقنا"]]],
+  m:"يعتمد على خطة السعر: بعض الخطط تتطلب سداداً كاملاً عند الإصدار، وبعضها تسمح بدفعة مقدمة.\nأتحقق من خطة هذا الفندق لتواريخك وأرجع لك خلال [المدة] بالخيار المتاح بالضبط."},
+ {c:"دفع وفواتير", l:2, q:"أبي فاتورة ضريبية باسم شركتنا.",
+  ok:[["أكّد إصدار فاتورة من الوكالة",["فاتوره","نصدر","تصدر","باسم الشركه"]],["أفصح أن الوكالة غير مسجلة بالضريبة حالياً",["غير مسجلين","ما نصدر ضريبيه","بلا ضريبه","غير خاضعين"]],["طلب بيانات الشركة",["الاسم التجاري","السجل","بيانات الشركه"]]],
+  no:[["وعد بفاتورة ضريبية لا يملكها",["فاتوره ضريبيه بالرقم","نصدر ضريبيه","ابشر ضريبيه"]],["رفض بلا بديل",["ما نعطي فواتير","ما يصير"]]],
+  m:"أصدر لك فاتورة باسم الشركة مفصّلة بالمبلغ والخدمة.\nوأكون صريحاً: وكالتنا غير مسجلة بضريبة القيمة المضافة حالياً، فالفاتورة تصدر بلا ضريبة ولا تحمل رقماً ضريبياً.\nأرسل لي الاسم التجاري والسجل وتوصلكم مع الفوتشر."},
+ {c:"دفع وفواتير", l:2, q:"الفندق طلب مني مبلغ تأمين عند الوصول، ليش ما قلتوا لي؟",
+  ok:[["أقرّ وتحقق من سياسة الفندق",["اتحقق","سياسه الفندق","التامين","نعم بعض الفنادق"]],["وضّح أنه يُعاد عند المغادرة",["يعاد","يرد لك","عند المغادره"]],["تعهّد بذكرها مستقبلاً وتوثيقها",["اسجلها","بالفوتشر","اذكرها"]]],
+  no:[["أنكر وجود تأمين بلا تحقق",["ما فيه تامين","غلط منهم","لا تدفع شي"]]],
+  m:"أعتذر إن ما كانت واضحة لك. بعض فنادق مكة تأخذ مبلغ تأمين عند الوصول يُعاد لك عند المغادرة بعد فحص الغرفة.\nأتحقق من مبلغ التأمين لهذا الفندق وأرسله لك مكتوباً الحين، وأثبّته بالفوتشر لأي حجز قادم."},
+ {c:"إلغاء وتعديل", l:2, q:"ظروف طارئة، ألغوا واسترجعوا المبلغ كامل.",
+  ok:[["تعاطف بلا لوم",["الله يسهل","اتفهم","سلامتكم"]],["ذكر سياسة الفندق كما هي",["سياسه الفندق","بالفوتشر","النص","حسب الخطه"]],["ذكر رسوم الوكالة بصراحة",["رسوم خدمه","رسوم الوكاله"]],["عرض التأجيل كبديل",["تاجيل","تغيير التواريخ","بدل الالغاء"]],["رفع الطلب بلا وعد",["ارفعه","ارجع لك بردهم","خلال"]]],
+  no:[["وعد باسترجاع كامل",["نرجع لك المبلغ كامل","اكيد بيرجع كامل","مضمون الاسترجاع"]],["رفض قاطع",["ما فيه استرجاع نهائيا","مستحيل يرجع"]]],
+  m:"الله يسهّل أموركم وأتفهّم الظرف.\nالإلغاء يتبع سياسة الفندق المكتوبة بالفوتشر: [النص]، ومعها رسوم خدمة الوكالة [المبلغ].\nقبل الإلغاء: يناسبكم تغيير التواريخ؟\nوإن كان القرار نهائياً، أرفع الطلب رسمياً وأرجع لك بردّ الفندق خلال [المدة]."},
+ {c:"إلغاء وتعديل", l:2, q:"أبي أزيد ليلة على حجزي المؤكد.",
+  ok:[["فحص الإتاحة للّيلة الإضافية",["افحص","اتاكد","الاتاحه"]],["توضيح احتمال اختلاف السعر",["قد يختلف","سعر الليله","حسب اليوم"]],["وعد بفوتشر محدّث",["فوتشر","تاكيد محدث","ارسل لك"]]],
+  no:[["أكّد التمديد بلا فحص",["تم التمديد","اكيد متوفره","زدتها لك"]]],
+  m:"أفحص إتاحة الليلة الإضافية مع الفندق وأرجع لك خلال [المدة].\nسعر الليلة الإضافية قد يختلف عن سعر حجزك، وبعد السداد يوصلك فوتشر محدّث بنفس رقم التأكيد."},
+ {c:"إلغاء وتعديل", l:2, q:"أبي أغيّر الفندق لفندق ثاني بنفس المبلغ.",
+  ok:[["وضّح أن التغيير = إلغاء وإصدار جديد",["الغاء","حجز جديد","يعامل كالغاء"]],["ذكر سياسة الإلغاء والفرق السعري",["سياسه","الفرق","رسوم"]],["عرض الفحص والرد بموعد",["افحص","ارجع لك","خلال"]]],
+  no:[["وعد بالتغيير المجاني",["ابشر نغيره مجانا","بلا فرق","ولا يهمك"]]],
+  m:"تغيير الفندق يُعامل إلغاءً للحجز الحالي وإصداراً جديداً، فيخضع لسياسة الإلغاء وفرق السعر.\nأفحص لك البديل بسعره الحالي وأحسب الفرق والرسوم بدقة، وأرجع لك خلال [المدة] قبل أي خطوة."},
+ {c:"إلغاء وتعديل", l:3, q:"غيّرت اسم النزيل، عدّلوه بالحجز.",
+  ok:[["وضّح أن التعديل يحتاج موافقة الفندق",["موافقه الفندق","بموافقتهم","ارفع طلب","للفندق","بعض الخطط","حسب سياستهم"]],["طلب الاسم كما بالهوية",["كما بالهويه","الجواز","الاسم الرباعي"]],["تحذير من رفض الاستقبال",["الاستقبال","قد يرفض","مطابقه"]]],
+  no:[["عدّل بلا مراجعة الفندق",["عدلته لك","تم التغيير","ولا يهمك"]]],
+  m:"أرفع طلب تعديل الاسم للفندق لأن بعض الخطط لا تسمح به وبعضها برسوم.\nأرسل لي الاسم كما هو بالهوية/الجواز، وأرجع لك بموافقتهم مكتوبة — الاسم غير المطابق قد يرفضه الاستقبال."},
+ {c:"وصول ودخول", l:2, q:"طيارتنا تنزل ٢ فجراً، ندخل الفندق مباشرة؟",
+  ok:[["تأكيد وقت الدخول الرسمي",["الدخول من","الدخول الرسمي","وقت الدخول"]],["إبلاغ الفندق بالوصول المتأخر",["ابلغ الفندق","اسجل وصول متاخر","اذكرهم"]],["توضيح أن الغرفة محجوزة لليلة نفسها",["محجوزه لكم","الليله","لا يلغى"]]],
+  no:[["وعد بدخول مبكر مؤكد",["تدخلون على طول","اكيد جاهزه","ابشر تدخلون الفجر"]]],
+  m:"وصولكم مسجّل، وأبلّغ الفندق بالوصول المتأخر الحين عشان ما يُعتبر عدم حضور.\nالدخول الرسمي من [الوقت]، ووصولكم الفجر يعني: الغرفة محجوزة لكم من ليلة [التاريخ]، وإن كانت جاهزة يسلّمونها مباشرة — وإن لم تجهز ترتاحون بالاستقبال لحين جاهزيتها."},
+ {c:"وصول ودخول", l:2, q:"وصلنا الصبح ونبي ندخل الحين.",
+  ok:[["توضيح أن الدخول المبكر قرار الفندق",["يقرره الفندق","قرارهم","جاهزيه","حسب الاشغال"]],["عرض المحاولة والتواصل معهم",["اكلمهم","اطلب لهم","اتواصل مع الفندق"]],["عرض حفظ الأمتعة",["الامانات","الشنط","حفظ"]]],
+  no:[["وعد بدخول مبكر",["ابشر تدخلون الحين","اكيد يدخلونكم","مضمون"]]],
+  m:"أتواصل مع الفندق الحين وأطلب لكم أقرب وقت ممكن.\nالدخول المبكر قرارهم وحسب جاهزية الغرف، وقد يكون برسوم بالمواسم.\nوإلى ذلك يحفظون أمتعتكم وتستريحون بالاستقبال."},
+ {c:"وصول ودخول", l:3, q:"أنا بالاستقبال والموظف يقول ما عندهم حجز باسمي!",
+  ok:[["طمأنة فورية",["لا يهمك","معي الحجز","ولا يهمك"]],["ذكر رقم تأكيد الفندق",["رقم التاكيد","رقم تاكيد الفندق","اصدر بتاريخ"]],["تواصل مباشر مع الفندق",["اكلمهم","اتواصل معهم","ارسل لهم الفوتشر"]],["منع الدفع المزدوج",["لا تدفع","لا تسدد","ابق بالاستقبال"]]],
+  no:[["طلب من النزيل أن يدفع ويسترجع لاحقاً",["ادفع وبنرجعه لك","سدد وبنعوضك"]]],
+  m:"لا يهمّك، الحجز عندي موثّق.\nرقم تأكيد الفندق [الرقم] باسم [الاسم] صادر بتاريخ [التاريخ]، وأرسلت لهم الفوتشر ونسخة التأكيد الحين وأكلّمهم مباشرة.\nابقَ بالاستقبال ولا تدفع أي مبلغ ثانٍ لين ما أرجع لك."},
+ {c:"وصول ودخول", l:1, q:"وش أحتاج عند الاستقبال؟",
+  ok:[["ذكر الفوتشر ورقم التأكيد",["الفوتشر","رقم التاكيد","الحجز"]],["ذكر الهوية أو الجواز لكل نزيل",["هويه","جواز","لكل نزيل"]],["ذكر التأمين إن وُجد",["تامين","مبلغ يعاد","حسب الفندق"]]],
+  no:[["أجاب بكلمة واحدة",[]]],
+  m:"تحتاج: الفوتشر ورقم التأكيد [الرقم]، وهوية أو جواز لكل نزيل.\nوبعض الفنادق تأخذ مبلغ تأمين مسترجعاً عند الوصول — تأمين هذا الفندق [المبلغ].\nوأنا معك على هذا الرقم إن صار أي شي بالاستقبال."},
+ {c:"وصول ودخول", l:2, q:"تأخرنا يوم وما قدرنا نجي، حجزنا وش صار فيه؟",
+  ok:[["سأل عن وضعهم أولاً",["سلامتكم","وش صار","كل شي تمام"]],["وضّح سياسة عدم الحضور",["عدم الحضور","السياسه","الليله الاولى"]],["عرض رفع الطلب للفندق",["ارفع","اكلم الفندق","اتواصل مع الفندق","اشوف امكانيه","اشوف المتاح"]]],
+  no:[["أكّد إلغاء الحجز بلا مراجعة",["انلغى","راح عليكم","انتهى الحجز"]]],
+  m:"سلامتكم، وش صار معكم؟\nعدم الحضور يخضع لسياسة الفندق: [النص]، وغالباً تُحتسب الليلة الأولى على الأقل.\nأتواصل مع الفندق الحين وأشوف إمكانية إعادة تفعيل بقية الليالي، وأرجع لك خلال [المدة]."},
+ {c:"شكاوى الفندق", l:2, q:"دخلنا الغرفة والحمام مو نظيف.",
+  ok:[["اعتذر بلا تبرير",["اسف","اعتذر","ما يمثل"]],["طلب توثيقاً",["صوره","مقطع","رقم الغرفه"]],["تواصل مع الفندق بمدة محددة",["اكلم الفندق","الاستقبال","خلال","اتابع"]],["تعهّد بالتصعيد إن لم يُعالج",["اصعد","اداره الفندق","تغيير الغرفه","ارفع"]]],
+  no:[["قال إنه سيرسل فريقه",["نرسل فريقنا","فريق النظافه عندنا","موظفينا بيجون"]]],
+  m:"آسف على هذا وأتابعه بنفسي الحين.\nلو تيسّر أرسل لي صورة ورقم الغرفة، وأكلّم الاستقبال وأطلب معالجة فورية أو تغيير الغرفة.\nأرجع لك بتحديث خلال [المدة]، وإن ما التزموا أرفع الموضوع لإدارة الفندق وأتابعه حتى يُحل."},
+ {c:"شكاوى الفندق", l:3, q:"المكيّف ما يبرّد والأطفال ما ناموا!",
+  ok:[["اعتبرها عاجلة",["عاجل","الحين","فورا"]],["تواصل مع الفندق وطلب حل أو تغيير غرفة",["اكلمهم","تغيير غرفه","الصيانه","اطلب"]],["تعهّد بتحديثات دورية",["احدثك","بحدثك","كل نصف ساعه","كل نص ساعه","ارجع لك"]],["توثيق البلاغ واسم من كلّمه",["وقت البلاغ","سجلت","اسم الموظف","اسم موظف","كلمت","الساعه"]]],
+  no:[["وعد بإصلاح من طرف الوكالة",["نرسل فني","فنينا","نصلحه لكم"]]],
+  m:"آسف، وأتعامل معها كحالة عاجلة.\nكلّمت [اسم موظف الفندق] بقسم الصيانة الساعة [الوقت]، وطلبت إصلاحاً فورياً أو تغيير الغرفة.\nبحدّثك كل نصف ساعة، وإن ما تحرّكوا خلال [المدة] أرفعها لإدارة الفندق وأطلب بديلاً."},
+ {c:"شكاوى الفندق", l:2, q:"الغرفة أصغر بكثير من الصور اللي أرسلتوها.",
+  ok:[["وضّح أن الصور لفئة الغرفة عموماً",["فئه","تختلف","عموم الفئه","الفندق ينشرها"]],["سأل عن عدم المطابقة بالضبط",["وش الناقص","بالضبط","نوع الغرفه المحجوز"]],["عرض المطالبة بالتصحيح أو الترقية بفرقها",["اطالب","تصحيح","ترقيه","الفرق"]]],
+  no:[["أنكر بلا تحقق",["مستحيل","نفس الصور","انت غلطان"]],["وعد بترقية مجانية",["ارقيك مجانا","بدون فرق","ابشر جناح"]]],
+  m:"الصور المنشورة تكون لفئة الغرفة عموماً وقد تختلف المساحة بين غرفة وأخرى بنفس الفئة.\nخبّرني بالضبط: هل الغرفة مطابقة لنوع الحجز [النوع] وعدد النزلاء؟\nإن كانت غير مطابقة أطالب الفندق بتصحيحها فوراً، وإن كانت مطابقة أشوف لك ترقية وفرقها."},
+ {c:"شكاوى الفندق", l:3, q:"حجزنا رباعية وأعطونا غرفة بسريرين!",
+  ok:[["رجع للفوتشر كإثبات",["الفوتشر","مكتوب","نوع الغرفه","الحجز عندي"]],["طالب الفندق بالتصحيح بلا تكلفة على النزيل",["اطالبهم","بلا فرق عليكم","تصحيح","غرفه اضافيه"]],["طلب توثيقاً",["صوره","رقم الغرفه"]],["تعهّد بموعد ردّ",["خلال","ارجع لك"]]],
+  no:[["حمّل النزيل المسؤولية",["شوفوا معهم","كلمهم انت","ما لي دخل"]]],
+  m:"هذا غير مقبول، والحجز عندي مكتوب [النوع] لـ[عدد] أشخاص.\nأكلّم الاستقبال الحين وأطالبهم بتصحيح الغرفة أو بإضافة غرفة بلا فرق عليكم.\nأرسل لي صورة الغرفة ورقمها، وأرجع لك خلال [المدة] بردّ رسمي."},
+ {c:"شكاوى الفندق", l:3, q:"إذا ما رجعتوا نص المبلغ بكتب تقييم يفضحكم.",
+  ok:[["لم يساوم على التقييم",["حقك","رايك","اكتب"]],["ركّز على معالجة المشكلة",["اصلح","نعالج","الاجراء"]],["صعّد للإدارة والفندق",["الاداره","الفندق","ارفعها","رد رسمي"]]],
+  no:[["عرض تعويضاً مقابل حذف التقييم",["احذف التقييم","لا تكتب التقييم","مقابل حذف"]],["وعد باسترجاع",["نرجع لك نص المبلغ","اكيد بنرجع"]]],
+  m:"حقك تكتب رأيك، واللي يهمّني الحين أصلح اللي صار.\nالمشكلة موثّقة عندي: [المشكلة]، وأرفعها للإدارة وللفندق وأرجع لك برد رسمي خلال [المدة].\nواللي أقدر أسويه الآن: [الإجراء الفوري]."},
+ {c:"شكاوى الفندق", l:2, q:"الفندق رفض يمدد خروجنا ونحن دافعين!",
+  ok:[["وضّح أن تأخير الخروج ليس حقاً بالحجز",["ليس ضمن","حسب الاشغال","يقرره الفندق"]],["عرض محاولة الطلب",["ارفع الطلب","اكلمهم","اشوف"]],["عرض بديل عملي",["حفظ الامانات","يحفظون","امانتكم","البهو","ساعات اضافيه"]]],
+  no:[["لام الفندق بلا تحقق",["مقصرين","ظلم","حقكم عليهم"]]],
+  m:"تأخير الخروج ليس ضمن الحجز، وهو قرار الفندق حسب الإشغال وغالباً برسوم.\nأرفع الطلب لهم الحين وأخبرك بردّهم، وإن ما توفر يحفظون أمانتكم وتستريحون بالبهو لين موعد رحلتكم."},
+ {c:"مجموعات", l:3, q:"حملة ٢٤ شخص، ست غرف برمضان، كم أفضل سعر؟",
+  ok:[["طلب منسّق المجموعة ورقمه",["منسق","مسؤول المجموعه","رقمه"]],["طلب التوزيع وبيانات الإصدار",["التوزيع","الاسماء","كما بالهويه","المنسق"]],["أشار إلى اعتماد الإدارة والفندق",["الاداره","يعتمد","عرض رسمي","الفندق"]],["وضّح أن الأدوار قرار الفندق",["الادوار","التجاور","يقرره الفندق"]]],
+  no:[["سعّر من عنده",["السعر لكم","اخر سعر","اعطيك خصم"]],["وعد بمبنى واحد أو أدوار متجاورة",["اكيد متجاوره","مضمون نفس الدور","نفس المبنى اكيد"]]],
+  m:"حيّاكم الله. أحتاج: اسم منسّق المجموعة ورقمه، التواريخ، توزيع الأشخاص على الغرف، وأسماء النزلاء كما بالهوية.\nتسعير المجموعات يُعتمد من الإدارة ومن الفندق، وأرجع لكم بعرض رسمي خلال [المدة].\nوتوزيع الأدوار والتجاور يبقى قرار الفندق يوم الوصول."},
+ {c:"مجموعات", l:2, q:"نبي كل الغرف بنفس المبنى، أغلب الوحدات عندكم منفصلة صح؟",
+  ok:[["وضّح اختلاف المباني بين الوحدات",["مبانٍ","منفصله","نفس المبنى","المجمع"]],["عرض التحقق قبل الوعد",["اتحقق","اتاكد","ارجع لك"]],["اقترح فندقاً واحداً يضمن التجمّع",["فندق واحد","نفس الفندق","نجمعكم"]]],
+  no:[["أكّد نفس المبنى بلا تحقق",["اكيد نفس المبنى","كلها بمبنى واحد"]]],
+  m:"سؤال مهم: بعض خياراتنا وحدات بمبانٍ متفرقة وبعضها فندق واحد.\nأتحقق من توزيع الوحدات المتاحة لتواريخكم وأرجع لك خلال [المدة].\nوإن كان التجمّع شرطاً، أرشّح لكم [الفندق] لأنه يضمن أن الجميع بنفس المبنى — تبقى الأدوار قرار الفندق."},
+ {c:"خدمات الوكالة", l:2, q:"تقدرون تسوون لنا تأشيرة عمرة ونقل من جدة وبرنامج زيارة؟",
+  ok:[["حدّد خدمات الوكالة المعتمدة",["خدماتنا","المعتمده","نقدم","ضمن ترخيصنا"]],["لم يعد بما هو خارج الترخيص",["ما اقدر اضمن","خارج خدماتنا","نرشح لك جهه"]],["عرض ما يملكه فعلاً بسعره",["النقل","بتكلفه","المبلغ","نرتب لكم"]]],
+  no:[["وعد بخدمة خارج نطاقه",["ابشر نسوي كل شي","اكيد نجيب التاشيره","ولا يهمك نرتبها"]]],
+  m:"خدماتنا المعتمدة: [الحجوزات · النقل · البرامج حسب ترخيصنا].\nاللي ضمنها أرتّبه لكم بسعره مكتوباً، واللي خارجه ما أقدر أضمنه وأرشّح لكم جهة معتمدة."},
+ {c:"خدمات الوكالة", l:1, q:"عندكم مندوب بمكة لو صار شي؟",
+  ok:[["وضّح قناة الطوارئ الفعلية",["رقم الطوارئ","متاح","نتواصل مع الفندق"]],["وضّح شكل المتابعة الفعلي",["ما لدينا مندوب","متابعتنا","على مدار","رقم الطوارئ","نتابع معك"]]],
+  no:[["وعد بمندوب ميداني بلا وجوده",["مندوبنا بيجيكم","نرسل لك موظف","بنوصل لكم"]]],
+  m:"متابعتنا معكم على مدار الرحلة عبر [رقم الطوارئ] — أي مشكلة بالفندق أتولاها معهم مباشرة نيابة عنكم.\n[وإن كان لديكم مندوب: ومندوبنا بمكة [الاسم] على [الرقم]]."},
+ {c:"مواسم", l:2, q:"ليش أسعار رمضان ضعف العادي عندكم؟",
+  ok:[["شرح بالطلب والموسم لا بالاعتذار",["الطلب","الموسم","العشر","الاشغال"]],["وضّح أن السعر من الفندق لا من الوكالة",["الفندق يسعر","اسعار الفنادق","نحن نشتري"]],["عرض بديلاً أو فترة أوفر",["بديل","فتره","اوفر","قبل العشر"]]],
+  no:[["اعتذر عن السعر أو شكّك فيه",["اعرف انه غالي","والله غالي","انا معك"]]],
+  m:"الأسعار بمكة موسمية ويحددها الفندق حسب الطلب، خصوصاً العشر الأواخر — نحن نشتري منهم بنفس الارتفاع.\nإن كانت الميزانية محدّدة: [البديل] بـ[المبلغ]، أو فترة [التاريخ] قبل الذروة بسعر أقل."},
+ {c:"مواسم", l:3, q:"أبي أحجز بموسم الحج، تحتاجون تصريح؟",
+  ok:[["أشار إلى اشتراط التصريح النظامي",["تصريح","نظامي","التعليمات","الجهات المختصه"]],["لم يفتِ من عنده",["اتاكد","ارجع لك","الاداره"]],["وعد بردّ مكتوب",["مكتوب","رسمي","خلال"]]],
+  no:[["أكّد إمكانية الإقامة بلا تصريح",["بدون تصريح","ما يحتاج","ندخلكم عادي"]]],
+  m:"إقامة موسم الحج تخضع للتعليمات النظامية وتصريح الحج، وبعض الفنادق لا تستقبل بلا تصريح.\nأتأكد من الإجراء المعتمد لهذا الموسم وأرجع لك خلال [المدة] بردّ مكتوب — ما أقدر أأكد لك شيئاً قبلها."},
+ {c:"مواسم", l:2, q:"متى أحجز للعشر الأواخر؟",
+  ok:[["نبّه لسرعة النفاد",["تنفد","بدري","مبكرا","الطلب عالي"]],["ذكر الشروط الموسمية",["حد ادنى","ليالي","سياسه الغاء","سداد كامل"]],["دفع لقرار مبكر بلا ضغط",["اثبت","اصدر","لو التواريخ شبه مؤكده"]]],
+  no:[["وعد بتوفر لاحق",["متوفره دايما","لا تستعجل","تلقاها اي وقت"]]],
+  m:"العشر الأواخر تُباع مبكراً جداً، وغالباً بحد أدنى [عدد] ليالٍ وسداد كامل وسياسة إلغاء مشددة.\nإن كانت تواريخكم شبه مؤكدة، أصدرها الآن؛ والانتظار غالباً يعني سعراً أعلى أو عدم توفر."},
+ {c:"إتاحة وإصدار", l:2, q:"حوّلت المبلغ أمس وتقولون الغرفة ما عادت متاحة؟!",
+  ok:[["اعتذر وتحمّل الخطأ",["اعتذر","اسف","من طرفنا","خطأ"]],["أكّد الاسترجاع الكامل الفوري",["كامل","فورا","نحوله لك","يرجع لك المبلغ"]],["عرض بديلاً بنفس المستوى",["بديل","نفس المستوى","افضل","بلا فرق"]],["حدّد موعد التحويل",["اليوم","خلال","الحين"]]],
+  no:[["ربط الاسترجاع بموافقات مطوّلة",["حسب الاداره","لما يعتمدون","ما اقدر اوعدك بالمبلغ"]],["حمّل العميل النتيجة",["الاتاحه تغيرت مالنا ذنب","النظام","ما لنا دخل"]]],
+  m:"أعتذر منك، هذا خطأ من طرفنا وأتحمّله.\nخيارك الأول: بديل بنفس المستوى أو أفضل بلا أي فرق عليك — وأرسله لك الحين.\nوإن ما ناسبك: المبلغ يرجع لك كاملاً فوراً بلا أي خصم، ونحوّله اليوم وأرسل لك إشعار التحويل."},
+ {c:"إتاحة وإصدار", l:2, q:"وين رقم تأكيد الفندق؟ ما أحس إن الحجز مؤكد بدونه.",
+  ok:[["طمأنه بأن الحجز مؤكد عندنا",["مؤكد","الفوتشر","مضمون","عندنا"]],["وضّح توقيت وصول رقم الفندق",["يوصل","قبل موعدك","قبل الوصول","نفس اليوم","طبيعي"]],["تعهّد بإرساله فوراً عند وصوله",["ارسله لك","اول ما يصل","اتابعه"]]],
+  no:[["أوهمه أن الرقم موجود",["الرقم عندي","ارسلته لك","صدر"]],["استهان بقلقه",["ما يحتاج","ليش تسأل","ما يفرق"]]],
+  m:"حجزك مؤكد عندنا ومثبّت بالفوتشر: [الفندق] · [فئة الغرفة] · [التواريخ] · باسم [الاسم].\nرقم تأكيد الفندق يصل غالباً قبل موعد وصولك وقد يكون بنفس اليوم — هذا طبيعي في فنادق مكة.\nأتابعه بنفسي وأرسله لك أول ما يصلني، وأنا مسؤول عن حجزك أمامك بأي حال."},
+ {c:"أمان واحتيال", l:3, q:"جاني رابط دفع من رقم ثاني يقول إنه منكم، أحوّل؟",
+  ok:[["أوقف الدفع فوراً",["لا تحول","توقف","لا تدفع"]],["أكّد القناة الرسمية",["حساب الوكاله","الايبان","رابط نظامنا","الرسمي"]],["طلب لقطة الرسالة أو الإشعار",["ارسل لي","لقطه","صوره"]],["صعّد للإدارة",["الاداره","ارفع","ابلغ"]]],
+  no:[["أكّد الحجز على تحويل غير مؤكد",["تم الحجز","مؤكد","ابشر"]]],
+  m:"لا تحوّل شيئاً الحين.\nالدفع عندنا فقط على حساب [اسم الوكالة] [الآيبان] أو رابط الدفع من نظامنا الرسمي.\nأرسل لي لقطة الرسالة، وأرفع الموضوع للإدارة فوراً — وأي حجز ما يتأكد إلا بوصول المبلغ لحسابنا وصدور رقم تأكيد الفندق."},
+ {c:"أمان واحتيال", l:2, q:"أبي أحول لك على حسابك الشخصي أسرع.",
+  ok:[["رفض التحويل الشخصي بوضوح",["حساب الوكاله","الرسمي فقط","ما نستقبل","لا يمثلنا"]],["شرح السبب لحماية العميل",["حقك","حفاظا","فاتوره","فوتشر رسمي","يثبتان","اثبات"]],["أعاد توجيهه للقناة الرسمية",["الايبان","رابط الدفع","ارسل لك البيانات"]]],
+  no:[["وافق",["ابشر حول","تمام على حسابي","ارسل لي"]]],
+  m:"ما نستقبل تحويلاً على حساب شخصي أبداً — حفاظاً على حقك أولاً.\nالتحويل على حساب [اسم الوكالة] الرسمي [الآيبان]، وتطلع لك فاتورة وفوتشر رسميان يثبتان حجزك."},
+ {c:"طلبات خاصة", l:2, q:"الوالدة كبيرة بالسن وتحتاج قرب من الحرم ومصعد.",
+  ok:[["سأل عن الاحتياج بدقة",["كرسي","مصعد","درج","المشي","تحتاج"]],["رشّح بناءً على المسافة والتجهيز",["دقايق","مصعد","الاقرب","مناسب"]],["تحقق من التجهيزات قبل الوعد",["اتاكد","اتحقق","اسال الفندق"]]],
+  no:[["أكّد تجهيزات بلا تحقق",["مجهز بالكامل","اكيد مناسب","ولا يهمك كله تمام"]]],
+  m:"الله يطول بعمرها. عشان أرشّح بدقة: تحتاج كرسياً متحركاً أو يكفيها مشي قصير؟ وتحتاج دخولاً بلا درج؟\nأتحقق من تجهيزات [الفندق] والمسافة الفعلية للبوابة الأقرب، وأرجع لك بجواب مؤكد خلال [المدة]."},
+ {c:"طلبات خاصة", l:1, q:"فيه مصلى نساء بالفندق؟ وفطور؟",
+  ok:[["تحقق بدل التخمين",["اتاكد","اتحقق","من الفندق"]],["أجاب عن الفطور وشموله بالسعر",["الفطور","شامل","غير شامل","برسوم"]],["حدّد موعد الردّ",["ارجع لك","خلال","اخبرك","ارسل لك"]]],
+  no:[["خمّن الإجابة",["اظن","يمكن","غالبا فيه"]]],
+  m:"أتأكد من الفندق مباشرة وأرجع لك خلال [المدة] بدل ما أخمّن.\nأما الفطور: حجزك الحالي [شامل/غير شامل] الفطور، وإضافته تكلّف [المبلغ] للشخص بالليلة."},
+ {c:"إتاحة وإصدار", l:3, q:"(داخلي) وصلك إلغاء لحجز مؤكد من جهة الحجز، والعميل يصل بعد يومين.",
+  ok:[["أبلغ العميل بمبادرة قبل أن يكتشف",["ابلغه","اتواصل مع العميل","قبل ان يكتشف","قبل وصوله"]],["رتّب بديلاً مساوياً أو أفضل",["بديل","مساوي","افضل","نفس المستوى"]],["تحمّل الفرق حسب سياسة الوكالة",["الفرق علينا","بلا فرق عليكم","على حسابنا"]],["صعّد للإدارة",["الاداره","ارفع","مسؤولي"]]],
+  no:[["انتظر حتى يكتشف العميل",["ننتظر","ما نخبره","لين يوصل"]],["حمّل العميل الفرق",["يدفع الفرق","عليه الفرق"]]],
+  m:"أرفع الموضوع للإدارة فوراً وأطالب جهة الحجز ببديل، ثم أتواصل مع العميل قبل أن يكتشف:\n«أعتذر منك، الفندق ألغى الغرفة من طرفه لظرف تشغيلي عندهم.\nما تركتك: حجزت لك [البديل] بنفس المستوى أو أفضل، والفرق علينا.\nوإن ما ناسبك، الاسترجاع كامل وأتابعه شخصياً.»"},
+ {c:"إلغاء وتعديل", l:2, q:"أرسلتوا لي فوتشر فيه اسم غلط.",
+  ok:[["اعتذر وصحّح فوراً",["اعتذر","اسف","اصححه","الحين"]],["طلب الاسم كما بالهوية",["كما بالهويه","الجواز","الاسم الصحيح"]],["أشار إلى مراجعة الفندق بالتعديل",["الفندق","ارفع التعديل","موافقتهم"]]],
+  no:[["استهان بالخطأ",["عادي","ما يفرق","الاستقبال ما بيلاحظ"]]],
+  m:"أعتذر عن الخطأ، وأصححه الحين.\nأرسل لي الاسم كما هو بالهوية/الجواز، وأرفع التعديل للفندق وأرسل لك فوتشر مصححاً خلال [المدة].\nالاسم المطابق مهم عشان ما يتأخر دخولكم بالاستقبال."},
+ {c:"دفع وفواتير", l:2, q:"حوّلت المبلغ من ساعة وما وصلكم؟",
+  ok:[["طلب إشعار التحويل",["اشعار","صوره","السند","المرجع"]],["وضّح مدة التحقق من المحاسبة",["المحاسبه","خلال","نتحقق"]],["طمأن مع بيان أن الإصدار بعد التأكيد",["بعد التاكيد","نصدر","ما يضيع"]]],
+  no:[["أكّد الاستلام بلا تحقق",["وصل المبلغ","استلمنا المبلغ","المبلغ وصلنا","تم الاستلام"]]],
+  m:"أرسل لي صورة إشعار التحويل ورقم العملية، وأتحقق من المحاسبة خلال [المدة].\nالتحويلات بين البنوك قد تتأخر، وما يضيع حقك — وبمجرد التأكيد أصدر الحجز ويوصلك الفوتشر."},
+ {c:"شكاوى الفندق", l:2, q:"الفندق فيه ضجيج وعمال صيانة طول الليل.",
+  ok:[["اعتذر وثّق البلاغ",["اسف","اعتذر","سجلت","وقت"]],["طلب تغيير الغرفة من الفندق",["تغيير غرفه","جهه اهدأ","دور ثاني"]],["تعهّد بالمتابعة والتصعيد",["اتابع","ارجع لك","اصعد"]]],
+  no:[["وعد بتعويض بلا اعتماد",["بنعوضك","نرجع لك ليله","خصم لك"]]],
+  m:"آسف على هذا، سجّلت البلاغ الساعة [الوقت].\nأطلب من الفندق تغيير غرفتكم لجهة أهدأ الحين، وأرجع لك بردّهم خلال [المدة].\nوإن ما توفر بديل، أرفع الموضوع لإدارة الفندق وأطالب بمعالجة مناسبة."},
+ {c:"خدمات الوكالة", l:1, q:"عندكم حجوزات للمدينة المنورة بعد مكة؟",
+  ok:[["أجاب عن نطاق خدمة الوكالة",["نعم","نوفر","ضمن خدماتنا","نرتب"]],["سأل عن تفاصيل الرحلة",["تواريخ","كم ليله","عدد الليالي","الاشخاص"]],["ربط الحجزين بترتيب زمني",["بعد مكه","تنقل","تسلسل","الحجزين","فوتشر لكل"]]],
+  no:[["وعد بخدمة غير متاحة",["اكيد كل شي","ابشر نسوي كل المدن"]]],
+  m:"نعم [إن كانت ضمن خدماتكم].\nأعطني تواريخ المدينة وعدد الليالي والأشخاص، وأرتّب لكم الحجزين بتسلسل يناسب تنقّلكم، وأرسل فوتشراً لكل إقامة."}
+];
+
+const SIMCATS = ["الكل","تسعير","طلبات خاصة","إتاحة وإصدار","دفع وفواتير","إلغاء وتعديل","وصول ودخول","شكاوى الفندق","مجموعات","خدمات الوكالة","مواسم","أمان واحتيال"];
+
+function norm(s){
+  return (s||"")
+    .replace(/[ً-ْٰ]/g,"")
+    .replace(/[أإآا]/g,"ا").replace(/ة/g,"ه").replace(/[ىي]/g,"ي").replace(/ؤ/g,"و").replace(/ئ/g,"ي")
+    .replace(/[^ء-يa-zA-Z0-9]+/g," ")
+    .trim();
+}
+function hitKw(ans, kws){
+  if (!kws || !kws.length) return null;
+  const a = norm(ans);
+  return kws.some(k => {
+    if (k.charAt(0) === "~"){ try { return new RegExp(k.slice(1)).test(a); } catch(e){ return false; } }
+    return a.includes(norm(k));
+  });
+}
+
+const TABS = [
+  { id:"plan", label:"خطة الأيام", n:"5" },
+  { id:"basics", label:"الأساسيات", n:String(BASICS.length) },
+  { id:"scripts", label:"السكربتات", n:String(SCRIPTS.length) },
+  { id:"objections", label:"مواقف صعبة", n:String(OBJECTIONS.length) },
+  { id:"drills", label:"التمارين", n:String(DRILLS.length) },
+  { id:"hotels", label:"دليل الفنادق", n:String(HOTELS.length) },
+  { id:"sim", label:"محاكي المحادثات", n:String(SIMQ.length) },
+  { id:"team", label:"أداء الفريق", n:"" },
+  { id:"score", label:"بطاقة التقييم", n:"100" }
+];
+
+/* ===================== أدوات ===================== */
+const $ = (s, r) => (r || document).querySelector(s);
+const el = (tag, cls, txt) => { const n = document.createElement(tag); if (cls) n.className = cls; if (txt != null) n.textContent = txt; return n; };
+function store(key, val){
+  try{
+    if (val === undefined) { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
+    localStorage.setItem(key, JSON.stringify(val));
+  }catch(e){ return null; }
+}
+
+/* ===================== التنقل ===================== */
+const rail = $("#rail");
+TABS.forEach((tab, i) => {
+  const b = el("button", null);
+  b.type = "button";
+  b.setAttribute("role", "tab");
+  b.setAttribute("aria-selected", i === 0 ? "true" : "false");
+  b.dataset.id = tab.id;
+  b.append(document.createTextNode(tab.label));
+  const n = el("span", "num", tab.n); b.append(n);
+  b.addEventListener("click", () => show(tab.id));
+  rail.append(b);
+});
+function show(id){
+  TABS.forEach(t => { $("#sec-" + t.id).hidden = t.id !== id; });
+  rail.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.id === id)));
+  store("bt.tab", id);
+}
+
+/* ===================== خطة الأيام ===================== */
+const progress = store("bt.progress") || {};
+function renderPlan(){
+  const sec = $("#sec-plan");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "خطة تأهيل خمسة أيام"));
+  head.append(el("p", null, "كل يوم ينتهي بتمرين ومعيار نجاح. علّم البند بعد ما يتقنه الموظف فعلياً — لا بعد ما تشرحه له."));
+  sec.append(head);
+  const grid = el("div", "grid");
+  DAYS.forEach((d, di) => {
+    const card = el("div", "day");
+    const h = el("div", "head");
+    h.append(el("span", "n", d.n));
+    h.append(el("h3", null, d.t));
+    card.append(h);
+    d.items.forEach((item, ii) => {
+      const key = di + "." + ii;
+      const label = el("label", "task");
+      const cb = el("input"); cb.type = "checkbox"; cb.id = "task-" + key; cb.checked = !!progress[key];
+      cb.addEventListener("change", () => { progress[key] = cb.checked; store("bt.progress", progress); paintMeter(); });
+      label.append(cb, el("span", null, item));
+      card.append(label);
+    });
+    const win = el("div", "win");
+    win.append(el("b", null, "معيار النجاح: "));
+    win.append(document.createTextNode(d.win));
+    card.append(win);
+    grid.append(card);
+  });
+  sec.append(grid);
+}
+function paintMeter(){
+  const total = DAYS.reduce((a, d) => a + d.items.length, 0);
+  const done = Object.values(progress).filter(Boolean).length;
+  const pct = Math.round((done / total) * 100);
+  $("#ringFill").setAttribute("stroke-dasharray", pct + " " + (100 - pct));
+  $("#meterNum").textContent = pct + "٪ من الخطة";
+  $("#meterSub").textContent = done + " من " + total + " بنداً";
+}
+
+/* ===================== الأساسيات ===================== */
+function renderBasics(){
+  const sec = $("#sec-basics");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "الأساسيات"));
+  head.append(el("p", null, "ستّ بطاقات يراجعها الموظف قبل كل وردية. لو ما بقي معه غيرها، يكفي."));
+  sec.append(head);
+  const grid = el("div", "grid two");
+  BASICS.forEach(b => {
+    const c = el("div", "card");
+    c.append(el("span", "tag" + (b.bad ? " bad" : " gold"), b.tag));
+    c.append(el("h3", null, b.t));
+    if (b.list){
+      const ul = el("ul");
+      b.list.forEach(x => ul.append(el("li", null, x)));
+      c.append(ul);
+    }
+    if (b.kv){
+      b.kv.forEach(pair => {
+        const row = el("div", "kv");
+        row.append(el("span", null, pair[0]), el("span", null, pair[1]));
+        c.append(row);
+      });
+    }
+    grid.append(c);
+  });
+  sec.append(grid);
+}
+
+/* ===================== السكربتات ===================== */
+let scriptFilter = "الكل", scriptQuery = "";
+function renderScripts(){
+  const sec = $("#sec-scripts");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "سكربتات الواتساب"));
+  head.append(el("p", null, "انسخ، بدّل ما بين الأقواس، أرسل. السعر يُكتب دائماً ولا يُرسل بصوتية."));
+  sec.append(head);
+
+  const bar = el("div", "toolbar");
+  const search = el("input"); search.type = "search"; search.id = "scriptSearch"; search.placeholder = "ابحث في السكربتات…"; search.style.maxWidth = "260px"; search.value = scriptQuery;
+  search.addEventListener("input", () => { scriptQuery = search.value.trim(); paintScripts(); });
+  bar.append(search);
+  const cats = ["الكل"].concat(Array.from(new Set(SCRIPTS.map(s => s.c))));
+  cats.forEach(c => {
+    const b = el("button", "chip", c);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(c === scriptFilter));
+    b.addEventListener("click", () => {
+      scriptFilter = c;
+      bar.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", String(x.textContent === c)));
+      paintScripts();
+    });
+    bar.append(b);
+  });
+  sec.append(bar);
+  const list = el("div", "grid"); list.id = "scriptList";
+  sec.append(list);
+  paintScripts();
+}
+function paintScripts(){
+  const list = $("#scriptList");
+  if (!list) return;
+  list.replaceChildren();
+  const hits = SCRIPTS.filter(s =>
+    (scriptFilter === "الكل" || s.c === scriptFilter) &&
+    (!scriptQuery || (s.t + " " + s.b).includes(scriptQuery))
+  );
+  if (!hits.length){ list.append(el("p", "note", "ما فيه سكربت يطابق بحثك. جرّب كلمة أقصر.")); return; }
+  hits.forEach(s => {
+    const card = el("div", "script");
+    const row = el("div", "row");
+    const left = el("div");
+    left.append(el("span", "tag", s.c));
+    left.append(el("h3", null, s.t));
+    const btn = el("button", "copy", "نسخ");
+    btn.type = "button";
+    btn.addEventListener("click", () => copyText(s.b, btn));
+    row.append(left, btn);
+    card.append(row);
+    card.append(el("div", "bubble", s.b));
+    list.append(card);
+  });
+}
+function copyText(text, btn){
+  const label = btn && btn.textContent ? btn.textContent : "نسخ";
+  const done = () => { btn.textContent = "نُسخ ✓"; if (btn.classList) btn.classList.add("done"); setTimeout(() => { btn.textContent = label; if (btn.classList) btn.classList.remove("done"); }, 1600); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, () => fallback(text, btn, done));
+  } else fallback(text, btn, done);
+}
+function fallback(text, btn, done){
+  const ta = el("textarea"); ta.value = text; ta.setAttribute("readonly", "");
+  ta.style.position = "fixed"; ta.style.insetInlineStart = "-9999px";
+  document.body.append(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch(e){ btn.textContent = "انسخ يدوياً"; }
+  ta.remove();
+}
+
+/* ===================== المواقف الصعبة ===================== */
+function renderObjections(){
+  const sec = $("#sec-objections");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "المواقف الصعبة"));
+  head.append(el("p", null, "القاعدة: أقرّ بالشعور ← أعد صياغة الطلب ← عالج بخيار واقعي ← تابع حتى الإغلاق. لا تبدأ بالدفاع."));
+  sec.append(head);
+  const grid = el("div", "grid");
+  OBJECTIONS.forEach((o, i) => {
+    const d = el("details", "obj");
+    if (i === 0) d.open = true;
+    const s = el("summary", null, o.t);
+    d.append(s);
+    const body = el("div", "body");
+    body.append(el("div", "say", o.say));
+    const nv = el("div", "never");
+    nv.append(el("b", null, "ممنوع: "));
+    nv.append(document.createTextNode(o.never));
+    body.append(nv);
+    d.append(body);
+    grid.append(d);
+  });
+  sec.append(grid);
+}
+
+/* ===================== التمارين ===================== */
+function renderDrills(){
+  const sec = $("#sec-drills");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "تمارين لعب الأدوار"));
+  head.append(el("p", null, "اقرأ رسالة العميل، اكتب ردّك بنفسك، وبعدين افتح الردّ النموذجي وقارن. لا تفتحه قبل ما تكتب."));
+  sec.append(head);
+  const grid = el("div", "grid");
+  DRILLS.forEach((d, i) => {
+    const card = el("div", "drill");
+    const row = el("div", "row");
+    const h = el("div");
+    h.append(el("h3", null, (i + 1) + ". " + d.t));
+    row.append(h);
+    row.append(el("span", "lvl", "★".repeat(d.l) + "☆".repeat(3 - d.l)));
+    card.append(row);
+    const c = el("div", "cust");
+    c.append(el("b", null, "العميل يكتب"));
+    c.append(document.createTextNode(d.msg));
+    card.append(c);
+    const meta = el("div", "meta");
+    const w = el("div"); w.append(el("strong", null, "المطلوب: ")); w.append(document.createTextNode(d.want));
+    const t = el("div"); t.append(el("strong", null, "الفخ: ")); t.append(document.createTextNode(d.trap));
+    meta.append(w, t);
+    card.append(meta);
+    const btn = el("button", "reveal", "أظهر الردّ النموذجي");
+    btn.type = "button";
+    const model = el("div", "model bubble", d.model);
+    model.hidden = true;
+    btn.addEventListener("click", () => {
+      model.hidden = !model.hidden;
+      btn.textContent = model.hidden ? "أظهر الردّ النموذجي" : "أخفِ الردّ النموذجي";
+    });
+    card.append(btn, model);
+    grid.append(card);
+  });
+  sec.append(grid);
+}
+
+
+/* ===================== دليل الفنادق ===================== */
+let hFilter = "all", hQuery = "", hSort = "near";
+function renderHotels(){
+  const sec = $("#sec-hotels");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "دليل فنادق مكة — 4 و5 نجوم"));
+  head.append(el("p", null, "لكل فندق: المسافة من الكعبة، زمن المشي التقريبي، أنواع الغرف، سياسات الدخول والخروج والأطفال، وموقعه على الخرائط. استخدمه وأنت ترد على العميل — لا ترسل مسافة ولا سياسة من ذاكرتك."));
+  sec.append(head);
+
+  const gen = el("div", "card");
+  gen.style.marginBottom = "16px";
+  gen.append(el("span", "tag gold", "اقرأها قبل أي وعد"));
+  gen.append(el("h3", null, "سياسات عامة تسري على فنادق مكة"));
+  const gul = el("ul");
+  [
+    "الدخول والخروج يختلفان بين فندق وآخر، والمعتاد الدخول 16:00 والخروج 12:00 — لا تعد بدخول مبكر أو خروج متأخر قبل تأكيد الفندق، وغالباً برسوم.",
+    "عمر احتساب الطفل بالغاً يختلف من فندق لآخر (من 6 إلى 18 سنة) — اسأل عن أعمار الأطفال واكتبها بالحجز، وإلا صار فرق حساب عند الوصول.",
+    "الأسرّة الإضافية والمهود بطلب وموافقة الفندق، وأغلبها برسوم لا تدخل بالسعر المعروض.",
+    "الإلغاء والاسترجاع يتبعان خطة السعر لا الفندق: نفس الفندق فيه أسعار قابلة للإلغاء وأخرى غير مستردة — اقرأ الخطة قبل ما ترسلها للعميل.",
+    "في رمضان والحج: أوقات دخول متأخرة، حد أدنى لعدد الليالي، وسياسات إلغاء أشدّ، وبعض الفنادق تشترط تصريحاً نظامياً للإقامة.",
+    "هوية أو جواز لكل نزيل عند الوصول، وتسجيل النزلاء إلزامي حسب الإجراء المعتمد لدينا — تأكد من الأسماء قبل الوصول لا عنده.",
+    "الوصول بعد منتصف الليل يُبلَّغ للفندق قبل 24 ساعة، وإلا قد يُعتبر عدم حضور ويُلغى الحجز."
+  ].forEach(t => gul.append(el("li", null, t)));
+  gen.append(gul);
+  sec.append(gen);
+
+  const bar = el("div", "toolbar");
+  const search = el("input"); search.type = "search"; search.id = "hotelSearch";
+  search.placeholder = "ابحث باسم الفندق أو الحي…"; search.style.maxWidth = "240px"; search.value = hQuery;
+  search.addEventListener("input", () => { hQuery = search.value.trim(); paintHotels(); });
+  bar.append(search);
+  [["all","الكل"],["5","5 نجوم"],["4","4 نجوم"]].forEach(pair => {
+    const b = el("button", "chip", pair[1]);
+    b.type = "button";
+    b.dataset.v = pair[0];
+    b.setAttribute("aria-pressed", String(pair[0] === hFilter));
+    b.addEventListener("click", () => {
+      hFilter = pair[0];
+      bar.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === hFilter)));
+      paintHotels();
+    });
+    bar.append(b);
+  });
+  const sort = el("select"); sort.id = "hotelSort";
+  [["near","الأقرب للحرم"],["rate","الأعلى تقييماً"],["name","الاسم"]].forEach(pair => {
+    const o = el("option", null, pair[1]); o.value = pair[0];
+    if (pair[0] === hSort) o.selected = true;
+    sort.append(o);
+  });
+  sort.addEventListener("change", () => { hSort = sort.value; paintHotels(); });
+  bar.append(sort);
+  sec.append(bar);
+
+  const count = el("p", "count"); count.id = "hotelCount";
+  sec.append(count);
+  const list = el("div", "grid"); list.id = "hotelList";
+  sec.append(list);
+
+  const note = el("p", "note");
+  note.textContent = "المصدر: نتائج Booking.com المباشرة (الأسماء، النجوم، الإحداثيات، تقييم النزلاء) ومواقع الفنادق الرسمية ومنصات الحجز لأنواع الغرف والسياسات. المسافة محسوبة من إحداثيات الكعبة بخط مستقيم × معامل التفاف 1.35، وزمن المشي على 80 متراً بالدقيقة — تقدير للاسترشاد، والمسار الفعلي يختلف بالبوابة والزحام. الأسعار والإتاحة تتغير يومياً: لا تعد بها قبل التحقق.";
+  note.style.marginTop = "18px";
+  sec.append(note);
+  paintHotels();
+}
+function paintHotels(){
+  const list = $("#hotelList");
+  if (!list) return;
+  list.replaceChildren();
+  let hits = HOTELS.filter(x =>
+    (hFilter === "all" || String(x.s) === hFilter) &&
+    (!hQuery || (x.n + " " + x.d + " " + (x.en || "") + " " + (x.addr || "")).includes(hQuery))
+  );
+  if (hSort === "near") hits = hits.slice().sort((a, b) => a.m - b.m);
+  else if (hSort === "rate") hits = hits.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+  else hits = hits.slice().sort((a, b) => a.n.localeCompare(b.n, "ar"));
+
+  $("#hotelCount").textContent = cnt(hits.length, "فندق واحد", "فندقان", "فنادق", "فندقاً") + " من أصل " + HOTELS.length;
+  if (!hits.length){ list.append(el("p", "note", "ما فيه فندق يطابق بحثك.")); return; }
+
+  hits.forEach(x => {
+    const card = el("div", "hotel");
+    const row = el("div", "top-row");
+    const left = el("div");
+    const h3 = el("h3", null, x.n);
+    if (x.en) h3.append(el("span", "en", x.en));
+    left.append(h3);
+    row.append(left, el("span", "stars", "★".repeat(x.s)));
+    card.append(row);
+
+    const facts = el("div", "facts");
+    const dist = x.m >= 1000 ? (x.m / 1000).toFixed(1) + " كم" : x.m + " م";
+    facts.append(el("span", "fact near", dist + " عن الكعبة · " + cnt(x.walk, "دقيقة واحدة", "دقيقتان", "دقائق", "دقيقة") + " مشياً"));
+    facts.append(el("span", "fact", x.d));
+    if (x.score) facts.append(el("span", "fact rate", "تقييم النزلاء " + x.score + "/10 (" + x.rev + ")"));
+    card.append(facts);
+
+    if (x.rooms){
+      const r = el("div", "rooms");
+      r.append(el("b", null, "أنواع الغرف: "));
+      r.append(document.createTextNode(x.rooms));
+      card.append(r);
+    } else {
+      card.append(el("div", "rooms none", "أنواع الغرف: غير مؤكدة — تحقّق من الفندق قبل العرض."));
+    }
+
+    if (x.pol){
+      const pb = el("div", "polbox");
+      pb.append(el("b", null, "السياسات: "));
+      pb.append(document.createTextNode(x.pol));
+      card.append(pb);
+    } else {
+      card.append(el("div", "polbox none", "السياسات: غير موثّقة هنا — المعتاد الدخول 16:00 والخروج 12:00، أكّدها مع الفندق قبل الوعد."));
+    }
+
+    const links = el("div", "links");
+    const gm = el("a", null, "الموقع على الخرائط ↗"); gm.href = x.gm; gm.target = "_blank"; gm.rel = "noopener";
+    const bk = el("a", null, "صفحة الفندق ↗"); bk.href = x.bk; bk.target = "_blank"; bk.rel = "noopener";
+    links.append(gm, bk);
+    card.append(links);
+    list.append(card);
+  });
+}
+
+/* ===================== بطاقة التقييم ===================== */
+let records = store("bt.records") || [];
+function renderScore(){
+  const sec = $("#sec-score");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "بطاقة تقييم المحادثة"));
+  head.append(el("p", null, "قيّم محادثة واحدة كاملة — تدريبية أو حقيقية. الدرجة تنزل على الخطأ حتى لو كان الردّ لطيفاً."));
+  sec.append(head);
+
+  const card = el("div", "card");
+  const who = el("div", "grid two");
+  who.append(field("اسم المتدرّب", "evalWho", store("bt.who") || ""));
+  who.append(field("المقيّم", "evalBy", store("bt.by") || ""));
+  card.append(who);
+
+  AXES.forEach(a => {
+    const wrap = el("div", "axis");
+    const line = el("div", "line");
+    const lab = el("label", null, a.label + " — من " + a.max);
+    lab.setAttribute("for", "ax-" + a.k);
+    const out = el("output", null, "0");
+    out.id = "out-" + a.k;
+    line.append(lab, out);
+    const r = el("input");
+    r.type = "range"; r.id = "ax-" + a.k; r.min = "0"; r.max = String(a.max); r.step = "1"; r.value = "0";
+    r.addEventListener("input", () => { out.textContent = r.value; recalc(); });
+    wrap.append(line, r, el("div", "hint", a.hint));
+    card.append(wrap);
+  });
+
+  const total = el("div", "total");
+  const num = el("div", "num"); num.id = "total"; num.append(document.createTextNode("0"));
+  const small = el("small", null, " / 100"); num.append(small);
+  const verdict = el("span", "verdict", "ابدأ التقييم"); verdict.id = "verdict";
+  total.append(num, verdict);
+  card.append(total);
+
+  const fat = el("div");
+  fat.append(el("h3", null, "أخطاء تُسقط المحادثة مهما كانت الدرجة"));
+  FATALS.forEach((f, i) => {
+    const l = el("label", "fatal");
+    const cb = el("input"); cb.type = "checkbox"; cb.id = "fatal-" + i; cb.className = "fatalBox";
+    cb.addEventListener("change", recalc);
+    l.append(cb, el("span", null, f));
+    fat.append(l);
+  });
+  card.append(fat);
+
+  const noteField = el("div", "field");
+  const nl = el("label", null, "ملاحظة للمتدرّب (جملة واحدة محددة، لا مجاملة)");
+  nl.setAttribute("for", "evalNote");
+  const ta = el("textarea"); ta.id = "evalNote"; ta.placeholder = "مثال: أرسلت السعر قبل ما تسأل عن عدد الأشخاص — أعد التمرين الثاني.";
+  noteField.append(nl, ta);
+  card.append(noteField);
+
+  const actions = el("div", "toolbar");
+  const save = el("button", "btn", "احفظ التقييم"); save.type = "button"; save.id = "saveEval";
+  save.addEventListener("click", saveEval);
+  const reset = el("button", "btn ghost", "تقييم جديد"); reset.type = "button";
+  reset.addEventListener("click", resetEval);
+  actions.append(save, reset);
+  card.append(actions);
+  const note = el("p", "note", "يُحفظ التقييم على هذا الجهاز ويظهر في السجل تحت.");
+  note.id = "saveNote";
+  card.append(note);
+  sec.append(card);
+
+  const recWrap = el("div");
+  recWrap.style.marginTop = "22px";
+  recWrap.append(el("h3", null, "آخر التقييمات"));
+  const list = el("div"); list.id = "recList";
+  list.append(el("p", "note", "لا توجد تقييمات محفوظة بعد."));
+  recWrap.append(list);
+  sec.append(recWrap);
+
+  recalc();
+}
+function field(label, id, val){
+  const f = el("div", "field");
+  const l = el("label", null, label); l.setAttribute("for", id);
+  const i = el("input"); i.type = "text"; i.id = id; i.value = val;
+  f.append(l, i);
+  return f;
+}
+function readScores(){
+  const s = {}; let total = 0;
+  AXES.forEach(a => { const v = Number(($("#ax-" + a.k) || {}).value || 0); s[a.k] = v; total += v; });
+  return { s, total };
+}
+function fatalHits(){
+  return FATALS.filter((f, i) => { const b = $("#fatal-" + i); return b && b.checked; });
+}
+function recalc(){
+  const { total } = readScores();
+  const hits = fatalHits();
+  const numEl = $("#total");
+  if (!numEl) return;
+  numEl.replaceChildren(document.createTextNode(String(total)));
+  const small = el("small", null, " / 100");
+  numEl.append(small);
+  const v = $("#verdict");
+  let txt, color;
+  if (hits.length){ txt = "محادثة مرفوضة — " + hits.length + " خطأ قاتل"; color = "var(--bad)"; }
+  else if (total >= 90){ txt = "ممتاز"; color = "var(--good)"; }
+  else if (total >= 75){ txt = "جيد"; color = "var(--accent)"; }
+  else if (total >= 60){ txt = "يحتاج تدريباً"; color = "var(--warn)"; }
+  else { txt = "لا يُترك بلا إشراف"; color = "var(--bad)"; }
+  v.textContent = txt;
+  v.style.color = color;
+  v.style.borderColor = color;
+}
+function resetEval(){
+  AXES.forEach(a => { const r = $("#ax-" + a.k); if (r){ r.value = "0"; $("#out-" + a.k).textContent = "0"; } });
+  FATALS.forEach((f, i) => { const b = $("#fatal-" + i); if (b) b.checked = false; });
+  const note = $("#evalNote"); if (note) note.value = "";
+  recalc();
+}
+function saveEval(){
+  const who = ($("#evalWho").value || "").trim();
+  const by = ($("#evalBy").value || "").trim();
+  if (!who){ setNote("اكتب اسم المتدرّب قبل الحفظ.", true); $("#evalWho").focus(); return; }
+  store("bt.who", who); store("bt.by", by);
+  const { s, total } = readScores();
+  const hits = fatalHits();
+  records.unshift({
+    trainee: who,
+    evaluator: by || "غير مذكور",
+    scores: s,
+    total: total,
+    fatal: hits,
+    note: ($("#evalNote").value || "").trim(),
+    createdAt: new Date().toISOString()
+  });
+  records = records.slice(0, 40);
+  store("bt.records", records);
+  paintRecords(records);
+  setNote("حُفظ تقييم " + who + " بدرجة " + total + " من 100 على هذا الجهاز.", false);
+  resetEval();
+}
+function setNote(msg, warn){
+  const n = $("#saveNote");
+  if (!n) return;
+  n.textContent = msg;
+  n.style.color = warn ? "var(--warn)" : "var(--good)";
+}
+function paintRecords(rows){
+  const list = $("#recList");
+  if (!list) return;
+  list.replaceChildren();
+  if (!rows.length){ list.append(el("p", "note", "لا توجد تقييمات محفوظة بعد.")); return; }
+  rows.forEach((v, i) => {
+    const row = el("div", "rec");
+    const left = el("div");
+    left.append(el("div", "who", String(v.trainee || "—")));
+    const when = new Date(v.createdAt || Date.now());
+    const stamp = isNaN(when.getTime()) ? "" : when.toLocaleDateString("ar", { year:"numeric", month:"long", day:"numeric" });
+    left.append(el("div", "when", stamp + " · قيّمه " + String(v.evaluator || "—")));
+    if (v.note) left.append(el("div", "nt", String(v.note)));
+    if (Array.isArray(v.fatal) && v.fatal.length){
+      const b = el("div", "nt"); b.style.color = "var(--bad)";
+      b.textContent = "خطأ قاتل: " + v.fatal.join(" · ");
+      left.append(b);
+    }
+    const right = el("div");
+    right.style.textAlign = "center";
+    const failed = Array.isArray(v.fatal) && v.fatal.length;
+    const sc = el("div", "sc", String(v.total != null ? v.total : "—"));
+    sc.style.color = failed ? "var(--bad)" : (v.total >= 75 ? "var(--good)" : "var(--warn)");
+    const del = el("button", "chip", "حذف");
+    del.type = "button";
+    del.style.marginTop = "6px";
+    del.addEventListener("click", () => {
+      records.splice(i, 1);
+      store("bt.records", records);
+      paintRecords(records);
+    });
+    right.append(sc, del);
+    row.append(left, right);
+    list.append(row);
+  });
+}
+
+
+/* ===================== محاكي المحادثات ===================== */
+let team = store("bt.team") || [];
+let activeEmp = store("bt.activeEmp") || "";
+let simResults = store("bt.simResults") || [];
+let simCat = "الكل", simQueue = [], simIdx = 0, simScores = [];
+
+function saveTeam(){ store("bt.team", team); }
+function empName(id){ const e = team.find(x => x.id === id); return e ? e.name : "—"; }
+
+function renderSim(){
+  const sec = $("#sec-sim");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "محاكي المحادثات"));
+  head.append(el("p", null, "عميل افتراضي يكتب لك، وأنت ترد كموظف وكالة — لا كموظف فندق. التقييم يحاسبك على أي وعد بشيء ما تملكه: دور، تجاور، إطلالة، دخول مبكر، أو استرجاع. اختر الموظف أولاً عشان تُحفظ نتائجه."));
+  sec.append(head);
+
+  // شريط الموظفين
+  const emp = el("div", "card");
+  emp.style.marginBottom = "14px";
+  emp.append(el("h3", null, "الموظف المتدرّب"));
+  const row = el("div", "toolbar");
+  const sel = el("select"); sel.id = "empSelect";
+  const opt0 = el("option", null, "— اختر الموظف —"); opt0.value = "";
+  sel.append(opt0);
+  team.forEach(e => { const o = el("option", null, e.name); o.value = e.id; if (e.id === activeEmp) o.selected = true; sel.append(o); });
+  sel.addEventListener("change", () => { activeEmp = sel.value; store("bt.activeEmp", activeEmp); paintSimState(); });
+  const nameIn = el("input"); nameIn.type = "text"; nameIn.id = "empNew"; nameIn.placeholder = "اسم موظف جديد"; nameIn.style.maxWidth = "200px";
+  const addBtn = el("button", "btn", "أضف موظفاً"); addBtn.type = "button";
+  addBtn.addEventListener("click", () => {
+    const v = (nameIn.value || "").trim();
+    if (!v){ nameIn.focus(); return; }
+    if (team.some(x => x.name === v)){ nameIn.value = ""; return; }
+    const id = "e" + Date.now().toString(36);
+    team.push({ id: id, name: v });
+    saveTeam();
+    activeEmp = id; store("bt.activeEmp", activeEmp);
+    renderSim(); renderTeam();
+  });
+  const delBtn = el("button", "btn ghost", "احذف الموظف المحدد"); delBtn.type = "button";
+  delBtn.addEventListener("click", () => {
+    if (!activeEmp) return;
+    team = team.filter(x => x.id !== activeEmp);
+    simResults = simResults.filter(r => r.emp !== activeEmp);
+    saveTeam(); store("bt.simResults", simResults);
+    activeEmp = ""; store("bt.activeEmp", "");
+    renderSim(); renderTeam();
+  });
+  row.append(sel, nameIn, addBtn, delBtn);
+  emp.append(row);
+  const st = el("p", "note"); st.id = "empState";
+  emp.append(st);
+  sec.append(emp);
+
+  // اختيار الفئة وبدء الجلسة
+  const bar = el("div", "toolbar");
+  SIMCATS.forEach(c => {
+    const b = el("button", "chip", c);
+    b.type = "button"; b.dataset.v = c;
+    b.setAttribute("aria-pressed", String(c === simCat));
+    b.addEventListener("click", () => {
+      simCat = c;
+      bar.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === simCat)));
+    });
+    bar.append(b);
+  });
+  const start = el("button", "btn", "ابدأ جلسة (5 مواقف)"); start.type = "button";
+  start.addEventListener("click", startSim);
+  bar.append(start);
+  sec.append(bar);
+
+  const stage = el("div"); stage.id = "simStage";
+  sec.append(stage);
+  const bankNote = el("p", "note", "بنك المواقف: " + SIMQ.length + " سؤالاً حقيقياً من عملاء مكة، موزّعة على " + (SIMCATS.length - 1) + " فئة. الدرجة تُحسب على ما ذكره الموظف فعلاً بردّه، وتنزل على الوعود الممنوعة.");
+  bankNote.style.marginTop = "16px";
+  sec.append(bankNote);
+  paintSimState();
+}
+function paintSimState(){
+  const st = $("#empState");
+  if (!st) return;
+  if (!team.length) st.textContent = "ما فيه موظفون مسجّلون بعد — أضف أول اسم وابدأ.";
+  else if (!activeEmp) st.textContent = "اختر موظفاً عشان تُحفظ نتائج الجلسة باسمه.";
+  else {
+    const rs = simResults.filter(r => r.emp === activeEmp);
+    const avg = rs.length ? Math.round(rs.reduce((a, r) => a + r.score, 0) / rs.length) : 0;
+    st.textContent = "الموظف النشط: " + empName(activeEmp) + " · جلسات: " + rs.length + (rs.length ? " · متوسط الدرجة: " + avg + "/100" : "");
+  }
+  st.style.color = activeEmp ? "var(--accent)" : "var(--warn)";
+}
+function startSim(){
+  let pool = SIMQ.filter(x => simCat === "الكل" || x.c === simCat);
+  pool = pool.slice().sort(() => Math.random() - 0.5).slice(0, 5);
+  if (!pool.length) return;
+  simQueue = pool; simIdx = 0; simScores = [];
+  paintSimStep();
+}
+function paintSimStep(){
+  const stage = $("#simStage");
+  stage.replaceChildren();
+  if (simIdx >= simQueue.length){ paintSimEnd(); return; }
+  const item = simQueue[simIdx];
+
+  const card = el("div", "drill");
+  const row = el("div", "row");
+  row.append(el("h3", null, "موقف " + (simIdx + 1) + " من " + simQueue.length));
+  const tags = el("div", "facts");
+  tags.append(el("span", "fact", item.c));
+  tags.append(el("span", "fact", "★".repeat(item.l) + "☆".repeat(3 - item.l)));
+  row.append(tags);
+  card.append(row);
+
+  const cust = el("div", "cust");
+  cust.append(el("b", null, "العميل يكتب"));
+  cust.append(document.createTextNode(item.q));
+  card.append(cust);
+
+  const f = el("div", "field");
+  f.style.marginTop = "12px";
+  const lab = el("label", null, "ردّك كما ترسله بالواتساب");
+  lab.setAttribute("for", "simAnswer");
+  const ta = el("textarea"); ta.id = "simAnswer"; ta.placeholder = "اكتب ردّك هنا…"; ta.style.minHeight = "110px";
+  f.append(lab, ta);
+  card.append(f);
+
+  const acts = el("div", "toolbar");
+  const send = el("button", "btn", "قيّم ردّي"); send.type = "button";
+  send.addEventListener("click", () => gradeAnswer(item, ta.value || "", card, send));
+  const skip = el("button", "btn ghost", "تخطَّ هذا الموقف"); skip.type = "button";
+  skip.addEventListener("click", () => { simScores.push({ q: item.q, c: item.c, score: 0, skipped: true }); simIdx++; paintSimStep(); });
+  acts.append(send, skip);
+  card.append(acts);
+  stage.append(card);
+  ta.focus();
+}
+function gradeAnswer(item, ans, card, sendBtn){
+  if (!ans.trim()){ $("#simAnswer").focus(); return; }
+  sendBtn.disabled = true;
+  const hits = [], misses = [], viols = [];
+  item.ok.forEach(pair => {
+    const label = pair[0], kws = pair[1];
+    const r = hitKw(ans, kws);
+    if (r === null){ if (ans.trim().length > 60) hits.push(label); else misses.push(label); }
+    else if (r) hits.push(label);
+    else misses.push(label);
+  });
+  (item.no || []).forEach(pair => { if (hitKw(ans, pair[1])) viols.push(pair[0]); });
+  let score = Math.round(100 * hits.length / Math.max(1, item.ok.length));
+  score = Math.max(0, score - viols.length * 25);
+  simScores.push({ q: item.q, c: item.c, score: score, hits: hits, misses: misses, viols: viols });
+
+  const res = el("div");
+  res.style.marginTop = "14px";
+  const tot = el("div", "total");
+  const num = el("div", "num"); num.append(document.createTextNode(String(score)));
+  num.append(el("small", null, " / 100"));
+  const verdict = el("span", "verdict", viols.length ? "ردّ فيه وعد ممنوع" : (score >= 80 ? "ممتاز" : score >= 60 ? "مقبول ويحتاج تحسين" : "يحتاج إعادة"));
+  verdict.style.color = viols.length ? "var(--bad)" : (score >= 80 ? "var(--good)" : score >= 60 ? "var(--warn)" : "var(--bad)");
+  verdict.style.borderColor = verdict.style.color;
+  tot.append(num, verdict);
+  res.append(tot);
+
+  if (hits.length){
+    const g = el("div", "rooms");
+    g.append(el("b", null, "أصبت في: "));
+    g.append(document.createTextNode(hits.join(" · ")));
+    res.append(g);
+  }
+  if (misses.length){
+    const mi = el("div", "polbox");
+    mi.style.marginTop = "8px";
+    mi.append(el("b", null, "فاتك: "));
+    mi.append(document.createTextNode(misses.join(" · ")));
+    res.append(mi);
+  }
+  if (viols.length){
+    const v = el("div", "polbox");
+    v.style.marginTop = "8px";
+    v.style.background = "color-mix(in srgb, var(--bad) 12%, transparent)";
+    const b = el("b", null, "ممنوع: "); b.style.color = "var(--bad)";
+    v.append(b);
+    v.append(document.createTextNode(viols.join(" · ") + " — هذا وحده يسقط المحادثة مهما كانت بقية الدرجة."));
+    res.append(v);
+  }
+  const mdl = el("div", "model bubble", item.m);
+  mdl.style.marginTop = "10px";
+  const mlab = el("p", "note", "الردّ النموذجي:");
+  res.append(mlab, mdl);
+
+  const next = el("button", "btn", simIdx + 1 >= simQueue.length ? "أنهِ الجلسة وأظهر النتيجة" : "الموقف التالي");
+  next.type = "button";
+  next.style.marginTop = "12px";
+  next.addEventListener("click", () => { simIdx++; paintSimStep(); });
+  res.append(next);
+  card.append(res);
+  res.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+function paintSimEnd(){
+  const stage = $("#simStage");
+  stage.replaceChildren();
+  const total = Math.round(simScores.reduce((a, s) => a + s.score, 0) / Math.max(1, simScores.length));
+  const viols = simScores.reduce((a, s) => a + ((s.viols || []).length), 0);
+  const card = el("div", "card");
+  card.append(el("h3", null, "نتيجة الجلسة"));
+  const tot = el("div", "total");
+  const num = el("div", "num"); num.append(document.createTextNode(String(total)));
+  num.append(el("small", null, " / 100"));
+  const verdict = el("span", "verdict", viols ? "فيها " + viols + " وعداً ممنوعاً" : total >= 80 ? "جاهز للحالات العادية" : total >= 60 ? "يحتاج تدريباً" : "لا يُترك بلا إشراف");
+  tot.append(num, verdict);
+  card.append(tot);
+
+  const list = el("div");
+  simScores.forEach((s, i) => {
+    const r = el("div", "rec");
+    const left = el("div");
+    left.append(el("div", "who", (i + 1) + ". " + s.q));
+    left.append(el("div", "when", s.c + (s.skipped ? " · تخطّاه" : (s.misses && s.misses.length ? " · فاته: " + s.misses.join(" · ") : " · كامل"))));
+    const sc = el("div", "sc", String(s.score));
+    sc.style.color = s.score >= 80 ? "var(--good)" : s.score >= 60 ? "var(--warn)" : "var(--bad)";
+    r.append(left, sc);
+    list.append(r);
+  });
+  card.append(list);
+
+  const acts = el("div", "toolbar");
+  acts.style.marginTop = "14px";
+  const save = el("button", "btn", "احفظ النتيجة للموظف"); save.type = "button";
+  save.addEventListener("click", () => {
+    if (!activeEmp){ alertNote(card, "اختر الموظف أولاً من الأعلى عشان تُحفظ النتيجة باسمه."); return; }
+    simResults.unshift({
+      emp: activeEmp, date: new Date().toISOString(), score: total, cat: simCat,
+      items: simScores.map(s => ({ q: s.q, c: s.c, score: s.score, misses: s.misses || [], viols: s.viols || [] }))
+    });
+    simResults = simResults.slice(0, 200);
+    store("bt.simResults", simResults);
+    renderTeam(); paintSimState();
+    alertNote(card, "حُفظت نتيجة " + empName(activeEmp) + ": " + total + "/100. شوفها بتبويب «أداء الفريق».");
+    save.disabled = true;
+  });
+  const again = el("button", "btn ghost", "جلسة جديدة"); again.type = "button";
+  again.addEventListener("click", startSim);
+  acts.append(save, again);
+  card.append(acts);
+  stage.append(card);
+}
+function alertNote(parent, msg){
+  let n = parent.querySelector(".saveflash");
+  if (!n){ n = el("p", "note saveflash"); parent.append(n); }
+  n.textContent = msg;
+  n.style.color = "var(--accent)";
+}
+
+/* ===================== أداء الفريق ===================== */
+function teamStats(){
+  const rows = team.map(e => {
+    const rs = simResults.filter(r => r.emp === e.id);
+    const avg = rs.length ? Math.round(rs.reduce((a, r) => a + r.score, 0) / rs.length) : null;
+    let viols = 0; const miss = {}, cats = {};
+    rs.forEach(r => r.items.forEach(it => {
+      viols += (it.viols || []).length;
+      (it.misses || []).forEach(m => { miss[m] = (miss[m] || 0) + 1; });
+      if (!cats[it.c]) cats[it.c] = { n: 0, s: 0 };
+      cats[it.c].n++; cats[it.c].s += it.score;
+    }));
+    return { e: e, rs: rs, avg: avg, viols: viols, miss: miss, cats: cats,
+             last: rs.length ? rs[0].date : null,
+             weak: Object.keys(miss).sort((a, b) => miss[b] - miss[a]).slice(0, 3) };
+  });
+  const all = { sessions: 0, sum: 0, viols: 0, miss: {}, cats: {} };
+  rows.forEach(r => {
+    all.sessions += r.rs.length;
+    r.rs.forEach(x => { all.sum += x.score; });
+    all.viols += r.viols;
+    Object.keys(r.miss).forEach(k => { all.miss[k] = (all.miss[k] || 0) + r.miss[k]; });
+    Object.keys(r.cats).forEach(k => {
+      if (!all.cats[k]) all.cats[k] = { n: 0, s: 0 };
+      all.cats[k].n += r.cats[k].n; all.cats[k].s += r.cats[k].s;
+    });
+  });
+  all.avg = all.sessions ? Math.round(all.sum / all.sessions) : null;
+  all.weak = Object.keys(all.miss).sort((a, b) => all.miss[b] - all.miss[a]).slice(0, 4);
+  return { rows: rows, all: all };
+}
+function cnt(n, one, two, few, many){
+  if (n === 1) return one;
+  if (n === 2) return two;
+  return n + " " + (n % 100 >= 3 && n % 100 <= 10 ? few : many);
+}
+function plur(n, one, two, few, many){
+  if (n === 1) return one;
+  if (n === 2) return two;
+  if (n % 100 >= 3 && n % 100 <= 10) return few;
+  return many;
+}
+function scoreColor(v){ return v == null ? "var(--ink-3)" : v >= 80 ? "var(--good)" : v >= 60 ? "var(--warn)" : "var(--bad)"; }
+function bar(value, label, right){
+  const wrap = el("div");
+  wrap.style.marginBlock = "9px";
+  const top = el("div", "kv");
+  top.style.borderBottom = "0";
+  top.style.paddingBottom = "2px";
+  top.append(el("span", null, label), el("span", null, right));
+  const track = el("div");
+  track.style.cssText = "height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden;";
+  const fill = el("div");
+  fill.style.cssText = "height:100%; border-radius:99px; width:" + Math.max(2, Math.min(100, value || 0)) + "%; background:" + scoreColor(value) + ";";
+  track.append(fill);
+  wrap.append(top, track);
+  return wrap;
+}
+function encodeRes(name, rs){
+  try { return btoa(unescape(encodeURIComponent(JSON.stringify({ n: name, r: rs })))); }
+  catch(e){ return ""; }
+}
+function decodeRes(code){
+  try { return JSON.parse(decodeURIComponent(escape(atob((code || "").trim())))); }
+  catch(e){ return null; }
+}
+function importCode(code, note){
+  const data = decodeRes(code);
+  if (!data || !data.n || !Array.isArray(data.r)){ note.textContent = "الكود غير صالح. انسخه كاملاً من جهاز الموظف وأعد اللصق."; note.style.color = "var(--bad)"; return; }
+  let emp = team.find(x => x.name === data.n);
+  if (!emp){ emp = { id: "e" + Date.now().toString(36) + Math.floor(Math.random() * 99), name: data.n }; team.push(emp); saveTeam(); }
+  const seen = new Set(simResults.filter(r => r.emp === emp.id).map(r => r.date));
+  let added = 0;
+  data.r.forEach(r => {
+    if (seen.has(r.date)) return;
+    simResults.push({ emp: emp.id, date: r.date, score: r.score, cat: r.cat, items: r.items || [] });
+    added++;
+  });
+  simResults.sort((a, b) => (a.date < b.date ? 1 : -1));
+  store("bt.simResults", simResults);
+  note.textContent = added ? ("اُستوردت " + cnt(added, "جلسة واحدة", "جلستان", "جلسات", "جلسة") + " لـ" + data.n + ".") : ("نتائج " + data.n + " محدّثة أصلاً — ما فيه جديد.");
+  note.style.color = "var(--good)";
+  renderTeam(); renderSim();
+}
+function renderTeam(){
+  const sec = $("#sec-team");
+  sec.replaceChildren();
+  const head = el("div", "sec-head");
+  head.append(el("h2", null, "أداء الفريق"));
+  head.append(el("p", null, "لوحة موحّدة لكل من تدرّب على هذا الجهاز، ومعها مزامنة بكود لجمع نتائج الموظفين من أجهزتهم في مكان واحد."));
+  sec.append(head);
+
+  const st = teamStats();
+
+  // ملخص الفريق
+  const sum = el("div", "card");
+  sum.append(el("span", "tag", "ملخص الفريق"));
+  sum.append(el("h3", null, st.all.sessions ? "متوسط الفريق " + st.all.avg + " من 100" : "لا توجد جلسات بعد"));
+  const facts = el("div", "facts");
+  facts.append(el("span", "fact", "موظفون: " + team.length));
+  facts.append(el("span", "fact", "جلسات: " + st.all.sessions));
+  if (st.all.sessions){
+    const v = el("span", st.all.viols ? "fact rate" : "fact", st.all.viols ? "وعود ممنوعة: " + st.all.viols : "بلا وعود ممنوعة");
+    facts.append(v);
+    const ready = st.rows.filter(r => r.avg != null && r.avg >= 80).length;
+    facts.append(el("span", "fact near", "جاهزون للعمل المستقل: " + ready + " من " + team.length));
+  }
+  sum.append(facts);
+  if (st.all.weak.length){
+    const w = el("div", "polbox");
+    w.append(el("b", null, "أكثر ما يفوت الفريق: "));
+    w.append(document.createTextNode(st.all.weak.join(" · ")));
+    sum.append(w);
+  }
+  sec.append(sum);
+
+  // ترتيب الموظفين
+  if (team.length){
+    const rank = el("div", "card");
+    rank.style.marginTop = "14px";
+    rank.append(el("h3", null, "ترتيب الموظفين"));
+    st.rows.slice().sort((a, b) => (b.avg == null ? -1 : b.avg) - (a.avg == null ? -1 : a.avg)).forEach(r => {
+      rank.append(bar(r.avg, r.e.name + (r.viols ? " ⚠" : ""), r.avg == null ? "ما بدأ بعد" : r.avg + "/100 · " + cnt(r.rs.length, "جلسة واحدة", "جلستان", "جلسات", "جلسة")));
+    });
+    sec.append(rank);
+  }
+
+  // أداء الفئات على مستوى الفريق
+  const catKeys = Object.keys(st.all.cats);
+  if (catKeys.length){
+    const cc = el("div", "card");
+    cc.style.marginTop = "14px";
+    cc.append(el("h3", null, "أداء الفريق حسب نوع الموقف"));
+    catKeys.map(k => ({ k: k, v: Math.round(st.all.cats[k].s / st.all.cats[k].n), n: st.all.cats[k].n }))
+      .sort((a, b) => a.v - b.v)
+      .forEach(c => cc.append(bar(c.v, c.k, c.v + "/100 · " + cnt(c.n, "موقف واحد", "موقفان", "مواقف", "موقفاً"))));
+    cc.append(el("p", "note", "الفئة الأقل درجة هي درس الأسبوع القادم للفريق كله."));
+    sec.append(cc);
+  }
+
+  // المزامنة
+  const sync = el("div", "card");
+  sync.style.marginTop = "14px";
+  sync.append(el("span", "tag gold", "مزامنة"));
+  sync.append(el("h3", null, "اجمع نتائج الموظفين من أجهزتهم"));
+  sync.append(el("p", "note", "كل موظف يدخل الصفحة من جواله، يتدرّب، ثم ينسخ كود نتائجه ويرسله لك بالواتساب. تلصقه هنا فتدخل نتائجه في اللوحة."));
+  const srow = el("div", "toolbar");
+  const mySel = el("select"); mySel.id = "syncWho";
+  const o0 = el("option", null, "— اختر موظفاً لنسخ كوده —"); o0.value = "";
+  mySel.append(o0);
+  team.forEach(e => { const o = el("option", null, e.name); o.value = e.id; if (e.id === activeEmp) o.selected = true; mySel.append(o); });
+  const cpBtn = el("button", "btn ghost", "انسخ كود نتائجه"); cpBtn.type = "button";
+  cpBtn.addEventListener("click", () => {
+    const id = mySel.value;
+    if (!id) return;
+    const e = team.find(x => x.id === id);
+    const code = encodeRes(e.name, simResults.filter(r => r.emp === id).map(r => ({ date: r.date, score: r.score, cat: r.cat, items: r.items })));
+    copyText(code, cpBtn);
+  });
+  srow.append(mySel, cpBtn);
+  sync.append(srow);
+  const f = el("div", "field");
+  const l = el("label", null, "الصق كود موظف هنا"); l.setAttribute("for", "syncCode");
+  const ta = el("textarea"); ta.id = "syncCode"; ta.placeholder = "الصق الكود المنسوخ من جهاز الموظف…"; ta.style.minHeight = "70px";
+  f.append(l, ta);
+  sync.append(f);
+  const imp = el("button", "btn", "استورد النتائج"); imp.type = "button";
+  const inote = el("p", "note"); inote.id = "syncNote";
+  imp.addEventListener("click", () => importCode(ta.value, inote));
+  sync.append(imp, inote);
+  sec.append(sync);
+
+  if (!team.length){
+    sec.append(el("p", "note", "ما فيه موظفون بعد — أضفهم من تبويب «محاكي المحادثات»، أو استورد كود موظف من فوق."));
+    return;
+  }
+
+  // بطاقة لكل موظف
+  const detail = el("h3", null, "تفاصيل كل موظف");
+  detail.style.marginTop = "22px";
+  sec.append(detail);
+  st.rows.forEach(r => {
+    const card = el("div", "hotel");
+    const row = el("div", "top-row");
+    const left = el("div");
+    left.append(el("h3", null, r.e.name));
+    row.append(left);
+    const sc = el("div");
+    sc.textContent = r.avg == null ? "—" : String(r.avg);
+    sc.style.cssText = "font-family:var(--f-display); font-size:26px; font-weight:700; color:" + scoreColor(r.avg) + ";";
+    row.append(sc);
+    card.append(row);
+
+    const fx = el("div", "facts");
+    fx.append(el("span", "fact", "جلسات: " + r.rs.length));
+    if (r.last){
+      const d = new Date(r.last);
+      fx.append(el("span", "fact", "آخر جلسة: " + (isNaN(d.getTime()) ? "—" : d.toLocaleDateString("ar", { month: "long", day: "numeric" }))));
+    }
+    if (r.rs.length) fx.append(el("span", r.viols ? "fact rate" : "fact", r.viols ? "وعود ممنوعة: " + r.viols : "بلا وعود ممنوعة"));
+    card.append(fx);
+
+    if (r.weak.length){
+      const w = el("div", "polbox");
+      w.append(el("b", null, "أكثر ما يفوته: "));
+      w.append(document.createTextNode(r.weak.join(" · ")));
+      card.append(w);
+    }
+    r.rs.slice(0, 5).forEach(x => {
+      const line = el("div", "kv");
+      const d = new Date(x.date);
+      line.append(el("span", null, (isNaN(d.getTime()) ? "" : d.toLocaleDateString("ar", { month: "short", day: "numeric" })) + " · " + x.cat));
+      const v = el("span", null, x.score + "/100");
+      v.style.color = scoreColor(x.score);
+      line.append(v);
+      card.append(line);
+    });
+
+    const acts = el("div", "links");
+    const cp = el("a", null, "انسخ تقريره"); cp.href = "#";
+    cp.addEventListener("click", ev => {
+      ev.preventDefault();
+      const txt = "تقرير تدريب — " + r.e.name +
+        "\nالجلسات: " + r.rs.length + " · المتوسط: " + (r.avg == null ? "لا يوجد" : r.avg + "/100") +
+        " · وعود ممنوعة: " + r.viols +
+        (r.weak.length ? "\nأكثر ما يفوته: " + r.weak.join(" · ") : "") + "\n" +
+        r.rs.slice(0, 10).map(x => "• " + new Date(x.date).toLocaleDateString("ar") + " · " + x.cat + " · " + x.score + "/100").join("\n");
+      copyText(txt, cp);
+    });
+    const code = el("a", null, "انسخ كود مزامنته"); code.href = "#";
+    code.addEventListener("click", ev => {
+      ev.preventDefault();
+      copyText(encodeRes(r.e.name, r.rs.map(x => ({ date: x.date, score: x.score, cat: x.cat, items: x.items }))), code);
+    });
+    const clr = el("a", null, "امسح سجله"); clr.href = "#";
+    clr.addEventListener("click", ev => {
+      ev.preventDefault();
+      simResults = simResults.filter(x => x.emp !== r.e.id);
+      store("bt.simResults", simResults);
+      renderTeam(); paintSimState();
+    });
+    acts.append(cp, code, clr);
+    card.append(acts);
+    sec.append(card);
+  });
+}
+
+/* ===================== التشغيل ===================== */
+renderPlan(); renderBasics(); renderScripts(); renderObjections(); renderDrills(); renderHotels(); renderSim(); renderTeam(); renderScore();
+paintMeter();
+const savedTab = store("bt.tab");
+if (savedTab && TABS.some(t => t.id === savedTab)) show(savedTab);
+
+paintRecords(records);
+</script>
