@@ -44,6 +44,11 @@ function build(hotelDataPath, format) {
   const PANEL_PAD_TOP_BASE = 190;
   const FOOT_PAD = 8;
 
+  const heroPct = (HERO_H / CANVAS_H) * 100;
+  const SCRIM_START = Math.max(18, Math.round(heroPct - 14));
+  const SCRIM_MID = Math.round(heroPct + 6);
+  const SCRIM_LATE = Math.min(88, Math.round(heroPct + 26));
+
   const metaBlocks = [];
   const mealsBlock = data.meals ? metaItem('meal', data.meals) : '';
   const dateBlock = data.offerDate ? metaItem('calendar', data.offerDate) : '';
@@ -51,6 +56,7 @@ function build(hotelDataPath, format) {
 
   const replacements = {
     CANVAS_W, CANVAS_H, HERO_H, PANEL_TOP, MEDALLION_TOP,
+    SCRIM_START, SCRIM_MID, SCRIM_LATE,
     PANEL_PAD_TOP: PANEL_PAD_TOP_BASE + PANEL_PAD_TOP_EXTRA, FOOT_PAD, GAP_SCALE,
     PANEL_PAD_BOTTOM: isStory ? 260 : 50,
     PANEL_JUSTIFY: isStory ? 'center' : 'flex-start',
