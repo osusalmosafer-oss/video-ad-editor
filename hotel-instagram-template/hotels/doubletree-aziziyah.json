@@ -1,0 +1,15 @@
+{
+  "hotelName": "فندق دبل تري من هيلتون العزيزية",
+  "roomType": "غرفة شخصين",
+  "pricePerNight": 165,
+  "currency": "ريال",
+  "meals": "شامل الإفطار",
+  "offerDate": "العرض حتى نهاية سبتمبر",
+  "distanceFromHaram": null,
+  "hotelPhoto": "assets/doubletree-building.jpg",
+  "roomPhoto": null,
+  "hotelLogo": "assets/doubletree-logo.png",
+  "agencyLogo": "assets/osus-logo.png",
+  "whatsapp": "+966566403938",
+  "location": "مكة المكرمة"
+}
