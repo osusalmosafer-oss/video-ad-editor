@@ -84,9 +84,28 @@ out = {
 payload = json.dumps(out, ensure_ascii=False, separators=(",", ":"))
 (HERE / "data.json").write_text(payload)
 
+import base64
 template = (HERE.parent / "src" / "template.html").read_text()
+logo = "data:image/svg+xml;base64," + base64.b64encode((HERE.parent / "src" / "brand" / "logo-dark.svg").read_bytes()).decode()
+template = template.replace("/*LOGO*/", logo)
+data_js = payload.replace("</", "<\\/")
+
+# 1) standalone file: Chart.js inlined, works offline
 chartjs = (HERE.parent / "src" / "vendor" / "chart.umd.js").read_text()
-html = template.replace("/*CHARTJS*/", chartjs).replace("/*DATA*/", payload.replace("</", "<\\/"))
+html = template.replace("/*CHARTJS*/", chartjs).replace("/*DATA*/", data_js)
 (HERE.parent / "tiktok-dashboard.html").write_text(html)
+
+# 2) claude.ai artifact: the host adds doctype/head/body; Chart.js from cdnjs
+art = template[template.index("<title>"):]
+art = art.replace("<title>داشبورد تيك توك — أسس المسافر</title>", "<title>تيك توك أسس المسافر</title>")
+art = art.replace("</head>\n<body>\n", "").replace("</body>\n</html>", "")
+art = art.replace("<script>/*CHARTJS*/</script>",
+                  '<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>\n'
+                  '<script>document.documentElement.setAttribute("dir","rtl");document.documentElement.setAttribute("lang","ar");</script>')
+art = art.replace("header.top{position:sticky;top:0;", "header.top{position:sticky;top:env(safe-area-inset-top,0px);")
+art = art.replace("html,body{margin:0;", "html,body{direction:rtl;margin:0;")
+art = art.replace("/*DATA*/", data_js)
+assert "<html" not in art and "<body" not in art
+(HERE.parent / "artifact.html").write_text(art)
 print(f"{len(videos)} videos ({sum(1 for v in videos if v['retention'])} with retention), "
-      f"daily {daily[0]['date']}..{daily[-1]['date']}, activity {days[0]}..{days[-1]}, html {len(html.encode())} bytes")
+      f"daily {daily[0]['date']}..{daily[-1]['date']}, activity {days[0]}..{days[-1]}, html {len(html.encode())} bytes, artifact {len(art.encode())} bytes")
