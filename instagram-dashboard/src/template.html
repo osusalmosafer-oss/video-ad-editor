@@ -3,22 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>داشبورد انستقرام — أسس المسافر</title>
+<title>داشبورد انستقرام أسس المسافر</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <script>/*CHARTJS*/</script>
 <style>
 :root{
   color-scheme:dark;
-  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232321; --surface-3:#2c2c2a;
-  --text:#ffffff; --text-2:#c3c2b7; --muted:#898781;
-  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  /* هوية أسس المسافر: أزرق #2884FF وكحلي #1F244E (من دليل الهوية). الخط الرسمي PNU إن كان مثبتاً على الجهاز، وإلا Tajawal */
+  --page:#141834; --surface:#1F244E; --surface-2:#262C5E; --surface-3:#2F3670;
+  --text:#ffffff; --text-2:#C9D0EE; --muted:#95A0D0;
+  --grid:#2F3670; --axis:#3D4585; --border:rgba(255,255,255,.13);
+  --brand:#2884FF; --navy:#1F244E;
+  --s1:#2884FF; --s2:#A9CCFF; --s3:#7FB4FF;
   --good:#0ca30c; --warning:#fab219; --critical:#d03b3b;
-  --accent:#d55181;
+  --accent:#2884FF;
   --radius:12px;
-  --font:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font:"PNU","Tajawal","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--page);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
@@ -26,10 +28,13 @@ body{overflow-x:hidden}
 a{color:#9ec5f4}
 button,select,input{font-family:inherit;font-size:14px}
 .wrap{max-width:1280px;margin:0 auto;padding:0 16px 64px}
-header.top{position:sticky;top:0;z-index:20;background:rgba(13,13,13,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+header.top{position:sticky;top:0;z-index:20;background:rgba(31,36,78,.97);backdrop-filter:blur(8px);border-bottom:3px solid var(--brand)}
 .top-inner{max-width:1280px;margin:0 auto;padding:12px 16px 0}
 .title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.title-row h1{font-size:18px;margin:0;font-weight:700}
+.title-row h1{font-size:20px;margin:0;font-weight:800;display:flex;align-items:center;gap:12px}
+.mark{height:44px;width:auto;flex:none}
+.ttl{display:flex;flex-direction:column;line-height:1.25}
+.ttl small{font-size:12px;font-weight:500;color:var(--text-2)}
 .title-row .sub{color:var(--muted);font-size:12px}
 nav.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;margin-top:8px}
 nav.tabs button{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-2);padding:10px 12px;cursor:pointer;white-space:nowrap}
@@ -103,6 +108,8 @@ ul.reasons li strong{color:var(--text)}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:640px;width:100%;padding:20px;position:relative}
 .modal .x{position:absolute;left:12px;top:12px;background:var(--surface-3);border:0;color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px}
 .small{font-size:12px;color:var(--muted)}
+h2,h3{font-weight:800}
+.footlogo{display:block;height:84px;width:auto;margin:0 0 14px}
 .muted{color:var(--muted)}
 .bar-inline{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;min-width:60px}
 .bar-inline i{display:block;height:100%;background:var(--s1);border-radius:3px}
@@ -120,7 +127,7 @@ footer{margin-top:32px;color:var(--muted);font-size:12px;border-top:1px solid va
 <body>
 <header class="top"><div class="top-inner">
   <div class="title-row">
-    <h1>داشبورد انستقرام — أسس المسافر <span class="small">@osusalmosafer</span></h1>
+    <h1><img class="mark" src="/*ICON*/" alt="شعار أسس المسافر"><span class="ttl">داشبورد انستقرام<small>أسس المسافر · @osusalmosafer</small></span></h1>
     <div class="sub" id="subline"></div>
   </div>
   <nav class="tabs" id="tabs"></nav>
@@ -228,15 +235,15 @@ const CAVEAT = `أرقام ميتا مأخوذة من دراسات على إعل
 const linkP = p=>`<a href="${p.url}" target="_blank" rel="noopener">${esc(p.title)}</a>`;
 
 /* ---------- chart defaults ---------- */
-Chart.defaults.color="#c3c2b7";
+Chart.defaults.color="#C9D0EE";
 Chart.defaults.font.family='"IBM Plex Sans Arabic",system-ui,sans-serif';
-Chart.defaults.borderColor="#2c2c2a";
+Chart.defaults.borderColor="#2F3670";
 Chart.defaults.plugins.legend.labels.boxWidth=10;
 Chart.defaults.plugins.tooltip.rtl=true;
 Chart.defaults.plugins.tooltip.textDirection="rtl";
 const charts=[];
 function mk(id,cfg){const el=document.getElementById(id);if(!el)return;cfg.options=Object.assign({responsive:true,maintainAspectRatio:false},cfg.options||{});charts.push(new Chart(el,cfg));}
-const barOpts=(extra={})=>Object.assign({plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:"#2c2c2a"}}}},extra);
+const barOpts=(extra={})=>Object.assign({plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:"#2F3670"}}}},extra);
 
 /* ---------- table helper ---------- */
 function sortable(tblId, cols, rows, defKey, defDir=-1){
@@ -251,11 +258,11 @@ function sortable(tblId, cols, rows, defKey, defDir=-1){
 }
 
 /* ---------- tabs ---------- */
-const TABS=[["overview","نظرة عامة"],["compare","الريلز مقابل الكاروسيل"],["results","شنو ضرب وشنو ما ضرب"],["viral","تحليل الفيروسية"],["plan","خطة النشر"],["recs","توصيات عملية"]];
+const TABS=[["overview","نظرة عامة"],["compare","الريلز مقابل الكاروسيل"],["results","إيش ضرب وإيش ما ضرب"],["viral","تحليل الفيروسية"],["plan","خطة النشر"],["recs","توصيات عملية"],["roadmap","التطوير القادم"]];
 $("#subline").textContent=`آخر سحب من Windsor: ${D.pulledAt} · المنشورات من ${S.first} إلى ${S.last}`;
 $("#tabs").innerHTML=TABS.map(([k,n],i)=>`<button data-t="${k}" class="${i?"":"on"}">${n}</button>`).join("");
 $("#main").innerHTML=TABS.map(([k],i)=>`<section class="tab ${i?"":"on"}" id="t-${k}"></section>`).join("")+
- `<footer>المصدر الأول: بيانات Windsor.ai (موصّل instagram، حساب osusalmosafer). المصدر الثاني: ملف ميتا «Real Talk Creative Playbook» — رموز M1…M15 تشير إلى صفحاته (انظر meta-criteria.md). لا توجد أرقام تقديرية: أي بيانات غير متاحة مكتوب أمامها «غير متوفر».</footer>`;
+ `<footer><img class="footlogo" src="/*LOGO*/" alt="أسس المسافر Osus Almosafer">المصدر الأول: بيانات Windsor.ai (موصّل instagram، حساب osusalmosafer). المصدر الثاني: ملف ميتا «Real Talk Creative Playbook» — رموز M1…M15 تشير إلى صفحاته (انظر meta-criteria.md). لا توجد أرقام تقديرية: أي بيانات غير متاحة مكتوب أمامها «غير متوفر».</footer>`;
 const built={};
 function show(k){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===k));
@@ -312,21 +319,21 @@ R.overview=function(){
    <div class="card"><h3>أكثر الدول (متابعون)</h3><div class="chart-box tall"><canvas id="c-country"></canvas></div><span class="src">Windsor · audience_country_size</span></div>
    <div class="card"><h3>أكثر المدن (متابعون)</h3><div class="chart-box tall"><canvas id="c-city"></canvas></div><span class="src">Windsor · audience_city_size</span></div>
   </div>`;
-  mk("c-reach",{type:"bar",data:{labels:P.map(p=>dstr(p.ksa)),datasets:[{data:P.map(p=>p.reach),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:14}]},
-    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>P[i[0].dataIndex].title,afterTitle:i=>{const p=P[i[0].dataIndex];return dstr(p.ksa)+" "+hhmm(p.ksa)+" · "+CAT[p.cat]},label:c=>"وصول: "+nf(c.raw)}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8}},y:{beginAtZero:true,grid:{color:"#2c2c2a"}}}})});
+  mk("c-reach",{type:"bar",data:{labels:P.map(p=>dstr(p.ksa)),datasets:[{data:P.map(p=>p.reach),backgroundColor:"#2884FF",borderRadius:3,maxBarThickness:14}]},
+    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>P[i[0].dataIndex].title,afterTitle:i=>{const p=P[i[0].dataIndex];return dstr(p.ksa)+" "+hhmm(p.ksa)+" · "+CAT[p.cat]},label:c=>"وصول: "+nf(c.raw)}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8}},y:{beginAtZero:true,grid:{color:"#2F3670"}}}})});
   const dd=D.daily;
   mk("c-daily",{type:"line",data:{labels:dd.map(d=>d.date.slice(5)),datasets:[
-    {label:"الوصول",data:dd.map(d=>d.reach),borderColor:"#3987e5",backgroundColor:"#3987e5",borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.25},
-    {label:"المشاهدات",data:dd.map(d=>d.views),borderColor:"#d95926",backgroundColor:"#d95926",borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.25}]},
-    options:{interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8}},y:{beginAtZero:true,grid:{color:"#2c2c2a"}}}}});
+    {label:"الوصول",data:dd.map(d=>d.reach),borderColor:"#2884FF",backgroundColor:"#2884FF",borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.25},
+    {label:"المشاهدات",data:dd.map(d=>d.views),borderColor:"#A9CCFF",backgroundColor:"#A9CCFF",borderDash:[6,4],borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.25}]},
+    options:{interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8}},y:{beginAtZero:true,grid:{color:"#2F3670"}}}}});
   const ages=Object.entries(A.age);
-  mk("c-age",{type:"bar",data:{labels:ages.map(a=>a[0]),datasets:[{data:ages.map(a=>a[1]),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:36}]},options:barOpts()});
+  mk("c-age",{type:"bar",data:{labels:ages.map(a=>a[0]),datasets:[{data:ages.map(a=>a[1]),backgroundColor:"#2884FF",borderRadius:3,maxBarThickness:36}]},options:barOpts()});
   const gs=[["إناث",A.gender.F],["ذكور",A.gender.M],["غير محدد",A.gender.U]];
-  mk("c-gender",{type:"bar",data:{labels:gs.map(g=>g[0]),datasets:[{data:gs.map(g=>g[1]),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:48}]},options:barOpts()});
+  mk("c-gender",{type:"bar",data:{labels:gs.map(g=>g[0]),datasets:[{data:gs.map(g=>g[1]),backgroundColor:"#2884FF",borderRadius:3,maxBarThickness:48}]},options:barOpts()});
   const cs=topN(A.country,10);
-  mk("c-country",{type:"bar",data:{labels:cs.map(c=>CN[c[0]]||c[0]),datasets:[{data:cs.map(c=>c[1]),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:18}]},options:barOpts({indexAxis:"y",scales:{x:{beginAtZero:true,grid:{color:"#2c2c2a"}},y:{grid:{display:false}}}})});
+  mk("c-country",{type:"bar",data:{labels:cs.map(c=>CN[c[0]]||c[0]),datasets:[{data:cs.map(c=>c[1]),backgroundColor:"#2884FF",borderRadius:3,maxBarThickness:18}]},options:barOpts({indexAxis:"y",scales:{x:{beginAtZero:true,grid:{color:"#2F3670"}},y:{grid:{display:false}}}})});
   const ct=topN(A.city,10);
-  mk("c-city",{type:"bar",data:{labels:ct.map(c=>CITYN[c[0]]||c[0]),datasets:[{data:ct.map(c=>c[1]),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:18}]},options:barOpts({indexAxis:"y",scales:{x:{beginAtZero:true,grid:{color:"#2c2c2a"}},y:{grid:{display:false}}}})});
+  mk("c-city",{type:"bar",data:{labels:ct.map(c=>CITYN[c[0]]||c[0]),datasets:[{data:ct.map(c=>c[1]),backgroundColor:"#2884FF",borderRadius:3,maxBarThickness:18}]},options:barOpts({indexAxis:"y",scales:{x:{beginAtZero:true,grid:{color:"#2F3670"}},y:{grid:{display:false}}}})});
 };
 
 /* ===================== 2) COMPARE ===================== */
@@ -351,10 +358,10 @@ R.compare=function(){
   </div>
   <div class="table-wrap" style="margin-top:12px" id="cattbl"></div>
   <div class="note info">ما يقوله الملف هنا: نمط <strong>Tutorial</strong> ${crit("M9")} (مشاركة معرفة + عرض عملي) و<strong>Listicle</strong> ${crit("M10")}. نمطا «استعراض فندق» و«عرض سعر مباشر» لا يطابقان نوع قصة محدداً في الملف، وأقرب قاعدة تخصهما هي ${crit("M3")}: ابدأ بما يريد الجمهور معرفته لا بما تريد قوله. ${CAVEAT}</div>`;
-  mk("c-cat",{type:"bar",data:{labels:S.cats.map(c=>c.name),datasets:[{data:S.cats.map(c=>c.medReach),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:44}]},
-    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>"وسيط الوصول: "+nf(c.raw),afterLabel:c=>"عدد المنشورات: "+S.cats[c.dataIndex].n}}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:0,callback:function(v){const l=this.getLabelForValue(v);return l.length>14?l.split(" "):l}}},y:{beginAtZero:true,grid:{color:"#2c2c2a"}}}})});
-  mk("c-catshare",{type:"bar",data:{labels:S.cats.map(c=>c.name),datasets:[{data:S.cats.map(c=>c.sumViews/S.views*100),backgroundColor:"#199e70",borderRadius:3,maxBarThickness:44}]},
-    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>nd(c.raw)+"% من المشاهدات ("+nf(S.cats[c.dataIndex].sumViews)+")"}}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:0,callback:function(v){const l=this.getLabelForValue(v);return l.length>14?l.split(" "):l}}},y:{beginAtZero:true,grid:{color:"#2c2c2a"},ticks:{callback:v=>v+"%"}}}})});
+  mk("c-cat",{type:"bar",data:{labels:S.cats.map(c=>c.name),datasets:[{data:S.cats.map(c=>c.medReach),backgroundColor:"#2884FF",borderRadius:3,maxBarThickness:44}]},
+    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>"وسيط الوصول: "+nf(c.raw),afterLabel:c=>"عدد المنشورات: "+S.cats[c.dataIndex].n}}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:0,callback:function(v){const l=this.getLabelForValue(v);return l.length>14?l.split(" "):l}}},y:{beginAtZero:true,grid:{color:"#2F3670"}}}})});
+  mk("c-catshare",{type:"bar",data:{labels:S.cats.map(c=>c.name),datasets:[{data:S.cats.map(c=>c.sumViews/S.views*100),backgroundColor:"#7FB4FF",borderRadius:3,maxBarThickness:44}]},
+    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>nd(c.raw)+"% من المشاهدات ("+nf(S.cats[c.dataIndex].sumViews)+")"}}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:0,callback:function(v){const l=this.getLabelForValue(v);return l.length>14?l.split(" "):l}}},y:{beginAtZero:true,grid:{color:"#2F3670"},ticks:{callback:v=>v+"%"}}}})});
   sortable("cattbl",[
     {k:"name",h:"النمط",v:c=>c.name,f:c=>esc(c.name)},
     {k:"meta",h:"ما يقابله في ميتا",v:c=>c.k,f:c=>CATMETA[c.k]?crit(CATMETA[c.k][0])+" "+CATMETA[c.k][1]:NOMETA},
@@ -373,16 +380,16 @@ R.compare=function(){
 /* ===================== 3) RESULTS ===================== */
 function reasons(p){
   const L=[]; const dSkip=(p.skip-S.medSkip)*100, dW=p.watchS-S.medWatch;
-  L.push(`<li><strong>الخطّاف (أول 3 ثوانٍ):</strong> ${pc(p.skip)} تجاوزوا الريل مقابل وسيط الحساب ${pc(S.medSkip)} (${dSkip>=0?"+":""}${nd(dSkip)} نقطة) — ${Math.abs(dSkip)<3?"قريب من الوسيط":dSkip<0?"أفضل من الوسيط":"أضعف من الوسيط"} ${crit("M1")}.</li>`);
-  L.push(`<li><strong>الحفاظ على الانتباه:</strong> متوسط المشاهدة ${nd(p.watchS)} ثانية مقابل وسيط ${nd(S.medWatch)} (${dW>=0?"+":""}${nd(dW)} ث) — ${Math.abs(dW)<1?"قريب من الوسيط":dW>0?"أعلى من الوسيط":"أقل من الوسيط"} ${crit("M1","M3")}.</li>`);
+  L.push(`<li><strong>الخطّاف (أول 3 ثواني):</strong> ${pc(p.skip)} تخطّوا الريل، ووسيط حسابك ${pc(S.medSkip)} (${dSkip>=0?"+":""}${nd(dSkip)} نقطة) — ${Math.abs(dSkip)<3?"قريب من الوسيط":dSkip<0?"أحسن من الوسيط":"أضعف من الوسيط"} ${crit("M1")}.</li>`);
+  L.push(`<li><strong>إيش يخلي الناس يكملون:</strong> متوسط المشاهدة ${nd(p.watchS)} ثانية، والوسيط ${nd(S.medWatch)} (${dW>=0?"+":""}${nd(dW)} ث) — ${Math.abs(dW)<1?"قريب من الوسيط":dW>0?"فوق الوسيط":"تحت الوسيط"} ${crit("M1","M3")}.</li>`);
   const m=CATMETA[p.cat];
-  L.push(`<li><strong>نمط القصة:</strong> ${CAT[p.cat]} — ${m?`يقابل ${m[1]} في ميتا ${crit(m[0])}`:`لا يطابق نوع قصة في ملف ميتا؛ القاعدة الأقرب ${crit("M3")} (ابدأ بما يريد الجمهور معرفته)`}.</li>`);
-  L.push(`<li><strong>المكافأة/الدعوة لإجراء:</strong> ${p.hasCta?"الكابشن فيه دعوة (رابط/حجز/مشاركة/حفظ)":"لا دعوة صريحة في الكابشن"} ${crit("M4")} — التفاعل الفعلي: مشاركة ${pc(p.shareRate,2)} (وسيط ${pc(S.medShare,2)})، حفظ ${pc(p.saveRate,2)} (وسيط ${pc(S.medSave,2)}).</li>`);
+  L.push(`<li><strong>نوع الريل:</strong> ${CAT[p.cat]} — ${m?`يقابل ${m[1]} في ميتا ${crit(m[0])}`:`ما له نوع قصة يطابقه في ملف ميتا، وأقرب قاعدة ${crit("M3")} (ابدأ بالي يبي الجمهور يعرفه)`}.</li>`);
+  L.push(`<li><strong>الدعوة في الآخر:</strong> ${p.hasCta?"الكابشن فيه دعوة (رابط/حجز/مشاركة/حفظ)":"ما فيه دعوة صريحة في الكابشن"} ${crit("M4")} — التفاعل الفعلي: مشاركة ${pc(p.shareRate,2)} (وسيط ${pc(S.medShare,2)})، حفظ ${pc(p.saveRate,2)} (وسيط ${pc(S.medSave,2)}).</li>`);
   return L.join("");
 }
-const NOTMEAS=`<li class="muted"><strong>غير قابل للقياس من البيانات:</strong> نص فوق الفيديو ${crit("M5")}، الصوت ${crit("M6","M8")}، الحضور البشري ${crit("M7")}، 9:16 والمنطقة الآمنة ${crit("M8")} — تُراجع يدوياً على الفيديو.</li>`;
+const NOTMEAS=`<li class="muted"><strong>اللي ما نقدر نقيسه من البيانات:</strong> النص فوق الفيديو ${crit("M5")}، الصوت ${crit("M6","M8")}، وجود شخص ${crit("M7")}، 9:16 والمنطقة الآمنة ${crit("M8")} — تراجعها بعينك على الفيديو.</li>`;
 function vcard(p,rank,kind){
-  return `<div class="vcard"><div class="head"><div class="capt">${rank}. ${linkP(p)}</div><div><span class="tag ${kind}">${kind==="good"?"نجح":"لم ينجح"}</span> <span class="tag">${CAT[p.cat]}</span> <span class="tag">${dstr(p.ksa)} ${hhmm(p.ksa)}</span></div></div>
+  return `<div class="vcard"><div class="head"><div class="capt">${rank}. ${linkP(p)}</div><div><span class="tag ${kind}">${kind==="good"?"ضرب":"ما ضرب"}</span> <span class="tag">${CAT[p.cat]}</span> <span class="tag">${dstr(p.ksa)} ${hhmm(p.ksa)}</span></div></div>
    <div class="mets">
     <div class="met"><b>${nf(p.reach)}</b><span>وصول (${nd(p.reach/S.medReach,1)}× الوسيط)</span></div>
     <div class="met"><b>${nf(p.views)}</b><span>مشاهدات</span></div>
@@ -398,16 +405,16 @@ R.results=function(){
   const byR=[...P].sort((a,b)=>b.reach-a.reach);
   const top=byR.slice(0,5), bot=byR.slice(-5).reverse();
   $("#t-results").innerHTML=`
-  <h2>شنو ضرب وشنو ما ضرب</h2>
-  <p class="lead">الترتيب حسب الوصول (media_reach). التفسير يربط كل رقم فعلي بمعيار ميتا المحدد؛ وحيث يعجز الملف أو البيانات عن التفسير أقول ذلك صراحة.</p>
-  <div class="note info"><strong>قراءة الارتباط في هذا الحساب (${S.n} منشوراً):</strong> معدل التجاوز في أول 3 ثوانٍ لا يفسّر الوصول تقريباً (${rr(S.rSkip)}؛ على لوغاريتم الوصول ${nd(S.rSkipLog,2)}) بينما متوسط زمن المشاهدة أقوى ارتباطاً (${rr(S.rWatch)}؛ على اللوغاريتم ${nd(S.rWatchLog,2)}). هذا يعني أن معيار الخطّاف ${crit("M1")} وحده لا يكفي لتفسير ما ضرب هنا، وأن الأثر الأوضح هو <strong>الحفاظ على الانتباه</strong> ${crit("M3")}. العينة صغيرة والارتباط لا يثبت سببية.</div>
-  <h3>الأفضل أداءً (أعلى 5 وصولاً)</h3>
+  <h2>إيش ضرب وإيش ما ضرب</h2>
+  <p class="lead">الترتيب على حسب الوصول (media_reach). كل رقم أربطه بمعيار محدد من ملف ميتا، ولو الملف أو البيانات ما تكفي أقولها لك صريحة.</p>
+  <div class="note info"><strong>قراءة الارتباط في حسابك (${S.n} منشور):</strong> معدل التجاوز في أول 3 ثواني تقريباً ما يفسّر الوصول (${rr(S.rSkip)}؛ على لوغاريتم الوصول ${rr(S.rSkipLog)}) بينما متوسط زمن المشاهدة أقوى ارتباطاً (${rr(S.rWatch)}؛ على اللوغاريتم ${rr(S.rWatchLog)}). يعني الخطّاف لحاله ${crit("M1")} ما يكفي يفسّر ليش ضرب اللي ضرب، والأوضح إن الناس يكملون الفيديو ${crit("M3")}. العينة صغيرة والارتباط ما يثبت السبب.</div>
+  <h3>اللي ضرب (أعلى 5 وصولاً)</h3>
   ${top.map((p,i)=>vcard(p,i+1,"good")).join("")}
-  <h3 style="margin-top:22px">الأسوأ أداءً (أدنى 5 وصولاً)</h3>
+  <h3 style="margin-top:22px">اللي ما ضرب (أدنى 5 وصولاً)</h3>
   ${bot.map((p,i)=>vcard(p,i+1,"bad")).join("")}
-  <div class="note">تنبيه: ${bot.filter(p=>new Date(p.utc).getTime()>lastT-12*DAY).length} من أدنى 5 منشورات نُشرت في آخر 12 يوماً من البيانات، وقد لا تكون اكتملت دورة توزيعها؛ قارنها بحذر.</div>
+  <div class="note">انتبه: ${bot.filter(p=>new Date(p.utc).getTime()>lastT-12*DAY).length} من أدنى 5 نزلوا في آخر 12 يوم من البيانات، وممكن ما خلصت دورة توزيعها، فقارنها بحذر.</div>
   <h3 style="margin-top:22px">كل المنشورات</h3>
-  <div class="toolbar"><input type="search" id="q" placeholder="ابحث في الكابشن…"><select id="fcat"><option value="">كل الأنماط</option>${Object.entries(CAT).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select><span class="small" id="cnt"></span></div>
+  <div class="toolbar"><input type="search" id="q" placeholder="دوّر في الكابشن…"><select id="fcat"><option value="">كل الأنماط</option>${Object.entries(CAT).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select><span class="small" id="cnt"></span></div>
   <div class="table-wrap" id="alltbl"></div>`;
   const cols=[
     {k:"t",h:"التاريخ (السعودية)",v:p=>p.ksa,f:p=>dstr(p.ksa)+" "+hhmm(p.ksa)},
@@ -446,10 +453,10 @@ R.viral=function(){
   <div class="table-wrap" style="margin-top:12px" id="vtbl"></div>
   <div class="note info">ما الذي يميّز منشورات الاختراق؟ في هذا الحساب أنماطها: ${[...new Set(brk.map(p=>CAT[p.cat]))].join("، ")}. معدل المشاركة فوق وسيط الحساب (${pc(S.medShare,2)}) في ${brk.filter(p=>p.shareRate>S.medShare).length} من ${brk.length} منها؛ وهذا متوافق مع القيمة العملية التي يقصدها ${crit("M3","M9")} (أرِ للجمهور ما يريد معرفته)، لكن الملف لا يربط هذه المقاييس بالانتشار العضوي ${NOMETA}.</div>`;
   const t12=byR.slice(0,12);
-  mk("c-vbest",{type:"bar",data:{labels:t12.map(p=>p.title.slice(0,26)+(p.title.length>26?"…":"")),datasets:[{data:t12.map(p=>p.reach/S.best.reach*100),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:16}]},
-    options:barOpts({indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>t12[i[0].dataIndex].title,label:c=>nd(c.raw)+"% من أفضل منشور ("+nf(t12[c.dataIndex].reach)+" وصول)"}}},scales:{x:{beginAtZero:true,max:100,grid:{color:"#2c2c2a"},ticks:{callback:v=>v+"%"}},y:{grid:{display:false}}}})});
-  mk("c-vscat",{type:"scatter",data:{datasets:[{data:P.map(p=>({x:p.reach,y:p.shareRate*100,p})),backgroundColor:"#3987e5",borderColor:"#1a1a19",borderWidth:2,pointRadius:6,pointHoverRadius:8}]},
-    options:{plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>i[0].raw.p.title,label:c=>"وصول "+nf(c.raw.x)+" · مشاركة "+nd(c.raw.y,2)+"%"}}},scales:{x:{type:"logarithmic",title:{display:true,text:"الوصول (لوغاريتمي)"},grid:{color:"#2c2c2a"}},y:{beginAtZero:true,title:{display:true,text:"مشاركات ÷ وصول (%)"},grid:{color:"#2c2c2a"}}}}});
+  mk("c-vbest",{type:"bar",data:{labels:t12.map(p=>p.title.slice(0,26)+(p.title.length>26?"…":"")),datasets:[{data:t12.map(p=>p.reach/S.best.reach*100),backgroundColor:"#2884FF",borderRadius:3,maxBarThickness:16}]},
+    options:barOpts({indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>t12[i[0].dataIndex].title,label:c=>nd(c.raw)+"% من أفضل منشور ("+nf(t12[c.dataIndex].reach)+" وصول)"}}},scales:{x:{beginAtZero:true,max:100,grid:{color:"#2F3670"},ticks:{callback:v=>v+"%"}},y:{grid:{display:false}}}})});
+  mk("c-vscat",{type:"scatter",data:{datasets:[{data:P.map(p=>({x:p.reach,y:p.shareRate*100,p})),backgroundColor:"#2884FF",borderColor:"#1F244E",borderWidth:2,pointRadius:6,pointHoverRadius:8}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>i[0].raw.p.title,label:c=>"وصول "+nf(c.raw.x)+" · مشاركة "+nd(c.raw.y,2)+"%"}}},scales:{x:{type:"logarithmic",title:{display:true,text:"الوصول (لوغاريتمي)"},grid:{color:"#2F3670"}},y:{beginAtZero:true,title:{display:true,text:"مشاركات ÷ وصول (%)"},grid:{color:"#2F3670"}}}}});
   sortable("vtbl",[
     {k:"cap",h:"المنشور",cls:"cap",v:p=>p.cap,f:p=>linkP(p)},
     {k:"reach",h:"وصول",num:1,v:p=>p.reach,f:p=>nf(p.reach)},
@@ -490,13 +497,13 @@ R.plan=function(){
   <div class="note info">الساعة 20:30 هي الساعة التي نشرت فيها معظم منشوراتك (وليست مثبتة كأفضل ساعة). لاختبارها: انشر في أسبوعين متتاليين نمطاً واحداً في ساعتين مختلفتين (مثلاً 20:30 و13:00) وقارن الوصول ${crit("M13")}.</div>
   <h3>الأسابيع</h3>
   <div class="table-wrap"><table><thead><tr><th>بداية الأسبوع (أحد)</th><th class="num">منشورات</th><th class="num">وسيط الوصول</th><th class="num">مجموع الوصول</th></tr></thead><tbody>${S.weeks.map(w=>`<tr><td>${w.k}</td><td class="num">${w.n}</td><td class="num">${nf(w.med)}</td><td class="num">${nf(w.sumReach)}</td></tr>`).join("")}</tbody></table></div>`;
-  mk("c-wd",{type:"bar",data:{labels:S.wd.map(d=>d.name),datasets:[{data:S.wd.map(d=>d.med||0),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:36}]},
+  mk("c-wd",{type:"bar",data:{labels:S.wd.map(d=>d.name),datasets:[{data:S.wd.map(d=>d.med||0),backgroundColor:"#2884FF",borderRadius:3,maxBarThickness:36}]},
     options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>"وسيط الوصول: "+nf(c.raw),afterLabel:c=>"عدد المنشورات: "+S.wd[c.dataIndex].n}}}})});
   const hrs=S.hr.filter(h=>h.n>0);
-  mk("c-hr",{type:"bar",data:{labels:hrs.map(h=>String(h.h).padStart(2,"0")+":00"),datasets:[{data:hrs.map(h=>h.n),backgroundColor:"#199e70",borderRadius:3,maxBarThickness:30}]},
+  mk("c-hr",{type:"bar",data:{labels:hrs.map(h=>String(h.h).padStart(2,"0")+":00"),datasets:[{data:hrs.map(h=>h.n),backgroundColor:"#7FB4FF",borderRadius:3,maxBarThickness:30}]},
     options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+" منشوراً",afterLabel:c=>"وسيط الوصول: "+nf(hrs[c.dataIndex].med)}}}})});
-  mk("c-wkn",{type:"bar",data:{labels:S.weeks.map(w=>w.k.slice(5)),datasets:[{data:S.weeks.map(w=>w.n),backgroundColor:"#199e70",borderRadius:3,maxBarThickness:30}]},options:barOpts()});
-  mk("c-wkm",{type:"bar",data:{labels:S.weeks.map(w=>w.k.slice(5)),datasets:[{data:S.weeks.map(w=>w.med),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:30}]},options:barOpts()});
+  mk("c-wkn",{type:"bar",data:{labels:S.weeks.map(w=>w.k.slice(5)),datasets:[{data:S.weeks.map(w=>w.n),backgroundColor:"#7FB4FF",borderRadius:3,maxBarThickness:30}]},options:barOpts()});
+  mk("c-wkm",{type:"bar",data:{labels:S.weeks.map(w=>w.k.slice(5)),datasets:[{data:S.weeks.map(w=>w.med),backgroundColor:"#2884FF",borderRadius:3,maxBarThickness:30}]},options:barOpts()});
 };
 
 /* ===================== 6) RECS ===================== */
@@ -525,6 +532,54 @@ R.recs=function(){
    <div class="note bad"><strong>الخطّاف:</strong> الملف يجعل «الخطّاف في أول ثوانٍ» أساس النجاح ${crit("M1")}، لكن في بيانات الحساب معدل التجاوز خلال 3 ثوانٍ لا يفسّر الوصول (${rr(S.rSkip)}). أعلى ريلين وصولاً تجاوزهما ${pc(byReach(0).skip)} و${pc(byReach(1).skip)} مقابل وسيط ${pc(S.medSkip)}. الملف لا ينفي أهمية الخطّاف، لكن هذا المقياس وحده لا يميّز الرابحين هنا.</div>
    <div class="note bad"><strong>الدعوة للإجراء:</strong> الملف يوصي بختام فيه دعوة لإجراء ${crit("M4")}. عروض الأسعار في الحساب فيها دعوة صريحة (احجز/الرابط في البايو) ومع ذلك وسيط وصولها ${nf(E_.medReach)}. الملف يشترط أن تسبق الدعوةَ قيمةٌ ${crit("M1","M3")}، فوجود الدعوة وحده لا يكفي.</div>
    <div class="note"><strong>نوع الدليل:</strong> أرقام ميتا (+7، +11، +15، +22 نقطة، CTR +27% و+39%) مأخوذة من إعلانات وليست من وصول عضوي؛ لا أستخدمها للتنبؤ بأداء منشوراتك، بل كقائمة تدقيق إبداعية فقط.</div>`;
+};
+
+/* ===================== 7) ROADMAP ===================== */
+R.roadmap=function(){
+  const dd=D.daily, w1=dd.slice(-7), w0=dd.slice(-14,-7);
+  const tot=(a,k)=>sum(a.map(d=>d[k]));
+  const wkPosts=P.filter(p=>new Date(p.utc).getTime()>lastT-7*DAY);
+  const wkBest=wkPosts.length?wkPosts.reduce((a,b)=>b.reach>a.reach?b:a):null;
+  const wkWeak=wkPosts.length?wkPosts.reduce((a,b)=>b.reach<a.reach?b:a):null;
+  const bestCat=[...S.cats].filter(c=>c.n>=5).sort((a,b)=>b.medReach-a.medReach)[0];
+  const row=(l,a,b)=>`<tr><td>${l}</td><td class="num">${nf(a)}</td><td class="num">${b==null?"—":nf(b)}</td><td class="num">${b?(a>=b?"▲ ":"▼ ")+nd(Math.abs(a-b)/b*100,0)+"%":"—"}</td></tr>`;
+  const items=[
+   ["h","إيميل كل أحد","good","جاهز تقنياً — ينتظر موافقتك","يسحب Windsor بيانات الأسبوع، يبني الملخص، ويرسله بالإيميل. أدوات السحب والإيميل والجدولة الأسبوعية متوفرة الحين في هذه الجلسة.","لازم تحدد: عنوان الاستلام، ساعة الإرسال (مقترح الأحد 8:00 صباحاً بتوقيت السعودية)، وهل يُرسل مباشرة أو يجي مسودة تراجعها.","صغير"],
+   ["h","حفظ تاريخ البيانات","warn","يحتاج تطوير","Windsor يرجع الأرقام اليومية للحساب لآخر 30 يوماً فقط، فما نقدر نقارن شهر بشهر. الحل: كل أسبوع نحفظ لقطة (وصول، متابعين جدد، نقرات) في المستودع.","بدونه تضيع أرقام الأسابيع القديمة وتبقى مقارنة الإيميل محصورة بأسبوع مقابل الأسبوع اللي قبله.","متوسط"],
+   ["h","تتبع التحويل للحجز","warn","يحتاج بيانات منك","نقرات روابط البروفايل "+nf(S.taps30)+" فقط في 30 يوم مقابل "+nf(S.reach30)+" وصول يومي مجمّع. Windsor ما يقول لنا كم حجز جا من كل ريل.","رابط تتبع أو رقم واتساب مخصص لكل ريل، وتسجيل الحجوزات (يدوي أو من نموذج) عشان نربط الريل بالحجز.","متوسط"],
+   ["m","تحديث الداشبورد تلقائياً","good","جاهز بعد الإيميل","الحين أسحب البيانات وأعيد النشر يدوياً. نفس الجدولة تسحب وتعيد بناء الرابط كل أسبوع فيبقى دايم محدّث.","يعتمد على تفعيل الإيميل الأسبوعي.","صغير"],
+   ["m","مقارنة الكاروسيل والستوري تشتغل أوتوماتيك","warn","ينتظر نشر","ما نشرت كاروسيل أو ستوري في الفترة، فالصف صفر. وللأمانة صفوف الكاروسيل والصورة في صفحة المقارنة مكتوبة صفر ثابت حالياً، لازم أعدلها تنحسب من البيانات أول ما تجي منشورات.","نشر تجربة كاروسيل أسبوعين حسب التوصية 9.","صغير"],
+   ["m","جدول مراجعة الفيديو","warn","يحتاج تطوير","النص فوق الفيديو، الصوت، الوجه، 9:16 والمنطقة الآمنة ما يقيسها Windsor. نموذج قصير يعبّيه فريقك لكل ريل ويظهر أثرها على الوصول.","يخلينا نختبر معايير ميتا M5 إلى M8 على حسابك بدل ما نكتفي بأرقامهم الإعلانية.","متوسط"],
+   ["m","ساعات نشاط المتابعين","warn","غير متوفر الحين","موصّل انستقرام في Windsor ما يرجع «متى المتابعين أونلاين». من دونه أوقات النشر تبقى فرضية.","إدخالها يدوياً من إنستقرام إنسايتس، أو ربط مصدر ثاني.","صغير"],
+   ["l","تصنيف نوع الريل تلقائياً","good","ممكن","الحين أصنّف كل ريل يدوياً من الكابشن. يمكن يصير تلقائي لكل ريل جديد بقواعد كلمات أو بمراجعة Claude.","يوفر التعديل اليدوي في build.py.","صغير"],
+   ["l","سجل التجارب (A/B)","good","ممكن","ميتا توصي باختبار أسبوعين مع تثبيت باقي المتغيرات M13. صفحة تسجل الفرضية والنتيجة لكل تجربة.","يخلي التوصيات تتحول لقرارات موثقة.","متوسط"],
+   ["l","الخط الرسمي PNU","warn","يحتاج ملف منك","استخدمت Tajawal لأن PNU خط خاص غير متوفر على الويب. لو ثبّتّه على جهازك الداشبورد يستخدمه تلقائياً.","ملف الخط (وترخيصه للويب) عشان نضمّنه في الداشبورد.","صغير"]
+  ];
+  const pl={h:"أولوية عالية",m:"متوسطة",l:"لاحقاً"};
+  $("#t-roadmap").innerHTML=`
+  <h2>التطوير القادم</h2>
+  <p class="lead">إيش ينقص الداشبورد وإيش نتوقع نضيفه. الجهد تقدير مني، ومو من أي مصدر بيانات.</p>
+  <div class="note info"><strong>ما تم تفعيل أي إرسال.</strong> الإيميل الأسبوعي أدناه مثال بأرقام آخر أسبوع في البيانات. ما ينرسل شي إلا بعد ما تأكد العنوان والوقت.</div>
+  <h3>شكل رسالة الأحد</h3>
+  <div class="card" style="max-width:720px">
+    <div class="small">الموضوع</div>
+    <div style="font-weight:800;margin-bottom:10px">تقرير أسس المسافر على إنستقرام — أسبوع ${w1[0].date} إلى ${w1[w1.length-1].date}</div>
+    <div class="table-wrap"><table><thead><tr><th>المؤشر (7 أيام)</th><th class="num">هذا الأسبوع</th><th class="num">الأسبوع قبله</th><th class="num">التغير</th></tr></thead><tbody>
+     ${row("وصول الحساب (مجموع يومي)",tot(w1,"reach"),tot(w0,"reach"))}
+     ${row("مشاهدات الحساب",tot(w1,"views"),tot(w0,"views"))}
+     ${row("متابعون جدد",tot(w1,"newFollowers"),tot(w0,"newFollowers"))}
+     ${row("نقرات روابط البروفايل",tot(w1,"taps"),tot(w0,"taps"))}
+    </tbody></table></div>
+    <ul class="reasons">
+     <li><strong>ريلز الأسبوع:</strong> ${wkPosts.length} منشورات.</li>
+     ${wkBest?`<li><strong>أقواها:</strong> ${linkP(wkBest)} — وصول ${nf(wkBest.reach)}.</li><li><strong>أضعفها:</strong> ${linkP(wkWeak)} — وصول ${nf(wkWeak.reach)}.</li>`:""}
+     <li><strong>توصية الأسبوع:</strong> ريل من نمط «${bestCat.name}» (وسيط وصوله ${nf(bestCat.medReach)} في ${bestCat.n} منشورات)، ونفّذ التوصية الأولى في تبويب التوصيات ${crit("M9")}.</li>
+    </ul>
+    <div class="small">مع رابط الداشبورد المحدّث أسفل الرسالة.</div>
+  </div>
+  <h3 style="margin-top:22px">قائمة التطوير</h3>
+  ${items.map((it,i)=>`<div class="rec"><div class="rh"><h3>${i+1}. ${it[1]}</h3><span><span class="tag prio-${it[0]}">${pl[it[0]]}</span> <span class="tag ${it[2]}">${it[3]}</span> <span class="tag">الجهد: ${it[6]}</span></span></div>
+   <dl><dt>ليش</dt><dd>${it[4]}</dd><dt>المطلوب</dt><dd>${it[5]}</dd></dl></div>`).join("")}`;
 };
 
 show((location.hash||"#overview").slice(1)in R?(location.hash||"#overview").slice(1):"overview");
