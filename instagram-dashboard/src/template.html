@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>داشبورد انستقرام — أسس المسافر</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>/*CHARTJS*/</script>
+<style>
+:root{
+  color-scheme:dark;
+  --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232321; --surface-3:#2c2c2a;
+  --text:#ffffff; --text-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --good:#0ca30c; --warning:#fab219; --critical:#d03b3b;
+  --accent:#d55181;
+  --radius:12px;
+  --font:"IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6}
+body{overflow-x:hidden}
+a{color:#9ec5f4}
+button,select,input{font-family:inherit;font-size:14px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 16px 64px}
+header.top{position:sticky;top:0;z-index:20;background:rgba(13,13,13,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.top-inner{max-width:1280px;margin:0 auto;padding:12px 16px 0}
+.title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.title-row h1{font-size:18px;margin:0;font-weight:700}
+.title-row .sub{color:var(--muted);font-size:12px}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:thin;margin-top:8px}
+nav.tabs button{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;color:var(--text-2);padding:10px 12px;cursor:pointer;white-space:nowrap}
+nav.tabs button.on{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+section.tab{display:none;padding-top:20px}
+section.tab.on{display:block}
+h2{font-size:20px;margin:0 0 4px}
+h3{font-size:16px;margin:0 0 8px}
+.lead{color:var(--text-2);margin:0 0 16px;font-size:14px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-width:0}
+.kpi .label{color:var(--text-2);font-size:13px}
+.kpi .val{font-size:26px;font-weight:700;margin:4px 0 2px;letter-spacing:-.3px;direction:ltr;text-align:right}
+.kpi .delta{font-size:12px;font-weight:600}
+.delta.up{color:#6fd46f} .delta.down{color:#f09a9a} .delta.na{color:var(--muted);font-weight:400}
+.src{display:block;color:var(--muted);font-size:11px;margin-top:6px;line-height:1.4;word-break:break-word}
+.chart-box{position:relative;height:260px}
+.chart-box.tall{height:340px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text-2);margin:4px 0 8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px;vertical-align:middle}
+.crit{display:inline-flex;align-items:center;background:rgba(57,135,229,.14);color:#9ec5f4;border:1px solid rgba(57,135,229,.35);border-radius:6px;padding:0 6px;font-size:12px;font-weight:600;cursor:pointer;line-height:20px;margin:0 2px;font-family:inherit}
+.tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--surface-3);color:var(--text-2);white-space:nowrap}
+.tag.good{background:rgba(12,163,12,.15);color:#6fd46f}
+.tag.bad{background:rgba(208,59,59,.15);color:#f09a9a}
+.tag.warn{background:rgba(250,178,25,.13);color:#fad27a}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap}
+td.cap{white-space:normal;min-width:220px;max-width:340px}
+.table-wrap th{white-space:normal;line-height:1.3;vertical-align:bottom}
+th{color:var(--text-2);font-weight:600;background:var(--surface-2);position:sticky;top:0}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--text)}
+th .arrow{color:var(--accent);margin-inline-start:4px}
+tbody tr:hover{background:var(--surface-2)}
+td.num,th.num{text-align:left;font-variant-numeric:tabular-nums;direction:ltr}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+select,input[type=search]{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px;min-height:34px}
+.vcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.vcard .head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.vcard .capt{font-weight:600}
+.mets{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin:12px 0}
+.met{background:var(--surface-2);border-radius:8px;padding:8px 10px}
+.met b{display:block;font-size:16px;direction:ltr;text-align:right}
+.met span{color:var(--muted);font-size:11px}
+ul.reasons{margin:8px 0 0;padding-inline-start:18px}
+ul.reasons li{margin:5px 0;color:var(--text-2)}
+ul.reasons li strong{color:var(--text)}
+.note{border-inline-start:3px solid var(--warning);background:rgba(250,178,25,.06);padding:10px 12px;border-radius:8px;color:var(--text-2);font-size:13px;margin:12px 0}
+.note.info{border-color:var(--s1);background:rgba(57,135,229,.06)}
+.note.bad{border-color:var(--critical);background:rgba(208,59,59,.06)}
+.na-box{border:1px dashed var(--axis);border-radius:var(--radius);padding:14px;color:var(--muted);background:var(--surface)}
+.rec{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.rec .rh{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.rec h3{margin:0}
+.rec dl{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;margin:12px 0 0;font-size:14px}
+.rec dt{color:var(--muted)}
+.rec dd{margin:0;color:var(--text-2)}
+.prio-h{background:rgba(208,59,59,.15);color:#f09a9a}
+.prio-m{background:rgba(250,178,25,.13);color:#fad27a}
+.prio-l{background:rgba(57,135,229,.14);color:#9ec5f4}
+.cal{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.cal .day{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.cal .day.off{opacity:.6}
+.cal .day h4{margin:0 0 6px;font-size:15px}
+.cal .time{font-size:18px;font-weight:700;direction:ltr;text-align:right}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 12px}
+.modal-bg.on{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;max-width:640px;width:100%;padding:20px;position:relative}
+.modal .x{position:absolute;left:12px;top:12px;background:var(--surface-3);border:0;color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px}
+.small{font-size:12px;color:var(--muted)}
+.muted{color:var(--muted)}
+.bar-inline{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;min-width:60px}
+.bar-inline i{display:block;height:100%;background:var(--s1);border-radius:3px}
+footer{margin-top:32px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);padding-top:12px}
+@media (max-width:640px){
+  .kpi .val{font-size:22px}
+  .rec dl{grid-template-columns:1fr}
+  .rec dt{margin-top:6px}
+  h2{font-size:18px}
+  .chart-box{height:230px}
+  header.top{position:static}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-inner">
+  <div class="title-row">
+    <h1>داشبورد انستقرام — أسس المسافر <span class="small">@osusalmosafer</span></h1>
+    <div class="sub" id="subline"></div>
+  </div>
+  <nav class="tabs" id="tabs"></nav>
+</div></header>
+<main class="wrap" id="main"></main>
+<div class="modal-bg" id="modalbg"><div class="modal"><button class="x" id="modalx" aria-label="إغلاق">×</button><div id="modalbody"></div></div></div>
+
+<script>
+const D = /*DATA*/null;
+(function(){
+"use strict";
+/* ---------- helpers ---------- */
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nf = n=>n==null?"—":Math.round(n).toLocaleString("en-US");
+const nd = (n,d=1)=>n==null?"—":Number(n).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const pc = (x,d=1)=>x==null?"—":nd(x*100,d)+"%";
+const rr = x=>`<bdi dir="ltr">r = ${nd(x,2)}</bdi>`;
+const sum = a=>a.reduce((s,x)=>s+x,0);
+const median = a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;if(!n)return null;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2};
+const mean = a=>a.length?sum(a)/a.length:null;
+const corr=(a,b)=>{const ma=mean(a),mb=mean(b);let sxy=0,sxx=0,syy=0;a.forEach((x,i)=>{sxy+=(x-ma)*(b[i]-mb);sxx+=(x-ma)**2;syy+=(b[i]-mb)**2});return sxy/Math.sqrt(sxx*syy)};
+const WD=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const dstr = iso=>iso.slice(0,10);
+const hhmm = iso=>iso.slice(11,16);
+
+const P = D.posts;
+P.forEach(p=>{
+  p.er = p.reach? p.eng/p.reach : 0;
+  p.shareRate = p.reach? p.shares/p.reach : 0;
+  p.saveRate = p.reach? p.saves/p.reach : 0;
+  p.watchS = p.avgWatch/1000;
+  p.title = p.cap.length>90? p.cap.slice(0,88)+"…" : p.cap;
+  p.hasCta = /الرابط|واتساب|احجز|للحجز|للاستفسار|شارك|احفظ/.test(p.cap);
+});
+const CAT = D.cats;
+const CATMETA = {A:["M9","Tutorial"],B:["M10","Listicle"],C:["M9","Demo"],D:null,E:null};
+
+/* ---------- global stats ---------- */
+const S = {};
+S.n = P.length;
+S.views = sum(P.map(p=>p.views)); S.reach = sum(P.map(p=>p.reach)); S.eng = sum(P.map(p=>p.eng));
+S.er = S.eng/S.reach;
+S.medReach = median(P.map(p=>p.reach)); S.medViews = median(P.map(p=>p.views));
+S.meanReach = mean(P.map(p=>p.reach));
+S.medSkip = median(P.map(p=>p.skip)); S.medWatch = median(P.map(p=>p.watchS));
+S.medEr = median(P.map(p=>p.er)); S.medShare = median(P.map(p=>p.shareRate)); S.medSave = median(P.map(p=>p.saveRate));
+S.rSkip = corr(P.map(p=>p.skip),P.map(p=>p.reach));
+S.rWatch = corr(P.map(p=>p.watchS),P.map(p=>p.reach));
+S.rSkipLog = corr(P.map(p=>p.skip),P.map(p=>Math.log(p.reach)));
+S.rWatchLog = corr(P.map(p=>p.watchS),P.map(p=>Math.log(p.reach)));
+S.best = P.reduce((a,b)=>b.reach>a.reach?b:a);
+S.followers = D.profile.followers_count;
+S.newF30 = sum(D.daily.map(d=>d.newFollowers));
+S.taps30 = sum(D.daily.map(d=>d.taps));
+S.reach30 = sum(D.daily.map(d=>d.reach));
+S.first = dstr(P[0].utc); S.last = dstr(P[P.length-1].utc);
+// windows relative to last post date
+const lastT = new Date(P[P.length-1].utc).getTime(), DAY=864e5;
+const inWin = (p,from,to)=>{const t=new Date(p.utc).getTime();return t>lastT-to*DAY && t<=lastT-from*DAY+DAY};
+S.recent = P.filter(p=>new Date(p.utc).getTime()>lastT-30*DAY);
+S.prev = P.filter(p=>{const t=new Date(p.utc).getTime();return t<=lastT-30*DAY && t>lastT-60*DAY});
+// categories
+S.cats = Object.keys(CAT).map(k=>{
+  const a=P.filter(p=>p.cat===k);
+  return {k,name:CAT[k],n:a.length,posts:a,medReach:median(a.map(p=>p.reach)),sumViews:sum(a.map(p=>p.views)),
+    sumReach:sum(a.map(p=>p.reach)),medEr:median(a.map(p=>p.er)),medShare:median(a.map(p=>p.shareRate)),
+    medSave:median(a.map(p=>p.saveRate)),medWatch:median(a.map(p=>p.watchS)),medSkip:median(a.map(p=>p.skip)),
+    max:Math.max(...a.map(p=>p.reach)),over5k:a.filter(p=>p.reach>=5000).length};
+});
+S.catBy = Object.fromEntries(S.cats.map(c=>[c.k,c]));
+// weekday / hour (KSA = UTC+3)
+S.wd = WD.map((name,i)=>{const a=P.filter(p=>p.wd===i);return {i,name,n:a.length,med:median(a.map(p=>p.reach)),sumReach:sum(a.map(p=>p.reach))}});
+S.hr = Array.from({length:24},(_,h)=>{const a=P.filter(p=>p.hr===h);return {h,n:a.length,med:median(a.map(p=>p.reach))}});
+// weeks (Sun-start, KSA)
+const wkStart = p=>{const d=new Date(p.ksa.slice(0,10)+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-d.getUTCDay());return d.toISOString().slice(0,10)};
+const wkMap={}; P.forEach(p=>{(wkMap[wkStart(p)]=wkMap[wkStart(p)]||[]).push(p)});
+S.weeks = Object.keys(wkMap).sort().map(k=>({k,n:wkMap[k].length,med:median(wkMap[k].map(p=>p.reach)),sumReach:sum(wkMap[k].map(p=>p.reach))}));
+// audience
+const A = D.audience;
+const topN=(o,n)=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n);
+S.countrySum = sum(Object.values(A.country));
+const CN={SA:"السعودية",MA:"المغرب",OM:"عُمان",EG:"مصر",IQ:"العراق",KW:"الكويت",DZ:"الجزائر",AE:"الإمارات",JO:"الأردن",SY:"سوريا",BH:"البحرين",FR:"فرنسا",YE:"اليمن",IL:"إسرائيل",LY:"ليبيا",LB:"لبنان",TN:"تونس",QA:"قطر",BE:"بلجيكا",PS:"فلسطين",DE:"ألمانيا",TR:"تركيا"};
+const CITYN={Riyadh:"الرياض",Jeddah:"جدة",Mecca:"مكة",Amman:"عمّان",Casablanca:"الدار البيضاء",Baghdad:"بغداد",Cairo:"القاهرة","Abu Dhabi":"أبوظبي","Algiers":"الجزائر العاصمة","Al-Sib (Muscat)":"السيب (مسقط)",Medina:"المدينة",Dubai:"دبي",Sharjah:"الشارقة",Dammam:"الدمام",Damascus:"دمشق",Tangier:"طنجة",Muscat:"مسقط"};
+
+/* ---------- Meta criteria (from meta-criteria.md; source PDF page in brackets) ---------- */
+const META = {
+ M1:{p:"12، 14",t:"بنية الريل: تلتقط الانتباه (الخطّاف في أول ثوانٍ)، تحافظ عليه (شيء مفيد/ذو صلة)، تكافئه (payoff أو دعوة لإجراء)."},
+ M2:{p:"14",t:"خمس طرق لالتقاط الانتباه: صوت لافت، إشراك الجمهور، معرفة مفيدة، إثارة الفضول، موقف مألوف."},
+ M3:{p:"15",t:"للحفاظ على الانتباه: «ابدأ بما يريد جمهورك أن يعرفه، لا بما تريد أنت أن تقوله». أرِ كيف يعمل الشيء وسهّل فهمه."},
+ M4:{p:"17",t:"للمكافأة: ختام بالمنتج/العلامة، دعوة لرأي الجمهور، رسم متحرك يوجّه لزر الإجراء، أو لمسة فكاهة."},
+ M5:{p:"9",t:"65% من الريلز العضوية تستخدم نصاً فوق الفيديو؛ النص/الستيكر سجّل +11 نقطة استجابة إيجابية."},
+ M6:{p:"8",t:"الإشارات الصوتية للعلامة رفعت الاستجابة الإيجابية +22 نقطة."},
+ M7:{p:"10",t:"ريلز الإعلانات بحضور بشري حققت CTR أعلى بنسبة 27%."},
+ M8:{p:"42",t:"فيديو 9:16 (+7 نقاط)، صوت موسيقى + تعليق (+15 نقطة)، احترام المنطقة الآمنة (CTR أعلى 39%)."},
+ M9:{p:"29",t:"نوع القصة Tutorial: شارك معرفة أو بسّط شيئاً معقداً. الريلز التي تعرض Demo للمنتج سجلت +7 نقاط."},
+ M10:{p:"27",t:"نوع القصة Listicle: نص فوق الفيديو يقسّم المحتوى إلى نقاط قصيرة."},
+ M11:{p:"24–32",t:"ثمانية أنواع قصص: Photodump, Types-of, Listicle, Transition, Before & After, POV, Tutorial, Behind the Scenes."},
+ M13:{p:"71–75",t:"اختبار A/B لمدة أسبوعين، مع تثبيت باقي المتغيرات (ميزانية، توقيت، موضع) وفرضية واضحة."},
+ M15:{p:"78",t:"أضف Reels إلى استراتيجيتك الحالية ولا تستبدلها؛ الخطوة الأولى: فيديو 9:16 مع صوت."}
+};
+const crit = (...ks)=>ks.map(k=>`<button class="crit" data-m="${k}" title="معيار ميتا — ص${META[k].p}">${k} · ص${META[k].p}</button>`).join("");
+const NOMETA = `<span class="tag warn">غير متوفر في ملف ميتا</span>`;
+const CAVEAT = `أرقام ميتا مأخوذة من دراسات على إعلانات Reels (استجابة إيجابية وCTR)، وليست مقاييس وصول عضوي.`;
+const linkP = p=>`<a href="${p.url}" target="_blank" rel="noopener">${esc(p.title)}</a>`;
+
+/* ---------- chart defaults ---------- */
+Chart.defaults.color="#c3c2b7";
+Chart.defaults.font.family='"IBM Plex Sans Arabic",system-ui,sans-serif';
+Chart.defaults.borderColor="#2c2c2a";
+Chart.defaults.plugins.legend.labels.boxWidth=10;
+Chart.defaults.plugins.tooltip.rtl=true;
+Chart.defaults.plugins.tooltip.textDirection="rtl";
+const charts=[];
+function mk(id,cfg){const el=document.getElementById(id);if(!el)return;cfg.options=Object.assign({responsive:true,maintainAspectRatio:false},cfg.options||{});charts.push(new Chart(el,cfg));}
+const barOpts=(extra={})=>Object.assign({plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:"#2c2c2a"}}}},extra);
+
+/* ---------- table helper ---------- */
+function sortable(tblId, cols, rows, defKey, defDir=-1){
+  let key=defKey, dir=defDir;
+  const wrap=$("#"+tblId);
+  function draw(){
+    const r=[...rows].sort((a,b)=>{const x=cols.find(c=>c.k===key).v(a),y=cols.find(c=>c.k===key).v(b);return (typeof x==="string"?x.localeCompare(y):x-y)*dir});
+    wrap.innerHTML=`<table><thead><tr>${cols.map(c=>`<th class="sortable ${c.num?"num":""}" data-k="${c.k}">${c.h}${c.k===key?`<span class="arrow">${dir<0?"▼":"▲"}</span>`:""}</th>`).join("")}</tr></thead><tbody>${r.map(x=>`<tr>${cols.map(c=>`<td class="${c.num?"num":""} ${c.cls||""}">${c.f?c.f(x):c.v(x)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+    wrap.querySelectorAll("th.sortable").forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k===key)dir=-dir;else{key=k;dir=-1}draw()});
+  }
+  draw();
+}
+
+/* ---------- tabs ---------- */
+const TABS=[["overview","نظرة عامة"],["compare","الريلز مقابل الكاروسيل"],["results","شنو ضرب وشنو ما ضرب"],["viral","تحليل الفيروسية"],["plan","خطة النشر"],["recs","توصيات عملية"]];
+$("#subline").textContent=`آخر سحب من Windsor: ${D.pulledAt} · المنشورات من ${S.first} إلى ${S.last}`;
+$("#tabs").innerHTML=TABS.map(([k,n],i)=>`<button data-t="${k}" class="${i?"":"on"}">${n}</button>`).join("");
+$("#main").innerHTML=TABS.map(([k],i)=>`<section class="tab ${i?"":"on"}" id="t-${k}"></section>`).join("")+
+ `<footer>المصدر الأول: بيانات Windsor.ai (موصّل instagram، حساب osusalmosafer). المصدر الثاني: ملف ميتا «Real Talk Creative Playbook» — رموز M1…M15 تشير إلى صفحاته (انظر meta-criteria.md). لا توجد أرقام تقديرية: أي بيانات غير متاحة مكتوب أمامها «غير متوفر».</footer>`;
+const built={};
+function show(k){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===k));
+  document.querySelectorAll("section.tab").forEach(s=>s.classList.toggle("on",s.id==="t-"+k));
+  if(!built[k]){built[k]=1;R[k]();}
+  history.replaceState(null,"","#"+k);
+}
+$("#tabs").onclick=e=>{const b=e.target.closest("button");if(b)show(b.dataset.t)};
+document.addEventListener("click",e=>{
+  const c=e.target.closest(".crit");
+  if(c){const m=META[c.dataset.m];$("#modalbody").innerHTML=`<h3>${c.dataset.m} — ملف ميتا، صفحة ${m.p}</h3><p>${m.t}</p><div class="note">${CAVEAT}</div>`;$("#modalbg").classList.add("on")}
+  if(e.target.id==="modalbg"||e.target.id==="modalx")$("#modalbg").classList.remove("on");
+});
+
+const kpi=(label,val,delta,src)=>`<div class="card kpi"><div class="label">${label}</div><div class="val">${val}</div>${delta?`<div class="delta ${delta[0]}">${delta[1]}</div>`:""}<span class="src">${src}</span></div>`;
+const chg=(a,b)=>{if(!b)return ["na","لا توجد فترة سابقة"];const d=(a-b)/b;return [d>=0?"up":"down",`${d>=0?"▲":"▼"} ${nd(Math.abs(d)*100,0)}% عن الفترة السابقة`]};
+
+const chg2=(a,b)=>{if(!b)return ["na","لا توجد فترة سابقة"];const d=(a-b)/b;return [d>=0?"up":"down",`${d>=0?"▲":"▼"} ${nd(Math.abs(d)*100,0)}% (السابقة: ${nf(b)})`]};
+const R={};
+
+/* ===================== 1) OVERVIEW ===================== */
+R.overview=function(){
+  const r=S.recent,pv=S.prev;
+  const rMed=median(r.map(p=>p.reach)),pMed=median(pv.map(p=>p.reach));
+  const rViews=sum(r.map(p=>p.views)),pViews=sum(pv.map(p=>p.views));
+  const bestCat=[...S.cats].filter(c=>c.n>=3).sort((a,b)=>b.medReach-a.medReach)[0];
+  $("#t-overview").innerHTML=`
+  <h2>نظرة عامة</h2>
+  <p class="lead">${S.n} منشوراً في بيانات Windsor (من ${S.first} إلى ${S.last}) — <strong>كلها Reels</strong>: لم يُرجع الكونكتور أي Carousel أو صورة ثابتة، ولا Stories (نتيجة فارغة لآخر 30 يوماً).</p>
+  <div class="grid kpis">
+   ${kpi("المشاهدات (مجموع المنشورات)",nf(S.views),null,"Windsor · media_views")}
+   ${kpi("وصول المنشورات (مجموع)",nf(S.reach),null,"Windsor · media_reach — قد يتكرر الحساب نفسه بين منشورات")}
+   ${kpi("التفاعل الكلي",nf(S.eng),null,"Windsor · media_engagement (إعجاب+تعليق+حفظ+مشاركة+إعادة نشر)")}
+   ${kpi("معدل التفاعل (تفاعل ÷ وصول)",pc(S.er),null,"محسوب: مجموع media_engagement ÷ مجموع media_reach")}
+   ${kpi("وسيط الوصول للمنشور",nf(S.medReach),null,`المتوسط ${nf(S.meanReach)} — متأثر بمنشورات قليلة شديدة النجاح`)}
+   ${kpi("المتابعون",nf(S.followers),null,"Windsor · followers_count (لقطة اليوم)")}
+   ${kpi("متابعون جدد (آخر 30 يوماً)",nf(S.newF30),null,"Windsor · follower_count_1d مجموع 30 يوماً (إضافات إجمالية دون خصم إلغاء المتابعة)")}
+   ${kpi("نقرات روابط البروفايل (30 يوماً)",nf(S.taps30),null,"Windsor · profile_links_taps")}
+   ${kpi("أفضل نوع محتوى","Reels",null,"النوع الوحيد في البيانات")}
+   ${kpi("أفضل نمط داخل الريلز",esc(bestCat.name),null,`وسيط وصول ${nf(bestCat.medReach)} (${bestCat.n} منشورات) — تصنيف يدوي من الكابشن`)}
+  </div>
+  <h3 style="margin-top:22px">آخر 30 يوماً مقابل الـ30 يوماً السابقة (حسب تاريخ النشر)</h3>
+  <div class="grid kpis">
+   ${kpi("عدد المنشورات (آخر 30 يوماً)",nf(r.length),chg2(r.length,pv.length),"Windsor · timestamp")}
+   ${kpi("وسيط الوصول للمنشور",nf(rMed),chg2(rMed,pMed),"Windsor · media_reach")}
+   ${kpi("مجموع المشاهدات",nf(rViews),chg2(rViews,pViews),"Windsor · media_views")}
+  </div>
+  <div class="note">لا توجد منشورات قبل ${S.first} في البيانات المسحوبة رغم أن نافذة السحب 90 يوماً؛ لذلك «الفترة السابقة» هنا هي الـ30 يوماً التي تسبق آخر 30 يوماً داخل البيانات المتاحة فقط.</div>
+  <div class="grid two" style="margin-top:12px">
+   <div class="card"><h3>وصول كل منشور حسب تاريخ النشر</h3><div class="chart-box tall"><canvas id="c-reach"></canvas></div><span class="src">Windsor · media_reach · التاريخ بتوقيت السعودية</span></div>
+   <div class="card"><h3>الحساب يومياً — وصول ومشاهدات (آخر 30 يوماً)</h3><div class="legend"><span><i style="background:var(--s1)"></i>الوصول</span><span><i style="background:var(--s2)"></i>المشاهدات</span></div><div class="chart-box tall"><canvas id="c-daily"></canvas></div><span class="src">Windsor · reach_1d, views · تشمل المنشورات القديمة أيضاً</span></div>
+   <div class="card"><h3>الفئة العمرية للمتابعين</h3><div class="chart-box"><canvas id="c-age"></canvas></div><span class="src">Windsor · audience_age_size · لقطة (مجموع ${nf(sum(Object.values(A.age)))} متابع مصنّف)</span></div>
+   <div class="card"><h3>الجنس</h3><div class="chart-box"><canvas id="c-gender"></canvas></div><span class="src">Windsor · audience_gender_size — F إناث · M ذكور · U غير محدد</span></div>
+   <div class="card"><h3>أكثر الدول (متابعون)</h3><div class="chart-box tall"><canvas id="c-country"></canvas></div><span class="src">Windsor · audience_country_size</span></div>
+   <div class="card"><h3>أكثر المدن (متابعون)</h3><div class="chart-box tall"><canvas id="c-city"></canvas></div><span class="src">Windsor · audience_city_size</span></div>
+  </div>`;
+  mk("c-reach",{type:"bar",data:{labels:P.map(p=>dstr(p.ksa)),datasets:[{data:P.map(p=>p.reach),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:14}]},
+    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>P[i[0].dataIndex].title,afterTitle:i=>{const p=P[i[0].dataIndex];return dstr(p.ksa)+" "+hhmm(p.ksa)+" · "+CAT[p.cat]},label:c=>"وصول: "+nf(c.raw)}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8}},y:{beginAtZero:true,grid:{color:"#2c2c2a"}}}})});
+  const dd=D.daily;
+  mk("c-daily",{type:"line",data:{labels:dd.map(d=>d.date.slice(5)),datasets:[
+    {label:"الوصول",data:dd.map(d=>d.reach),borderColor:"#3987e5",backgroundColor:"#3987e5",borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.25},
+    {label:"المشاهدات",data:dd.map(d=>d.views),borderColor:"#d95926",backgroundColor:"#d95926",borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.25}]},
+    options:{interaction:{mode:"index",intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8}},y:{beginAtZero:true,grid:{color:"#2c2c2a"}}}}});
+  const ages=Object.entries(A.age);
+  mk("c-age",{type:"bar",data:{labels:ages.map(a=>a[0]),datasets:[{data:ages.map(a=>a[1]),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:36}]},options:barOpts()});
+  const gs=[["إناث",A.gender.F],["ذكور",A.gender.M],["غير محدد",A.gender.U]];
+  mk("c-gender",{type:"bar",data:{labels:gs.map(g=>g[0]),datasets:[{data:gs.map(g=>g[1]),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:48}]},options:barOpts()});
+  const cs=topN(A.country,10);
+  mk("c-country",{type:"bar",data:{labels:cs.map(c=>CN[c[0]]||c[0]),datasets:[{data:cs.map(c=>c[1]),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:18}]},options:barOpts({indexAxis:"y",scales:{x:{beginAtZero:true,grid:{color:"#2c2c2a"}},y:{grid:{display:false}}}})});
+  const ct=topN(A.city,10);
+  mk("c-city",{type:"bar",data:{labels:ct.map(c=>CITYN[c[0]]||c[0]),datasets:[{data:ct.map(c=>c[1]),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:18}]},options:barOpts({indexAxis:"y",scales:{x:{beginAtZero:true,grid:{color:"#2c2c2a"}},y:{grid:{display:false}}}})});
+};
+
+/* ===================== 2) COMPARE ===================== */
+R.compare=function(){
+  const reels=P;
+  const row=(name,n,extra)=>`<tr><td>${name}</td><td class="num">${n}</td>${extra}</tr>`;
+  const na=`<td class="num muted" colspan="6">لا منشورات في البيانات — غير متوفر</td>`;
+  $("#t-compare").innerHTML=`
+  <h2>الريلز مقابل الكاروسيل والصور الثابتة</h2>
+  <div class="note bad"><strong>لا يمكن إجراء هذه المقارنة على هذا الحساب.</strong> كل الـ${S.n} منشوراً المسحوبة (media_type = REELS) ريلز. لم يُرجع Windsor أي منشور Carousel أو صورة ثابتة، ولا Stories. لن أقدّر أرقاماً لأنواع لم تُنشر.
+  كذلك ملف ميتا لا يقارن Reels بـ Carousel أو الصور؛ أقرب ما فيه: «أضف Reels إلى استراتيجيتك ولا تستبدلها» ${crit("M15")} — وهو في سياق الإعلانات.</div>
+  <div class="table-wrap"><table><thead><tr><th>النوع</th><th class="num">منشورات</th><th class="num">وسيط الوصول</th><th class="num">وسيط الحفظ</th><th class="num">وسيط المشاركة</th><th class="num">وسيط معدل التفاعل</th><th class="num">متابعون جدد لكل منشور</th></tr></thead><tbody>
+   <tr><td><strong>Reels</strong></td><td class="num">${reels.length}</td><td class="num">${nf(S.medReach)}</td><td class="num">${pc(S.medSave,2)}</td><td class="num">${pc(S.medShare,2)}</td><td class="num">${pc(S.medEr)}</td><td class="num muted">غير متوفر (media_follows فارغ للريلز)</td></tr>
+   ${row("Carousel",0,na)}${row("صورة ثابتة",0,na)}${row("Stories",0,na)}
+  </tbody></table></div>
+  <span class="src">Windsor · media_type, media_reach, media_saved, media_shares, media_engagement. الحفظ والمشاركة كنسبة من الوصول.</span>
+  <h3 style="margin-top:22px">البديل الممكن: مقارنة أنماط القصة داخل الريلز</h3>
+  <p class="lead">تصنيف يدوي لكل ريل من نص الكابشن إلى خمسة أنماط، وربط ما أمكن بأنواع القصص في ملف ميتا ${crit("M11")}. ليس تصنيفاً من انستقرام؛ راجعه وعدّله في <code>build.py</code> إن اختلفت قراءتك.</p>
+  <div class="grid two">
+   <div class="card"><h3>وسيط الوصول لكل نمط</h3><div class="chart-box"><canvas id="c-cat"></canvas></div><span class="src">Windsor · media_reach · وسيط لتقليل أثر المنشورات الاستثنائية</span></div>
+   <div class="card"><h3>حصة كل نمط من مجموع المشاهدات</h3><div class="chart-box"><canvas id="c-catshare"></canvas></div><span class="src">Windsor · media_views</span></div>
+  </div>
+  <div class="table-wrap" style="margin-top:12px" id="cattbl"></div>
+  <div class="note info">ما يقوله الملف هنا: نمط <strong>Tutorial</strong> ${crit("M9")} (مشاركة معرفة + عرض عملي) و<strong>Listicle</strong> ${crit("M10")}. نمطا «استعراض فندق» و«عرض سعر مباشر» لا يطابقان نوع قصة محدداً في الملف، وأقرب قاعدة تخصهما هي ${crit("M3")}: ابدأ بما يريد الجمهور معرفته لا بما تريد قوله. ${CAVEAT}</div>`;
+  mk("c-cat",{type:"bar",data:{labels:S.cats.map(c=>c.name),datasets:[{data:S.cats.map(c=>c.medReach),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:44}]},
+    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>"وسيط الوصول: "+nf(c.raw),afterLabel:c=>"عدد المنشورات: "+S.cats[c.dataIndex].n}}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:0,callback:function(v){const l=this.getLabelForValue(v);return l.length>14?l.split(" "):l}}},y:{beginAtZero:true,grid:{color:"#2c2c2a"}}}})});
+  mk("c-catshare",{type:"bar",data:{labels:S.cats.map(c=>c.name),datasets:[{data:S.cats.map(c=>c.sumViews/S.views*100),backgroundColor:"#199e70",borderRadius:3,maxBarThickness:44}]},
+    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>nd(c.raw)+"% من المشاهدات ("+nf(S.cats[c.dataIndex].sumViews)+")"}}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:0,callback:function(v){const l=this.getLabelForValue(v);return l.length>14?l.split(" "):l}}},y:{beginAtZero:true,grid:{color:"#2c2c2a"},ticks:{callback:v=>v+"%"}}}})});
+  sortable("cattbl",[
+    {k:"name",h:"النمط",v:c=>c.name,f:c=>esc(c.name)},
+    {k:"meta",h:"ما يقابله في ميتا",v:c=>c.k,f:c=>CATMETA[c.k]?crit(CATMETA[c.k][0])+" "+CATMETA[c.k][1]:NOMETA},
+    {k:"n",h:"منشورات",num:1,v:c=>c.n},
+    {k:"med",h:"وسيط الوصول",num:1,v:c=>c.medReach,f:c=>nf(c.medReach)},
+    {k:"max",h:"أعلى وصول",num:1,v:c=>c.max,f:c=>nf(c.max)},
+    {k:"o5",h:"منشورات بوصول 5,000+",num:1,v:c=>c.over5k},
+    {k:"er",h:"وسيط معدل التفاعل",num:1,v:c=>c.medEr,f:c=>pc(c.medEr)},
+    {k:"sv",h:"وسيط الحفظ/وصول",num:1,v:c=>c.medSave,f:c=>pc(c.medSave,2)},
+    {k:"sh",h:"وسيط المشاركة/وصول",num:1,v:c=>c.medShare,f:c=>pc(c.medShare,2)},
+    {k:"w",h:"وسيط زمن المشاهدة (ث)",num:1,v:c=>c.medWatch,f:c=>nd(c.medWatch)},
+    {k:"sk",h:"وسيط التجاوز (3 ث)",num:1,v:c=>c.medSkip,f:c=>pc(c.medSkip)}
+  ],S.cats,"med");
+};
+
+/* ===================== 3) RESULTS ===================== */
+function reasons(p){
+  const L=[]; const dSkip=(p.skip-S.medSkip)*100, dW=p.watchS-S.medWatch;
+  L.push(`<li><strong>الخطّاف (أول 3 ثوانٍ):</strong> ${pc(p.skip)} تجاوزوا الريل مقابل وسيط الحساب ${pc(S.medSkip)} (${dSkip>=0?"+":""}${nd(dSkip)} نقطة) — ${Math.abs(dSkip)<3?"قريب من الوسيط":dSkip<0?"أفضل من الوسيط":"أضعف من الوسيط"} ${crit("M1")}.</li>`);
+  L.push(`<li><strong>الحفاظ على الانتباه:</strong> متوسط المشاهدة ${nd(p.watchS)} ثانية مقابل وسيط ${nd(S.medWatch)} (${dW>=0?"+":""}${nd(dW)} ث) — ${Math.abs(dW)<1?"قريب من الوسيط":dW>0?"أعلى من الوسيط":"أقل من الوسيط"} ${crit("M1","M3")}.</li>`);
+  const m=CATMETA[p.cat];
+  L.push(`<li><strong>نمط القصة:</strong> ${CAT[p.cat]} — ${m?`يقابل ${m[1]} في ميتا ${crit(m[0])}`:`لا يطابق نوع قصة في ملف ميتا؛ القاعدة الأقرب ${crit("M3")} (ابدأ بما يريد الجمهور معرفته)`}.</li>`);
+  L.push(`<li><strong>المكافأة/الدعوة لإجراء:</strong> ${p.hasCta?"الكابشن فيه دعوة (رابط/حجز/مشاركة/حفظ)":"لا دعوة صريحة في الكابشن"} ${crit("M4")} — التفاعل الفعلي: مشاركة ${pc(p.shareRate,2)} (وسيط ${pc(S.medShare,2)})، حفظ ${pc(p.saveRate,2)} (وسيط ${pc(S.medSave,2)}).</li>`);
+  return L.join("");
+}
+const NOTMEAS=`<li class="muted"><strong>غير قابل للقياس من البيانات:</strong> نص فوق الفيديو ${crit("M5")}، الصوت ${crit("M6","M8")}، الحضور البشري ${crit("M7")}، 9:16 والمنطقة الآمنة ${crit("M8")} — تُراجع يدوياً على الفيديو.</li>`;
+function vcard(p,rank,kind){
+  return `<div class="vcard"><div class="head"><div class="capt">${rank}. ${linkP(p)}</div><div><span class="tag ${kind}">${kind==="good"?"نجح":"لم ينجح"}</span> <span class="tag">${CAT[p.cat]}</span> <span class="tag">${dstr(p.ksa)} ${hhmm(p.ksa)}</span></div></div>
+   <div class="mets">
+    <div class="met"><b>${nf(p.reach)}</b><span>وصول (${nd(p.reach/S.medReach,1)}× الوسيط)</span></div>
+    <div class="met"><b>${nf(p.views)}</b><span>مشاهدات</span></div>
+    <div class="met"><b>${nf(p.eng)}</b><span>تفاعل (${pc(p.er)})</span></div>
+    <div class="met"><b>${nf(p.saves)}</b><span>حفظ</span></div>
+    <div class="met"><b>${nf(p.shares)}</b><span>مشاركة</span></div>
+    <div class="met"><b>${nd(p.watchS)} ث</b><span>متوسط المشاهدة</span></div>
+    <div class="met"><b>${pc(p.skip)}</b><span>تجاوز أول 3 ث</span></div>
+   </div>
+   <ul class="reasons">${reasons(p)}${NOTMEAS}</ul></div>`;
+}
+R.results=function(){
+  const byR=[...P].sort((a,b)=>b.reach-a.reach);
+  const top=byR.slice(0,5), bot=byR.slice(-5).reverse();
+  $("#t-results").innerHTML=`
+  <h2>شنو ضرب وشنو ما ضرب</h2>
+  <p class="lead">الترتيب حسب الوصول (media_reach). التفسير يربط كل رقم فعلي بمعيار ميتا المحدد؛ وحيث يعجز الملف أو البيانات عن التفسير أقول ذلك صراحة.</p>
+  <div class="note info"><strong>قراءة الارتباط في هذا الحساب (${S.n} منشوراً):</strong> معدل التجاوز في أول 3 ثوانٍ لا يفسّر الوصول تقريباً (${rr(S.rSkip)}؛ على لوغاريتم الوصول ${nd(S.rSkipLog,2)}) بينما متوسط زمن المشاهدة أقوى ارتباطاً (${rr(S.rWatch)}؛ على اللوغاريتم ${nd(S.rWatchLog,2)}). هذا يعني أن معيار الخطّاف ${crit("M1")} وحده لا يكفي لتفسير ما ضرب هنا، وأن الأثر الأوضح هو <strong>الحفاظ على الانتباه</strong> ${crit("M3")}. العينة صغيرة والارتباط لا يثبت سببية.</div>
+  <h3>الأفضل أداءً (أعلى 5 وصولاً)</h3>
+  ${top.map((p,i)=>vcard(p,i+1,"good")).join("")}
+  <h3 style="margin-top:22px">الأسوأ أداءً (أدنى 5 وصولاً)</h3>
+  ${bot.map((p,i)=>vcard(p,i+1,"bad")).join("")}
+  <div class="note">تنبيه: ${bot.filter(p=>new Date(p.utc).getTime()>lastT-12*DAY).length} من أدنى 5 منشورات نُشرت في آخر 12 يوماً من البيانات، وقد لا تكون اكتملت دورة توزيعها؛ قارنها بحذر.</div>
+  <h3 style="margin-top:22px">كل المنشورات</h3>
+  <div class="toolbar"><input type="search" id="q" placeholder="ابحث في الكابشن…"><select id="fcat"><option value="">كل الأنماط</option>${Object.entries(CAT).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select><span class="small" id="cnt"></span></div>
+  <div class="table-wrap" id="alltbl"></div>`;
+  const cols=[
+    {k:"t",h:"التاريخ (السعودية)",v:p=>p.ksa,f:p=>dstr(p.ksa)+" "+hhmm(p.ksa)},
+    {k:"cap",h:"المنشور",cls:"cap",v:p=>p.cap,f:p=>linkP(p)},
+    {k:"cat",h:"النمط",v:p=>p.cat,f:p=>CAT[p.cat]},
+    {k:"reach",h:"وصول",num:1,v:p=>p.reach,f:p=>nf(p.reach)},
+    {k:"views",h:"مشاهدات",num:1,v:p=>p.views,f:p=>nf(p.views)},
+    {k:"eng",h:"تفاعل",num:1,v:p=>p.eng,f:p=>nf(p.eng)},
+    {k:"er",h:"معدل التفاعل",num:1,v:p=>p.er,f:p=>pc(p.er)},
+    {k:"saves",h:"حفظ",num:1,v:p=>p.saves},
+    {k:"shares",h:"مشاركة",num:1,v:p=>p.shares},
+    {k:"w",h:"متوسط المشاهدة (ث)",num:1,v:p=>p.watchS,f:p=>nd(p.watchS)},
+    {k:"skip",h:"تجاوز 3 ث",num:1,v:p=>p.skip,f:p=>pc(p.skip)}
+  ];
+  const draw=()=>{const q=$("#q").value.trim(),c=$("#fcat").value;const rows=P.filter(p=>(!c||p.cat===c)&&(!q||p.cap.includes(q)));$("#cnt").textContent=rows.length+" منشور";sortable("alltbl",cols,rows,"reach")};
+  $("#q").oninput=draw;$("#fcat").onchange=draw;draw();
+};
+
+/* ===================== 4) VIRAL ===================== */
+R.viral=function(){
+  const byR=[...P].sort((a,b)=>b.reach-a.reach);
+  const thr=S.medReach*5;
+  const brk=P.filter(p=>p.reach>=thr);
+  $("#t-viral").innerHTML=`
+  <h2>تحليل الفيروسية</h2>
+  <div class="na-box"><strong>حدود المحتوى الفيروسي غير متوفرة في ملف ميتا.</strong> الملف لا يذكر أي حد للمشاهدات أو نسبة الحفظ أو المشاركة يُعتبر «فيروسياً» ${NOMETA}. لذلك لا أستطيع حساب «المسافة من الحد الفيروسي» كما طلب البرومبت دون اختلاق رقم. بدلاً منه أقيس كل منشور مقابل <strong>معايير داخلية من أرقام الحساب نفسه</strong> (وليست من ميتا):</div>
+  <ul>
+   <li>وسيط الوصول للمنشور = ${nf(S.medReach)}؛ «منشور اختراق» (تعريف داخلي مني) = وصول بمقدار 5 أضعاف الوسيط أو أكثر = ${nf(thr)}.</li>
+   <li>أفضل منشور في الحساب: ${linkP(S.best)} بوصول ${nf(S.best.reach)} = ${nd(S.best.reach/S.followers,1)}× عدد المتابعين (${nf(S.followers)}).</li>
+   <li>عدد منشورات الاختراق: <strong>${brk.length} من ${S.n}</strong> (${pc(brk.length/S.n,0)}) — وهي مسؤولة عن ${pc(sum(brk.map(p=>p.reach))/S.reach,0)} من مجموع وصول المنشورات.</li>
+  </ul>
+  <div class="grid two">
+   <div class="card"><h3>أعلى 12 منشوراً — النسبة من أفضل منشور</h3><div class="chart-box tall"><canvas id="c-vbest"></canvas></div><span class="src">محسوب: media_reach ÷ ${nf(S.best.reach)}</span></div>
+   <div class="card"><h3>الوصول مقابل معدل المشاركة</h3><div class="chart-box tall"><canvas id="c-vscat"></canvas></div><span class="src">Windsor · media_reach (محور سيني لوغاريتمي) و media_shares ÷ media_reach</span></div>
+  </div>
+  <div class="table-wrap" style="margin-top:12px" id="vtbl"></div>
+  <div class="note info">ما الذي يميّز منشورات الاختراق؟ في هذا الحساب أنماطها: ${[...new Set(brk.map(p=>CAT[p.cat]))].join("، ")}. معدل المشاركة فوق وسيط الحساب (${pc(S.medShare,2)}) في ${brk.filter(p=>p.shareRate>S.medShare).length} من ${brk.length} منها؛ وهذا متوافق مع القيمة العملية التي يقصدها ${crit("M3","M9")} (أرِ للجمهور ما يريد معرفته)، لكن الملف لا يربط هذه المقاييس بالانتشار العضوي ${NOMETA}.</div>`;
+  const t12=byR.slice(0,12);
+  mk("c-vbest",{type:"bar",data:{labels:t12.map(p=>p.title.slice(0,26)+(p.title.length>26?"…":"")),datasets:[{data:t12.map(p=>p.reach/S.best.reach*100),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:16}]},
+    options:barOpts({indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>t12[i[0].dataIndex].title,label:c=>nd(c.raw)+"% من أفضل منشور ("+nf(t12[c.dataIndex].reach)+" وصول)"}}},scales:{x:{beginAtZero:true,max:100,grid:{color:"#2c2c2a"},ticks:{callback:v=>v+"%"}},y:{grid:{display:false}}}})});
+  mk("c-vscat",{type:"scatter",data:{datasets:[{data:P.map(p=>({x:p.reach,y:p.shareRate*100,p})),backgroundColor:"#3987e5",borderColor:"#1a1a19",borderWidth:2,pointRadius:6,pointHoverRadius:8}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>i[0].raw.p.title,label:c=>"وصول "+nf(c.raw.x)+" · مشاركة "+nd(c.raw.y,2)+"%"}}},scales:{x:{type:"logarithmic",title:{display:true,text:"الوصول (لوغاريتمي)"},grid:{color:"#2c2c2a"}},y:{beginAtZero:true,title:{display:true,text:"مشاركات ÷ وصول (%)"},grid:{color:"#2c2c2a"}}}}});
+  sortable("vtbl",[
+    {k:"cap",h:"المنشور",cls:"cap",v:p=>p.cap,f:p=>linkP(p)},
+    {k:"reach",h:"وصول",num:1,v:p=>p.reach,f:p=>nf(p.reach)},
+    {k:"x",h:"× الوسيط",num:1,v:p=>p.reach/S.medReach,f:p=>nd(p.reach/S.medReach,1)+"×"},
+    {k:"f",h:"وصول ÷ متابعين",num:1,v:p=>p.reach/S.followers,f:p=>nd(p.reach/S.followers,1)+"×"},
+    {k:"b",h:"% من الأفضل",num:1,v:p=>p.reach/S.best.reach,f:p=>pc(p.reach/S.best.reach,0)},
+    {k:"sh",h:"مشاركة/وصول",num:1,v:p=>p.shareRate,f:p=>pc(p.shareRate,2)},
+    {k:"sv",h:"حفظ/وصول",num:1,v:p=>p.saveRate,f:p=>pc(p.saveRate,2)},
+    {k:"br",h:"اختراق (5× الوسيط+)",v:p=>p.reach>=thr?1:0,f:p=>p.reach>=thr?`<span class="tag good">نعم</span>`:`<span class="tag">لا</span>`}
+  ],P,"reach");
+};
+
+/* ===================== 5) PLAN ===================== */
+R.plan=function(){
+  const enough=S.wd.filter(d=>d.n>=5).sort((a,b)=>b.med-a.med);
+  const rank=Object.fromEntries(enough.map((d,i)=>[d.i,i]));
+  const h2021=S.hr.filter(h=>h.h===20||h.h===21).reduce((s,h)=>s+h.n,0);
+  const others=S.hr.filter(h=>h.h!==20&&h.h!==21&&h.n>0);
+  const plan={ [enough[0].i]:["A","دليل عملي"], [enough[1].i]:["A","دليل عملي"], [enough[2].i]:["B","قائمة/ترتيب"], [enough[3].i]:["C","إثبات مسافة/وقت المشي"], [enough[4].i]:["A","دليل عملي"] };
+  const days=WD.map((n,i)=>{
+    const d=S.wd[i]; const pl=plan[i];
+    if(pl) return `<div class="day"><h4>${n}</h4><div class="time">20:30</div><div><span class="tag good">ريل: ${pl[1]}</span></div><div class="small">وسيط وصول ${nf(d.med)} (${d.n} منشورات)</div></div>`;
+    return `<div class="day off"><h4>${n}</h4><div class="time">—</div><div><span class="tag warn">تجربة: كاروسيل أو صورة</span></div><div class="small">وسيط وصول الريلز ${d.med==null?"—":nf(d.med)} (${d.n} منشورات)</div></div>`;
+  }).join("");
+  $("#t-plan").innerHTML=`
+  <h2>خطة النشر</h2>
+  <div class="na-box"><strong>ملف ميتا لا يذكر أفضل أيام أو أوقات النشر ولا تكرار النشر الأمثل</strong> ${NOMETA}. وواجهة Windsor للحساب لا تُرجع «ساعات نشاط المتابعين». لذلك الخطة أدناه مبنية على أداء منشوراتك التاريخية فقط، وبما أن العينة صغيرة فهي فرضية للاختبار ${crit("M13")} وليست حقيقة.</div>
+  <div class="grid two" style="margin-top:12px">
+   <div class="card"><h3>وسيط الوصول حسب يوم النشر (بتوقيت السعودية)</h3><div class="chart-box"><canvas id="c-wd"></canvas></div><span class="src">Windsor · timestamp + media_reach · عدد المنشورات لكل يوم بين 5 و8 فقط</span></div>
+   <div class="card"><h3>عدد المنشورات حسب ساعة النشر (السعودية)</h3><div class="chart-box"><canvas id="c-hr"></canvas></div><span class="src">Windsor · timestamp</span></div>
+   <div class="card"><h3>المنشورات في كل أسبوع</h3><div class="chart-box"><canvas id="c-wkn"></canvas></div><span class="src">أسابيع تبدأ الأحد · Windsor · timestamp</span></div>
+   <div class="card"><h3>وسيط وصول المنشور في كل أسبوع</h3><div class="chart-box"><canvas id="c-wkm"></canvas></div><span class="src">Windsor · media_reach</span></div>
+  </div>
+  <div class="note"><strong>ما تقوله البيانات وما لا تقوله:</strong> ${h2021} من ${S.n} منشوراً (${pc(h2021/S.n,0)}) نُشرت بين 20:00 و21:59 بتوقيت السعودية، أما بقية الساعات فمجموع منشوراتها ${sum(others.map(h=>h.n))} موزعة على ${others.length} ساعات (منشور أو منشوران لكل ساعة)، فلا يمكن الحكم على أي وقت آخر. أعلى منشور في الحساب نُشر عند ${hhmm(S.best.ksa)} (${WD[S.best.wd]}) — حالة واحدة لا تكفي للاستنتاج. الفروق بين الأيام كبيرة التذبذب (وسيط يوم ${enough[0].name} ${nf(enough[0].med)} مقابل ${enough[enough.length-1].name} ${nf(enough[enough.length-1].med)}) ومبنية على ${enough[0].n}–${enough[enough.length-1].n} منشورات لكل يوم.</div>
+  <h3>جدول أسبوعي مقترح (فرضية للاختبار)</h3>
+  <p class="lead">أيام الريل الخمسة = الأيام ذات أعلى وسيط وصول في بياناتك (بين الأيام التي فيها 5 منشورات فأكثر). النمط المقترح لكل يوم من نتائج الأنماط في صفحة المقارنة. الكاروسيل/الصورة: لا توجد بيانات ولا معيار من ميتا؛ هي تجربة لجمع بيانات، وفق ${crit("M13")} (تجربة أسبوعين مع تثبيت باقي المتغيرات).</p>
+  <div class="cal">${days}</div>
+  <div class="note info">الساعة 20:30 هي الساعة التي نشرت فيها معظم منشوراتك (وليست مثبتة كأفضل ساعة). لاختبارها: انشر في أسبوعين متتاليين نمطاً واحداً في ساعتين مختلفتين (مثلاً 20:30 و13:00) وقارن الوصول ${crit("M13")}.</div>
+  <h3>الأسابيع</h3>
+  <div class="table-wrap"><table><thead><tr><th>بداية الأسبوع (أحد)</th><th class="num">منشورات</th><th class="num">وسيط الوصول</th><th class="num">مجموع الوصول</th></tr></thead><tbody>${S.weeks.map(w=>`<tr><td>${w.k}</td><td class="num">${w.n}</td><td class="num">${nf(w.med)}</td><td class="num">${nf(w.sumReach)}</td></tr>`).join("")}</tbody></table></div>`;
+  mk("c-wd",{type:"bar",data:{labels:S.wd.map(d=>d.name),datasets:[{data:S.wd.map(d=>d.med||0),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:36}]},
+    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>"وسيط الوصول: "+nf(c.raw),afterLabel:c=>"عدد المنشورات: "+S.wd[c.dataIndex].n}}}})});
+  const hrs=S.hr.filter(h=>h.n>0);
+  mk("c-hr",{type:"bar",data:{labels:hrs.map(h=>String(h.h).padStart(2,"0")+":00"),datasets:[{data:hrs.map(h=>h.n),backgroundColor:"#199e70",borderRadius:3,maxBarThickness:30}]},
+    options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+" منشوراً",afterLabel:c=>"وسيط الوصول: "+nf(hrs[c.dataIndex].med)}}}})});
+  mk("c-wkn",{type:"bar",data:{labels:S.weeks.map(w=>w.k.slice(5)),datasets:[{data:S.weeks.map(w=>w.n),backgroundColor:"#199e70",borderRadius:3,maxBarThickness:30}]},options:barOpts()});
+  mk("c-wkm",{type:"bar",data:{labels:S.weeks.map(w=>w.k.slice(5)),datasets:[{data:S.weeks.map(w=>w.med),backgroundColor:"#3987e5",borderRadius:3,maxBarThickness:30}]},options:barOpts()});
+};
+
+/* ===================== 6) RECS ===================== */
+R.recs=function(){
+  const A_=S.catBy.A,B_=S.catBy.B,C_=S.catBy.C,D_=S.catBy.D,E_=S.catBy.E;
+  const gt1k=E_.posts.filter(p=>p.reach>1000).length;
+  const recentMed=median(S.recent.map(p=>p.reach)),prevMed=median(S.prev.map(p=>p.reach));
+  const ageMid=(A.age["35-44"]+A.age["45-54"])/sum(Object.values(A.age));
+  const sa=A.country.SA/S.countrySum;
+  const recs=[
+   {p:"h",t:"اجعل «الدليل العملي للمعتمر» عمود الجدول",ev:`نمط «${A_.name}» وسيط وصوله ${nf(A_.medReach)} (${A_.n} منشوراً، منها ${A_.over5k} بوصول 5,000 فأكثر) مقابل ${nf(D_.medReach)} لاستعراض الفنادق و${nf(E_.medReach)} لعروض الأسعار. أعلى ريل في الحساب: «${S.best.title}» (${nf(S.best.reach)}). ملاحظة: «${B_.name}» وسيطه أعلى (${nf(B_.medReach)}) لكن من ${B_.n} منشورات فقط.`,m:crit("M9","M3"),a:"3 ريلز أسبوعياً بصيغة «كيف توصل / أين / ماذا تفعل» لأماكن وخدمات الحرم، بنفس أسلوب ريل مقهى لحظة."},
+   {p:"h",t:"حوّل عروض الأسعار من إعلان مباشر إلى محتوى مفيد",ev:`نمط «${E_.name}»: ${E_.n} منشورات، أعلاها ${nf(E_.max)} وصول، و${gt1k} فقط تجاوز 1,000. وسيط التفاعل ${pc(E_.medEr)}.`,m:crit("M3","M4"),a:"اجعل السعر ضمن قصة مفيدة (مسافة المشي الحقيقية + السعر + لمن يناسب) بدل «عرض خاص لفترة محدودة». ميتا تنص: ابدأ بما يريد الجمهور معرفته لا بما تريد قوله."},
+   {p:"h",t:"أضف دعوة تحويل حقيقية للمنشورات الناجحة",ev:`مجموع الوصول اليومي للحساب في آخر 30 يوماً ${nf(S.reach30)} (يتكرر فيه الأشخاص)، لكن نقرات روابط البروفايل ${nf(S.taps30)} فقط. عدد المنشورات التي فيها دعوة (حجز/رابط/مشاركة) في الكابشن من أعلى 5 منشورات وصولاً: ${[...P].sort((a,b)=>b.reach-a.reach).slice(0,5).filter(p=>p.hasCta).length} من 5.`,m:crit("M4"),a:"ختم الريلز الأعلى وصولاً بدعوة واضحة (واتساب/الرابط في البايو) على الشاشة وفي الصوت، مع ربطها بفندق مذكور في الفيديو. راقب profile_links_taps أسبوعين."},
+   {p:"h",t:"ركّز على الاحتفاظ بالمشاهد بدل الخطّاف وحده",ev:`ارتباط الوصول بمعدل التجاوز في أول 3 ثوانٍ ${rr(S.rSkip)} (ضعيف جداً)، وبمتوسط زمن المشاهدة ${rr(S.rWatch)}. وسيط زمن المشاهدة ${nd(S.medWatch)} ث وأعلى ريل ${nd(byReach(0).watchS)} ث.`,m:crit("M1","M3"),a:"في كل ريل: اذكر الفائدة في أول ثانيتين، ثم قدّم الخطوات بالترتيب (Tutorial)، وأجّل الاسم التجاري للنهاية. تابع media_reel_avg_watch_time كمؤشر رئيسي."},
+   {p:"m",t:"عالج تراجع سبتمبر بمراجعة الإيقاع والنمط",ev:`وسيط وصول المنشور في آخر 30 يوماً ${nf(recentMed)} مقابل ${nf(prevMed)} في الـ30 السابقة، ومنشورات الفترة الأخيرة ${S.recent.length} مقابل ${S.prev.length}. الوصول اليومي للحساب انخفض من ${nf(D.daily[0].reach)} (${D.daily[0].date}) إلى ${nf(D.daily[D.daily.length-1].reach)} (${D.daily[D.daily.length-1].date}).`,m:crit("M13"),a:"اختبار أسبوعين: عد إلى نمط «الدليل العملي» بنفس الجدول السابق وثبّت الباقي (الساعة، عدد المنشورات) لمعرفة هل الانخفاض من النمط أم من الإيقاع."},
+   {p:"m",t:"استخدم إثبات المسافة بوصفه Demo، وبأمثلة أوضح",ev:`نمط «${C_.name}»: ${C_.n} منشورات، أعلاها «${C_.posts.reduce((a,b)=>b.reach>a.reach?b:a).title}» بوصول ${nf(C_.max)}، لكن وسيطه ${nf(C_.medReach)} — أي أن النجاح غير مضمون.`,m:crit("M9"),a:"استبقِ الفكرة التي نجحت (مشي حقيقي بمؤقت ظاهر إلى ساحة الحرم) وافحص ما اختلف في الريلز الضعيفة: النص فوق الفيديو، الصوت، وضوح الرقم، الفندق المختار."},
+   {p:"m",t:"راجع يدوياً العناصر التي لا تقيسها البيانات",ev:"لا يُرجع Windsor بيانات عن النص فوق الفيديو أو الصوت أو الحضور البشري أو المنطقة الآمنة.",m:crit("M5","M6","M7","M8"),a:"جدول تدقيق لـ10 ريلز (5 الأعلى و5 الأدنى وصولاً): هل فيه نص؟ صوت + تعليق؟ وجه؟ 9:16 داخل المنطقة الآمنة؟ ثم قارن. أرقام ميتا هنا من إعلانات."},
+   {p:"m",t:"اختبر الوقت بدل افتراضه",ev:`${pc(S.hr.filter(h=>h.h===20||h.h===21).reduce((s,h)=>s+h.n,0)/S.n,0)} من المنشورات في ساعتَي 20–21 بتوقيت السعودية؛ باقي الساعات فيها منشوران أو أقل لكل ساعة.`,m:NOMETA+" "+crit("M13"),a:"اختبار A/B لأسبوعين: نمط واحد بموعدين مختلفين، وثبّت اليوم والنمط، ثم قارن وسيط الوصول."},
+   {p:"l",t:"جرّب كاروسيل واحداً أسبوعياً لمدة أسبوعين",ev:`لا توجد منشورات كاروسيل أو صور في البيانات (${S.n} من ${S.n} ريلز)، فلا مقارنة ممكنة.`,m:NOMETA+" "+crit("M15"),a:"أضف الكاروسيل (مثلاً: قائمة أقرب الفنادق للحرم) إلى الجدول ولا تستبدل به الريلز، ثم أعد سحب البيانات بعد أسبوعين لتظهر مقارنة حقيقية."},
+   {p:"l",t:"طابق المحتوى مع جمهورك الفعلي",ev:`${pc(ageMid,0)} من المتابعين المصنّفين بين 35 و54 سنة؛ السعودية ${nf(A.country.SA)} من ${nf(S.countrySum)} (${pc(sa,0)}) والباقي موزع على المغرب وعُمان ومصر والعراق والكويت والجزائر وغيرها. أعلى المدن: الرياض ثم جدة ثم مكة.`,m:NOMETA,a:"شمل في الريلز معلومات تفيد القادم من خارج السعودية (مطارات، مواصلات، أوقات الذروة) واختبر أثرها على الحفظ والمشاركة."}
+  ];
+  function byReach(i){return [...P].sort((a,b)=>b.reach-a.reach)[i]}
+  $("#t-recs").innerHTML=`<h2>توصيات عملية</h2><p class="lead">كل توصية مرقّمة، مع رقم فعلي من الحساب وقاعدة محددة من ملف ميتا. حيث لا توجد قاعدة أكتب «غير متوفر في ملف ميتا».</p>`+
+  recs.map((r,i)=>`<div class="rec"><div class="rh"><h3>${i+1}. ${r.t}</h3><span class="tag prio-${r.p}">${{h:"أولوية عالية",m:"متوسطة",l:"منخفضة"}[r.p]}</span></div><dl><dt>رقم من الحساب</dt><dd>${r.ev}</dd><dt>قاعدة ميتا</dt><dd>${r.m}</dd><dt>التنفيذ</dt><dd>${r.a}</dd></dl></div>`).join("")+
+  `<h3 style="margin-top:22px">تعارضات بين البيانات وملف ميتا</h3>
+   <div class="note bad"><strong>الخطّاف:</strong> الملف يجعل «الخطّاف في أول ثوانٍ» أساس النجاح ${crit("M1")}، لكن في بيانات الحساب معدل التجاوز خلال 3 ثوانٍ لا يفسّر الوصول (${rr(S.rSkip)}). أعلى ريلين وصولاً تجاوزهما ${pc(byReach(0).skip)} و${pc(byReach(1).skip)} مقابل وسيط ${pc(S.medSkip)}. الملف لا ينفي أهمية الخطّاف، لكن هذا المقياس وحده لا يميّز الرابحين هنا.</div>
+   <div class="note bad"><strong>الدعوة للإجراء:</strong> الملف يوصي بختام فيه دعوة لإجراء ${crit("M4")}. عروض الأسعار في الحساب فيها دعوة صريحة (احجز/الرابط في البايو) ومع ذلك وسيط وصولها ${nf(E_.medReach)}. الملف يشترط أن تسبق الدعوةَ قيمةٌ ${crit("M1","M3")}، فوجود الدعوة وحده لا يكفي.</div>
+   <div class="note"><strong>نوع الدليل:</strong> أرقام ميتا (+7، +11، +15، +22 نقطة، CTR +27% و+39%) مأخوذة من إعلانات وليست من وصول عضوي؛ لا أستخدمها للتنبؤ بأداء منشوراتك، بل كقائمة تدقيق إبداعية فقط.</div>`;
+};
+
+show((location.hash||"#overview").slice(1)in R?(location.hash||"#overview").slice(1):"overview");
+})();
+</script>
+</body>
+</html>
