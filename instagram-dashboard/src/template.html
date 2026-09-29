@@ -28,11 +28,17 @@ body{overflow-x:hidden}
 a{color:#9ec5f4}
 button,select,input{font-family:inherit;font-size:14px}
 .wrap{max-width:1280px;margin:0 auto;padding:0 16px 64px}
-header.top{position:sticky;top:0;z-index:20;background:rgba(31,36,78,.97);backdrop-filter:blur(8px);border-bottom:3px solid var(--brand)}
+header.top{position:sticky;top:0;z-index:20;background:#ffffff;border-bottom:4px solid var(--brand)}
 .top-inner{max-width:1280px;margin:0 auto;padding:12px 16px 0}
 .title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .title-row h1{font-size:20px;margin:0;font-weight:800;display:flex;align-items:center;gap:12px}
-.mark{height:44px;width:auto;flex:none}
+.mark{height:88px;width:auto;flex:none;display:block}
+header.top h1{color:var(--navy)}
+header.top .ttl small{color:#4A5080}
+header.top .sub{color:#4A5080}
+header.top nav.tabs button{color:#4A5080}
+header.top nav.tabs button.on{color:var(--navy);border-bottom-color:var(--brand)}
+header.top nav.tabs button:hover{color:var(--navy)}
 .ttl{display:flex;flex-direction:column;line-height:1.25}
 .ttl small{font-size:12px;font-weight:500;color:var(--text-2)}
 .title-row .sub{color:var(--muted);font-size:12px}
@@ -109,7 +115,7 @@ ul.reasons li strong{color:var(--text)}
 .modal .x{position:absolute;left:12px;top:12px;background:var(--surface-3);border:0;color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px}
 .small{font-size:12px;color:var(--muted)}
 h2,h3{font-weight:800}
-.footlogo{display:block;height:84px;width:auto;margin:0 0 14px}
+.footlogo{display:block;height:96px;width:auto;margin:0 0 14px;background:#fff;padding:10px 14px;border-radius:12px}
 .muted{color:var(--muted)}
 .bar-inline{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;min-width:60px}
 .bar-inline i{display:block;height:100%;background:var(--s1);border-radius:3px}
@@ -121,13 +127,14 @@ footer{margin-top:32px;color:var(--muted);font-size:12px;border-top:1px solid va
   h2{font-size:18px}
   .chart-box{height:230px}
   header.top{position:static}
+  .mark{height:64px}
 }
 </style>
 </head>
 <body>
 <header class="top"><div class="top-inner">
   <div class="title-row">
-    <h1><img class="mark" src="/*ICON*/" alt="شعار أسس المسافر"><span class="ttl">داشبورد انستقرام<small>أسس المسافر · @osusalmosafer</small></span></h1>
+    <h1><img class="mark" src="/*LOGOC*/" alt="شعار أسس المسافر Osus Almosafer"><span class="ttl">داشبورد انستقرام<small>أسس المسافر · @osusalmosafer</small></span></h1>
     <div class="sub" id="subline"></div>
   </div>
   <nav class="tabs" id="tabs"></nav>
@@ -262,7 +269,7 @@ const TABS=[["overview","نظرة عامة"],["compare","الريلز مقابل
 $("#subline").textContent=`آخر سحب من Windsor: ${D.pulledAt} · المنشورات من ${S.first} إلى ${S.last}`;
 $("#tabs").innerHTML=TABS.map(([k,n],i)=>`<button data-t="${k}" class="${i?"":"on"}">${n}</button>`).join("");
 $("#main").innerHTML=TABS.map(([k],i)=>`<section class="tab ${i?"":"on"}" id="t-${k}"></section>`).join("")+
- `<footer><img class="footlogo" src="/*LOGO*/" alt="أسس المسافر Osus Almosafer">المصدر الأول: بيانات Windsor.ai (موصّل instagram، حساب osusalmosafer). المصدر الثاني: ملف ميتا «Real Talk Creative Playbook» — رموز M1…M15 تشير إلى صفحاته (انظر meta-criteria.md). لا توجد أرقام تقديرية: أي بيانات غير متاحة مكتوب أمامها «غير متوفر».</footer>`;
+ `<footer><img class="footlogo" src="/*LOGOC*/" alt="أسس المسافر Osus Almosafer">المصدر الأول: بيانات Windsor.ai (موصّل instagram، حساب osusalmosafer). المصدر الثاني: ملف ميتا «Real Talk Creative Playbook» — رموز M1…M15 تشير إلى صفحاته (انظر meta-criteria.md). لا توجد أرقام تقديرية: أي بيانات غير متاحة مكتوب أمامها «غير متوفر».</footer>`;
 const built={};
 function show(k){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===k));

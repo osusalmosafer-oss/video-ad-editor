@@ -70,7 +70,7 @@ html = tpl.replace("/*CHARTJS*/", chart.replace("</script>", "<\\/script>"), 1)
 import base64
 def b64(name):
     return "data:image/png;base64," + base64.b64encode((ROOT / "src" / "assets" / name).read_bytes()).decode()
-html = html.replace("/*ICON*/", b64("icon-white.png")).replace("/*LOGO*/", b64("logo-vertical-white.png"))
+html = html.replace("/*LOGOC*/", b64("logo-color.png"))
 html = html.replace("/*DATA*/null", json.dumps(out, ensure_ascii=False), 1)
 (ROOT / "instagram-dashboard.html").write_text(html, encoding="utf-8")
 print("posts", len(posts), "->", ROOT / "instagram-dashboard.html", f"{len(html)//1024} KB")
