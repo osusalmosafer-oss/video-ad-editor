@@ -119,6 +119,32 @@ h2,h3{font-weight:800}
 .muted{color:var(--muted)}
 .bar-inline{height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;min-width:60px}
 .bar-inline i{display:block;height:100%;background:var(--s1);border-radius:3px}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;min-height:34px}
+.btn:hover{border-color:var(--brand)} .btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+.btn:disabled{opacity:.55;cursor:default}
+header.top .btn{background:#fff;color:var(--navy);border-color:#c9d0ee}
+header.top .btn:hover{border-color:var(--brand)}
+.toast{position:fixed;inset-inline:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));max-width:520px;margin-inline:auto;background:var(--brand);color:#fff;padding:10px 14px;border-radius:10px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;font-weight:600}
+.toast.on{opacity:1}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:8px 0 12px}
+.formgrid label,label.inl{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-2);min-width:0}
+label.inl{flex-direction:row;align-items:center;gap:6px}
+label.inl.wide{flex:1 1 200px} label.inl.wide input{flex:1;min-width:0}
+.formgrid .wide{grid-column:1/-1}
+input[type=text],input[type=date],input[type=number],textarea{background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:7px 9px;font-family:inherit;font-size:14px;min-width:0;width:100%}
+label.inl input[type=date]{width:auto}
+textarea{resize:vertical}
+.toolrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.chat{display:flex;flex-direction:column;gap:10px;max-height:56vh;overflow-y:auto;margin-bottom:10px;padding:2px}
+.bubble{border-radius:12px;padding:10px 12px;border:1px solid var(--border);background:var(--surface);max-width:100%}
+.bubble.user{background:var(--surface-3);align-self:flex-start}
+.bubble .who{font-size:11px;color:var(--muted);margin-bottom:4px}
+.bubble .txt{white-space:pre-wrap;line-height:1.75}
+.askrow textarea{margin-bottom:6px}
+.notes-txt{white-space:pre-wrap;color:var(--text-2);font-size:13px;margin:8px 0;max-height:12em;overflow:auto}
+.prio-d{background:rgba(12,163,12,.15);color:#6fd46f}
 footer{margin-top:32px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);padding-top:12px}
 @media (max-width:640px){
   .kpi .val{font-size:22px}
@@ -135,7 +161,7 @@ footer{margin-top:32px;color:var(--muted);font-size:12px;border-top:1px solid va
 <header class="top"><div class="top-inner">
   <div class="title-row">
     <h1><img class="mark" src="/*LOGOC*/" alt="شعار أسس المسافر Osus Almosafer"><span class="ttl">داشبورد انستقرام<small>أسس المسافر · @osusalmosafer</small></span></h1>
-    <div class="sub" id="subline"></div>
+    <div class="tools"><div class="sub" id="subline"></div><button class="btn" id="btn-refresh" hidden>حدّث من Windsor</button><button class="btn" id="btn-export" hidden>تصدير CSV</button><button class="btn" id="btn-comment" hidden>علّق</button></div>
   </div>
   <nav class="tabs" id="tabs"></nav>
 </div></header>
@@ -161,7 +187,16 @@ const WD=["الأحد","الإثنين","الثلاثاء","الأربعاء","�
 const dstr = iso=>iso.slice(0,10);
 const hhmm = iso=>iso.slice(11,16);
 
-const P = D.posts;
+const CAT = D.cats;
+const CATMETA = {A:["M9","Tutorial"],B:["M10","Listicle"],C:["M9","Demo"],D:null,E:null};
+let P, S, lastT, A;
+const DAY=864e5;
+const topN=(o,n)=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n);
+const wkStart = p=>{const d=new Date(p.ksa.slice(0,10)+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-d.getUTCDay());return d.toISOString().slice(0,10)};
+
+/* ---------- global stats (recomputed after a live refresh) ---------- */
+function compute(){
+P = D.posts;
 P.forEach(p=>{
   p.er = p.reach? p.eng/p.reach : 0;
   p.shareRate = p.reach? p.shares/p.reach : 0;
@@ -170,11 +205,7 @@ P.forEach(p=>{
   p.title = p.cap.length>90? p.cap.slice(0,88)+"…" : p.cap;
   p.hasCta = /الرابط|واتساب|احجز|للحجز|للاستفسار|شارك|احفظ/.test(p.cap);
 });
-const CAT = D.cats;
-const CATMETA = {A:["M9","Tutorial"],B:["M10","Listicle"],C:["M9","Demo"],D:null,E:null};
-
-/* ---------- global stats ---------- */
-const S = {};
+S = {};
 S.n = P.length;
 S.views = sum(P.map(p=>p.views)); S.reach = sum(P.map(p=>p.reach)); S.eng = sum(P.map(p=>p.eng));
 S.er = S.eng/S.reach;
@@ -192,31 +223,25 @@ S.newF30 = sum(D.daily.map(d=>d.newFollowers));
 S.taps30 = sum(D.daily.map(d=>d.taps));
 S.reach30 = sum(D.daily.map(d=>d.reach));
 S.first = dstr(P[0].utc); S.last = dstr(P[P.length-1].utc);
-// windows relative to last post date
-const lastT = new Date(P[P.length-1].utc).getTime(), DAY=864e5;
-const inWin = (p,from,to)=>{const t=new Date(p.utc).getTime();return t>lastT-to*DAY && t<=lastT-from*DAY+DAY};
+lastT = new Date(P[P.length-1].utc).getTime();
 S.recent = P.filter(p=>new Date(p.utc).getTime()>lastT-30*DAY);
 S.prev = P.filter(p=>{const t=new Date(p.utc).getTime();return t<=lastT-30*DAY && t>lastT-60*DAY});
-// categories
 S.cats = Object.keys(CAT).map(k=>{
   const a=P.filter(p=>p.cat===k);
   return {k,name:CAT[k],n:a.length,posts:a,medReach:median(a.map(p=>p.reach)),sumViews:sum(a.map(p=>p.views)),
     sumReach:sum(a.map(p=>p.reach)),medEr:median(a.map(p=>p.er)),medShare:median(a.map(p=>p.shareRate)),
     medSave:median(a.map(p=>p.saveRate)),medWatch:median(a.map(p=>p.watchS)),medSkip:median(a.map(p=>p.skip)),
-    max:Math.max(...a.map(p=>p.reach)),over5k:a.filter(p=>p.reach>=5000).length};
+    max:a.length?Math.max(...a.map(p=>p.reach)):0,over5k:a.filter(p=>p.reach>=5000).length};
 });
 S.catBy = Object.fromEntries(S.cats.map(c=>[c.k,c]));
-// weekday / hour (KSA = UTC+3)
 S.wd = WD.map((name,i)=>{const a=P.filter(p=>p.wd===i);return {i,name,n:a.length,med:median(a.map(p=>p.reach)),sumReach:sum(a.map(p=>p.reach))}});
 S.hr = Array.from({length:24},(_,h)=>{const a=P.filter(p=>p.hr===h);return {h,n:a.length,med:median(a.map(p=>p.reach))}});
-// weeks (Sun-start, KSA)
-const wkStart = p=>{const d=new Date(p.ksa.slice(0,10)+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-d.getUTCDay());return d.toISOString().slice(0,10)};
 const wkMap={}; P.forEach(p=>{(wkMap[wkStart(p)]=wkMap[wkStart(p)]||[]).push(p)});
 S.weeks = Object.keys(wkMap).sort().map(k=>({k,n:wkMap[k].length,med:median(wkMap[k].map(p=>p.reach)),sumReach:sum(wkMap[k].map(p=>p.reach))}));
-// audience
-const A = D.audience;
-const topN=(o,n)=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n);
+A = D.audience;
 S.countrySum = sum(Object.values(A.country));
+}
+compute();
 const CN={SA:"السعودية",MA:"المغرب",OM:"عُمان",EG:"مصر",IQ:"العراق",KW:"الكويت",DZ:"الجزائر",AE:"الإمارات",JO:"الأردن",SY:"سوريا",BH:"البحرين",FR:"فرنسا",YE:"اليمن",IL:"إسرائيل",LY:"ليبيا",LB:"لبنان",TN:"تونس",QA:"قطر",BE:"بلجيكا",PS:"فلسطين",DE:"ألمانيا",TR:"تركيا"};
 const CITYN={Riyadh:"الرياض",Jeddah:"جدة",Mecca:"مكة",Amman:"عمّان",Casablanca:"الدار البيضاء",Baghdad:"بغداد",Cairo:"القاهرة","Abu Dhabi":"أبوظبي","Algiers":"الجزائر العاصمة","Al-Sib (Muscat)":"السيب (مسقط)",Medina:"المدينة",Dubai:"دبي",Sharjah:"الشارقة",Dammam:"الدمام",Damascus:"دمشق",Tangier:"طنجة",Muscat:"مسقط"};
 
@@ -265,7 +290,7 @@ function sortable(tblId, cols, rows, defKey, defDir=-1){
 }
 
 /* ---------- tabs ---------- */
-const TABS=[["overview","نظرة عامة"],["compare","الريلز مقابل الكاروسيل"],["results","إيش ضرب وإيش ما ضرب"],["viral","تحليل الفيروسية"],["plan","خطة النشر"],["recs","توصيات عملية"],["roadmap","التطوير القادم"]];
+const TABS=[["overview","نظرة عامة"],["compare","الريلز مقابل الكاروسيل"],["results","إيش ضرب وإيش ما ضرب"],["viral","تحليل الفيروسية"],["plan","خطة النشر"],["recs","توصيات عملية"],["ask","اسأل كلاود"],["ideas","الأفكار والتقويم"],["bookings","تتبع الحجوزات"],["review","مراجعة الفيديو والتجارب"],["history","السجل الأسبوعي"],["roadmap","التطوير القادم"]];
 $("#subline").textContent=`آخر سحب من Windsor: ${D.pulledAt} · المنشورات من ${S.first} إلى ${S.last}`;
 $("#tabs").innerHTML=TABS.map(([k,n],i)=>`<button data-t="${k}" class="${i?"":"on"}">${n}</button>`).join("");
 $("#main").innerHTML=TABS.map(([k],i)=>`<section class="tab ${i?"":"on"}" id="t-${k}"></section>`).join("")+
@@ -295,7 +320,7 @@ R.overview=function(){
   const r=S.recent,pv=S.prev;
   const rMed=median(r.map(p=>p.reach)),pMed=median(pv.map(p=>p.reach));
   const rViews=sum(r.map(p=>p.views)),pViews=sum(pv.map(p=>p.views));
-  const bestCat=[...S.cats].filter(c=>c.n>=3).sort((a,b)=>b.medReach-a.medReach)[0];
+  const bestCat=[...S.cats].filter(c=>c.n>=3).sort((a,b)=>b.medReach-a.medReach)[0]||S.cats[0];
   $("#t-overview").innerHTML=`
   <h2>نظرة عامة</h2>
   <p class="lead">${S.n} منشوراً في بيانات Windsor (من ${S.first} إلى ${S.last}) — <strong>كلها Reels</strong>: لم يُرجع الكونكتور أي Carousel أو صورة ثابتة، ولا Stories (نتيجة فارغة لآخر 30 يوماً).</p>
@@ -348,13 +373,15 @@ R.compare=function(){
   const reels=P;
   const row=(name,n,extra)=>`<tr><td>${name}</td><td class="num">${n}</td>${extra}</tr>`;
   const na=`<td class="num muted" colspan="6">لا منشورات في البيانات — غير متوفر</td>`;
+  const otherRow=(label,type)=>{const a=(D.others||[]).filter(o=>o.type===type);if(!a.length)return row(label,0,na);
+    return `<tr><td>${label}</td><td class="num">${a.length}</td><td class="num">${nf(median(a.map(o=>o.reach)))}</td><td class="num">${pc(median(a.map(o=>o.reach?o.saves/o.reach:0)),2)}</td><td class="num">${pc(median(a.map(o=>o.reach?o.shares/o.reach:0)),2)}</td><td class="num">${pc(median(a.map(o=>o.reach?o.eng/o.reach:0)))}</td><td class="num muted">غير متوفر</td></tr>`};
   $("#t-compare").innerHTML=`
   <h2>الريلز مقابل الكاروسيل والصور الثابتة</h2>
-  <div class="note bad"><strong>لا يمكن إجراء هذه المقارنة على هذا الحساب.</strong> كل الـ${S.n} منشوراً المسحوبة (media_type = REELS) ريلز. لم يُرجع Windsor أي منشور Carousel أو صورة ثابتة، ولا Stories. لن أقدّر أرقاماً لأنواع لم تُنشر.
-  كذلك ملف ميتا لا يقارن Reels بـ Carousel أو الصور؛ أقرب ما فيه: «أضف Reels إلى استراتيجيتك ولا تستبدلها» ${crit("M15")} — وهو في سياق الإعلانات.</div>
+  ${(D.others&&D.others.length)?`<div class="note info">فيه ${D.others.length} منشور غير ريل في البيانات، ومقارنتها بالريلز بأرقامها الفعلية في الجدول. ملف ميتا لا يقارن الأنواع ببعض ${NOMETA}. الفروق بين أنواع بأعداد صغيرة لا تثبت شيئاً.</div>`:`<div class="note bad"><strong>لا يمكن إجراء هذه المقارنة على هذا الحساب.</strong> كل الـ${S.n} منشوراً المسحوبة (media_type = REELS) ريلز. لم يُرجع Windsor أي منشور Carousel أو صورة ثابتة، ولا Stories. لن أقدّر أرقاماً لأنواع لم تُنشر.
+  كذلك ملف ميتا لا يقارن Reels بـ Carousel أو الصور؛ أقرب ما فيه: «أضف Reels إلى استراتيجيتك ولا تستبدلها» ${crit("M15")} — وهو في سياق الإعلانات.</div>`}
   <div class="table-wrap"><table><thead><tr><th>النوع</th><th class="num">منشورات</th><th class="num">وسيط الوصول</th><th class="num">وسيط الحفظ</th><th class="num">وسيط المشاركة</th><th class="num">وسيط معدل التفاعل</th><th class="num">متابعون جدد لكل منشور</th></tr></thead><tbody>
    <tr><td><strong>Reels</strong></td><td class="num">${reels.length}</td><td class="num">${nf(S.medReach)}</td><td class="num">${pc(S.medSave,2)}</td><td class="num">${pc(S.medShare,2)}</td><td class="num">${pc(S.medEr)}</td><td class="num muted">غير متوفر (media_follows فارغ للريلز)</td></tr>
-   ${row("Carousel",0,na)}${row("صورة ثابتة",0,na)}${row("Stories",0,na)}
+   ${otherRow("Carousel","CAROUSEL_ALBUM")}${otherRow("صورة ثابتة","IMAGE")}${otherRow("فيديو (غير ريل)","VIDEO")}${row("Stories",0,na)}
   </tbody></table></div>
   <span class="src">Windsor · media_type, media_reach, media_saved, media_shares, media_engagement. الحفظ والمشاركة كنسبة من الوصول.</span>
   <h3 style="margin-top:22px">البديل الممكن: مقارنة أنماط القصة داخل الريلز</h3>
@@ -548,25 +575,27 @@ R.roadmap=function(){
   const wkPosts=P.filter(p=>new Date(p.utc).getTime()>lastT-7*DAY);
   const wkBest=wkPosts.length?wkPosts.reduce((a,b)=>b.reach>a.reach?b:a):null;
   const wkWeak=wkPosts.length?wkPosts.reduce((a,b)=>b.reach<a.reach?b:a):null;
-  const bestCat=[...S.cats].filter(c=>c.n>=5).sort((a,b)=>b.medReach-a.medReach)[0];
+  const bestCat=[...S.cats].filter(c=>c.n>=5).sort((a,b)=>b.medReach-a.medReach)[0]||S.cats[0];
   const row=(l,a,b)=>`<tr><td>${l}</td><td class="num">${nf(a)}</td><td class="num">${b==null?"—":nf(b)}</td><td class="num">${b?(a>=b?"▲ ":"▼ ")+nd(Math.abs(a-b)/b*100,0)+"%":"—"}</td></tr>`;
   const items=[
-   ["h","إيميل كل أحد","good","جاهز تقنياً — ينتظر موافقتك","يسحب Windsor بيانات الأسبوع، يبني الملخص، ويرسله بالإيميل. أدوات السحب والإيميل والجدولة الأسبوعية متوفرة الحين في هذه الجلسة.","لازم تحدد: عنوان الاستلام، ساعة الإرسال (مقترح الأحد 8:00 صباحاً بتوقيت السعودية)، وهل يُرسل مباشرة أو يجي مسودة تراجعها.","صغير"],
-   ["h","حفظ تاريخ البيانات","warn","يحتاج تطوير","Windsor يرجع الأرقام اليومية للحساب لآخر 30 يوماً فقط، فما نقدر نقارن شهر بشهر. الحل: كل أسبوع نحفظ لقطة (وصول، متابعين جدد، نقرات) في المستودع.","بدونه تضيع أرقام الأسابيع القديمة وتبقى مقارنة الإيميل محصورة بأسبوع مقابل الأسبوع اللي قبله.","متوسط"],
-   ["h","تتبع التحويل للحجز","warn","يحتاج بيانات منك","نقرات روابط البروفايل "+nf(S.taps30)+" فقط في 30 يوم مقابل "+nf(S.reach30)+" وصول يومي مجمّع. Windsor ما يقول لنا كم حجز جا من كل ريل.","رابط تتبع أو رقم واتساب مخصص لكل ريل، وتسجيل الحجوزات (يدوي أو من نموذج) عشان نربط الريل بالحجز.","متوسط"],
-   ["m","تحديث الداشبورد تلقائياً","good","جاهز بعد الإيميل","الحين أسحب البيانات وأعيد النشر يدوياً. نفس الجدولة تسحب وتعيد بناء الرابط كل أسبوع فيبقى دايم محدّث.","يعتمد على تفعيل الإيميل الأسبوعي.","صغير"],
-   ["m","مقارنة الكاروسيل والستوري تشتغل أوتوماتيك","warn","ينتظر نشر","ما نشرت كاروسيل أو ستوري في الفترة، فالصف صفر. وللأمانة صفوف الكاروسيل والصورة في صفحة المقارنة مكتوبة صفر ثابت حالياً، لازم أعدلها تنحسب من البيانات أول ما تجي منشورات.","نشر تجربة كاروسيل أسبوعين حسب التوصية 9.","صغير"],
-   ["m","جدول مراجعة الفيديو","warn","يحتاج تطوير","النص فوق الفيديو، الصوت، الوجه، 9:16 والمنطقة الآمنة ما يقيسها Windsor. نموذج قصير يعبّيه فريقك لكل ريل ويظهر أثرها على الوصول.","يخلينا نختبر معايير ميتا M5 إلى M8 على حسابك بدل ما نكتفي بأرقامهم الإعلانية.","متوسط"],
-   ["m","ساعات نشاط المتابعين","warn","غير متوفر الحين","موصّل انستقرام في Windsor ما يرجع «متى المتابعين أونلاين». من دونه أوقات النشر تبقى فرضية.","إدخالها يدوياً من إنستقرام إنسايتس، أو ربط مصدر ثاني.","صغير"],
-   ["l","تصنيف نوع الريل تلقائياً","good","ممكن","الحين أصنّف كل ريل يدوياً من الكابشن. يمكن يصير تلقائي لكل ريل جديد بقواعد كلمات أو بمراجعة Claude.","يوفر التعديل اليدوي في build.py.","صغير"],
-   ["l","سجل التجارب (A/B)","good","ممكن","ميتا توصي باختبار أسبوعين مع تثبيت باقي المتغيرات M13. صفحة تسجل الفرضية والنتيجة لكل تجربة.","يخلي التوصيات تتحول لقرارات موثقة.","متوسط"],
-   ["l","الخط الرسمي PNU","warn","يحتاج ملف منك","استخدمت Tajawal لأن PNU خط خاص غير متوفر على الويب. لو ثبّتّه على جهازك الداشبورد يستخدمه تلقائياً.","ملف الخط (وترخيصه للويب) عشان نضمّنه في الداشبورد.","صغير"]
+   ["d","إيميل كل أحد","good","مفعّل","أول تقرير وصل، وروتين أسبوعي يصحّي هذه المحادثة كل أحد 7:52 صباحاً بتوقيت السعودية (أول إرسال 4 أكتوبر).","يعتمد على بقاء المحادثة وعلى ربط Gmail وWindsor فيها. لو فشل الإرسال يوصلك إيميل يشرح السبب. لم يتأكد إيميل الأحد بعد.","تم"],
+   ["d","اسأل كلاود","good","تم","صندوق أسئلة داخل الداشبورد يرد من أرقام حسابك ومعايير ميتا، ويحفظ الرد في بنك الأفكار.","يعمل من الرابط فقط. الاستهلاك على حساب من يستخدمه، والرد اقتراح وليس ضمان.","تم"],
+   ["d","بنك الأفكار والتقويم","good","تم","تسجيل الأفكار بحالاتها وتاريخ النشر، وربط الفكرة بالريل المنشور لمقارنتها بالوسيط.","تنحفظ بين التحديثات وتظهر لمن معه صلاحية.","تم"],
+   ["d","زر «حدّث من Windsor»","warn","بُني ولم يُجرَّب داخل الصفحة","يسحب الريلز والحساب اليومي من Windsor عبر موصّلك ويعيد الحساب فوراً، ويصنّف الريلز الجديدة بقواعد كلمات (أقل دقة من تصنيفي اليدوي).","لم أتأكد من شكل رد Windsor داخل الصفحة قبل النشر. لو ظهر خطأ أرسل لي رسالته. التحديث يظهر عندك فقط، ولا يغيّر الرابط لغيرك.","تم"],
+   ["d","السجل الأسبوعي","good","تم","لقطة أسبوعية محفوظة (وصول، مشاهدات، متابعون جدد، نقرات) عشان يتكوّن تاريخ أطول من 30 يوماً.","الحفظ بزر يدوي. الحفظ الآلي كل أحد ما تفعّل بعد.","تم"],
+   ["d","تتبع الحجوزات","good","تم","تسجيل الحجز أو الاستفسار وربطه بالريل، وحساب الحجوزات لكل 10,000 وصول.","الإدخال يدوي منك أو من فريقك، لأن Windsor ما يعرف الحجوزات.","تم"],
+   ["d","مراجعة الفيديو وسجل التجارب","good","تم","تعليم النص والصوت والشخص و9:16 والمنطقة الآمنة لكل ريل وقياس أثرها على وصولك، وسجل فرضيات A/B.","المقارنة لا تظهر قبل ٣ ريلز على الأقل لكل جهة.","تم"],
+   ["d","تصدير CSV والتعليقات","good","تم","تصدير الريلز والأفكار والحجوزات، وتعليق على أي تبويب لفريقك.","التصدير والتعليق يظهران فقط في الرابط.","تم"],
+   ["h","نشر تلقائي للرابط بعد كل سحب","warn","لم يُبنَ","الرابط العام لا يتحدّث بنفسه؛ زر التحديث يغيّر عرضك أنت فقط. لتحديث الرابط لكل من يفتحه لازم إعادة نشر.","أضيفه لروتين الأحد إن أردت.","صغير"],
+   ["m","سحب الستوري","warn","لم يُبنَ","حقول الستوري موجودة في Windsor لكنها رجعت فارغة آخر 30 يوماً؛ يبدأ العمل لما تنشر ستوري.","نشر ستوري لمدة أسبوعين.","صغير"],
+   ["m","ساعات نشاط المتابعين","warn","غير متوفر","موصّل انستقرام في Windsor لا يرجع «متى المتابعين أونلاين». من دونه أوقات النشر تبقى فرضية.","إدخالها يدوياً من إنستقرام إنسايتس، أو مصدر آخر.","صغير"],
+   ["l","الخط الرسمي PNU","warn","يحتاج ملف منك","استخدمت Tajawal لأن PNU خط خاص غير متوفر على الويب. لو ثبّتّه على جهازك الداشبورد يستخدمه تلقائياً.","ملف الخط وترخيصه للويب.","صغير"]
   ];
-  const pl={h:"أولوية عالية",m:"متوسطة",l:"لاحقاً"};
+  const pl={h:"أولوية عالية",m:"متوسطة",l:"لاحقاً",d:"تم"};
   $("#t-roadmap").innerHTML=`
   <h2>التطوير القادم</h2>
-  <p class="lead">إيش ينقص الداشبورد وإيش نتوقع نضيفه. الجهد تقدير مني، ومو من أي مصدر بيانات.</p>
-  <div class="note info"><strong>ما تم تفعيل أي إرسال.</strong> الإيميل الأسبوعي أدناه مثال بأرقام آخر أسبوع في البيانات. ما ينرسل شي إلا بعد ما تأكد العنوان والوقت.</div>
+  <p class="lead">إيش تم وإيش لسه ناقص. الجهد تقدير مني، ومو من أي مصدر بيانات.</p>
+  <div class="note info"><strong>الإيميل مفعّل.</strong> المعاينة أدناه بأرقام آخر أسبوع في البيانات، وهي شكل رسالة الأحد.</div>
   <h3>شكل رسالة الأحد</h3>
   <div class="card" style="max-width:720px">
     <div class="small">الموضوع</div>
@@ -587,6 +616,363 @@ R.roadmap=function(){
   <h3 style="margin-top:22px">قائمة التطوير</h3>
   ${items.map((it,i)=>`<div class="rec"><div class="rh"><h3>${i+1}. ${it[1]}</h3><span><span class="tag prio-${it[0]}">${pl[it[0]]}</span> <span class="tag ${it[2]}">${it[3]}</span> <span class="tag">الجهد: ${it[6]}</span></span></div>
    <dl><dt>ليش</dt><dd>${it[4]}</dd><dt>المطلوب</dt><dd>${it[5]}</dd></dl></div>`).join("")}`;
+};
+
+/* ===================== CAPABILITIES (each one hides itself when absent) ===================== */
+const CL = window.claude;
+const cap = name => (CL && typeof CL.use==="function") ? CL.use(name).catch(()=>null) : Promise.resolve(null);
+const capP = {db:cap("db"), sample:cap("sample"), mcp:cap("mcp"), downloads:cap("downloads"), comments:cap("comments")};
+const NOCAP = `<div class="na-box">هذي الميزة تشتغل من رابط الداشبورد داخل claude.ai بعد تسجيل الدخول. النسخة المحفوظة كملف ما تدعمها.</div>`;
+const todayStr = ()=>new Date().toISOString().slice(0,10);
+function toast(msg){
+  let t=$("#toast"); if(!t){t=document.createElement("div");t.id="toast";t.className="toast";t.setAttribute("role","status");document.body.appendChild(t)}
+  t.textContent=msg;t.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("on"),4200);
+}
+const errMsg=e=>{
+  const c=e&&e.code;
+  const m={not_granted:"ما وافقت على الصلاحية.",needs_reauth:"لازم تعيد ربط الموصّل من claude.ai.",server_not_connected:"الموصّل غير مربوط عندك.",not_in_manifest:"الموصّل غير مسموح لهذي الصفحة.",
+    rate_limited:"طلبات كثيرة، جرّب بعد شوي.",server_unavailable:"الخدمة ما ردّت، جرّب مرة ثانية.",cancelled:"تم الإلغاء.",tool_error:"الموصّل رجّع خطأ: "+(e&&e.message||""),
+    invalid_json:"الرد ما جا بصيغة مفهومة.",prompt_too_large:"الطلب كبير."};
+  return m[c]||("تعذّر التنفيذ"+(c?" ("+c+")":""));
+};
+/* shared db collections: subscribe once per collection, views re-render from o.rows */
+const stores={};
+async function store(name){
+  if(stores[name]) return stores[name];
+  const db=await capP.db; if(!db) return null;
+  const col=db.collection(name);
+  const o=stores[name]={col,rows:[],ready:false,err:null,subs:new Set()};
+  o.unsub=col.onSnapshot(snap=>{o.rows=snap.docs.map(d=>({id:d.id,...d.data()}));o.ready=true;o.err=null;o.subs.forEach(f=>f())},e=>{o.err=e;o.ready=true;o.subs.forEach(f=>f())});
+  return o;
+}
+function watch(o,root,fn,key="main"){o.wf=o.wf||{};const id=root.id+"|"+key;if(o.wf[id])o.subs.delete(o.wf[id]);const f=()=>{if(!document.body.contains(root)){o.subs.delete(f);return}fn()};o.wf[id]=f;o.subs.add(f);f()}
+async function put(o,data,id){try{if(id)await o.col.doc(id).set(data);else await o.col.add(data);return true}catch(e){toast(errMsg(e));return false}}
+async function patch(o,id,data){try{await o.col.doc(id).update(data);return true}catch(e){toast(errMsg(e));return false}}
+async function del(o,id){try{await o.col.doc(id).delete();return true}catch(e){toast(errMsg(e));return false}}
+const opts=(list,sel)=>list.map(([v,l])=>`<option value="${esc(v)}"${v===sel?" selected":""}>${esc(l)}</option>`).join("");
+const postOpts=(sel)=>opts([["","بدون ربط"],...[...P].sort((a,b)=>b.utc.localeCompare(a.utc)).map(p=>[p.sc,dstr(p.ksa)+" · "+p.title.slice(0,40)])],sel);
+const postBySc=sc=>P.find(p=>p.sc===sc);
+function csvOf(head,rows){const q=v=>{v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};return "﻿"+[head,...rows].map(r=>r.map(q).join(",")).join("\r\n")}
+async function saveFile(filename,text){
+  const d=await capP.downloads; if(!d){toast("التصدير يشتغل من رابط الداشبورد داخل claude.ai.");return}
+  try{const r=await d.save({filename,data:text});if(r==="saved"||(r&&r.status==="saved"))toast("انحفظ الملف.")}catch(e){toast(e&&e.code==="cancelled"?"تم الإلغاء.":errMsg(e))}
+}
+const exportPosts=()=>saveFile(`osus-reels-${todayStr()}.csv`,csvOf(
+  ["التاريخ (السعودية)","الكابشن","النمط","الرابط","الوصول","المشاهدات","التفاعل","معدل التفاعل","حفظ","مشاركة","متوسط المشاهدة (ث)","تجاوز أول 3 ث"],
+  [...P].sort((a,b)=>a.utc.localeCompare(b.utc)).map(p=>[p.ksa.replace("T"," "),p.cap,CAT[p.cat],p.url,p.reach,p.views,p.eng,p.er.toFixed(4),p.saves,p.shares,p.watchS.toFixed(1),p.skip])));
+
+/* ---------- live refresh from Windsor through the viewer's own connector ---------- */
+const WS="Windsor_ai";
+const MEDIA_F=["media_id","timestamp","media_type","media_product_type","media_permalink","media_caption","media_views","media_reach","media_like_count","media_comments_count","media_saved","media_shares","media_reposts","media_engagement","media_reel_avg_watch_time","media_reel_skip_rate","media_reel_total_watch_time"];
+const DAILY_F=["date","reach_1d","follower_count_1d","views","accounts_engaged","total_interactions","likes","comments","saves","shares","reposts","profile_links_taps"];
+function autoCat(c){
+  if(/عرض|ريال|خصم|احجز الآن|بسعر|باقة/.test(c)) return "E";
+  if(/كم (يبعد|تحتاج|يستغرق)|المسافة|مشي|دقائق|دقيقة/.test(c)) return "C";
+  if(/(أقرب|أفخم|أفضل|أجمل)\s*\d|\d\s*(كافيهات|مواقع|فنادق|أماكن)|ترتيب|الأبواب الثلاثة/.test(c)) return "B";
+  if(/كيف|طريقة|وين|أين|دليل|مواقف|احذر|نصائح|نصيحة/.test(c)) return "A";
+  return "D";
+}
+function rowsOf(res){
+  let p=res&&res.payload;
+  if(typeof p==="string"){try{p=JSON.parse(p)}catch(e){}}
+  if(p&&!Array.isArray(p)&&Array.isArray(p.result)) p=p.result;
+  if(!Array.isArray(p)) throw {code:"shape",message:"شكل الرد غير متوقع"};
+  return p;
+}
+const num=v=>Number(v)||0;
+function mapMedia(r){
+  const sc=(String(r.media_permalink||"").match(/\/(?:reel|p|tv)\/([^/?#]+)/)||[])[1]||r.media_id;
+  const t=new Date(String(r.timestamp).replace(/\+0000$/,"Z")), k=new Date(t.getTime()+3*36e5);
+  const cap=String(r.media_caption||"").replace(/#[^\s#]+/g,"").replace(/\s+/g," ").trim();
+  const isReel=r.media_type==="REELS"||r.media_product_type==="REELS";
+  const base={id:r.media_id,sc,url:r.media_permalink,utc:t.toISOString().slice(0,19),ksa:k.toISOString().slice(0,19),wd:k.getUTCDay(),hr:k.getUTCHours(),cap,
+    views:num(r.media_views),reach:num(r.media_reach),likes:num(r.media_like_count),comments:num(r.media_comments_count),saves:num(r.media_saved),shares:num(r.media_shares),reposts:num(r.media_reposts),eng:num(r.media_engagement)};
+  return isReel?Object.assign(base,{cat:(D.tags&&D.tags[sc])||autoCat(cap),avgWatch:num(r.media_reel_avg_watch_time),skip:num(r.media_reel_skip_rate),totalWatch:num(r.media_reel_total_watch_time)})
+               :Object.assign(base,{type:r.media_type||"OTHER"});
+}
+let refreshing=false;
+async function liveRefresh(){
+  if(refreshing) return; refreshing=true;
+  const btn=$("#btn-refresh"); const old=btn.textContent; btn.disabled=true; btn.textContent="جارِ السحب…";
+  try{
+    const mcp=await capP.mcp; if(!mcp) throw {code:"server_not_connected"};
+    const sig=()=>({signal:AbortSignal.timeout(120000),cache:{refresh:true}});
+    const media=rowsOf(await mcp.callTool(WS,"get_data",{connector:"instagram",fields:MEDIA_F,date_preset:"last_90d"},sig()));
+    btn.textContent="جارِ سحب الحساب…";
+    const daily=rowsOf(await mcp.callTool(WS,"get_data",{connector:"instagram",fields:DAILY_F,date_preset:"last_30d"},sig()));
+    let followers=null;
+    try{const u=rowsOf(await mcp.callTool(WS,"get_data",{connector:"instagram",fields:["followers_count"],date_preset:"last_7d"},sig()));followers=Math.max(0,...u.map(x=>num(x.followers_count)))||null}catch(e){}
+    const all=media.map(mapMedia).filter(p=>p.utc&&!p.utc.startsWith("Invalid"));
+    const reels=all.filter(p=>p.cat).sort((a,b)=>a.utc.localeCompare(b.utc));
+    if(!reels.length) throw {code:"shape",message:"ما رجعت ريلز"};
+    D.posts=reels; D.others=all.filter(p=>!p.cat);
+    const dd=daily.filter(r=>r.date&&r.reach_1d!=null).map(r=>({date:String(r.date).slice(0,10),reach:num(r.reach_1d),newFollowers:num(r.follower_count_1d),views:num(r.views),engaged:num(r.accounts_engaged),interactions:num(r.total_interactions),likes:num(r.likes),comments:num(r.comments),saves:num(r.saves),shares:num(r.shares),reposts:num(r.reposts),taps:num(r.profile_links_taps)})).sort((a,b)=>a.date.localeCompare(b.date));
+    if(dd.length) D.daily=dd;
+    if(followers) D.profile.followers_count=followers;
+    D.pulledAt=todayStr(); D.liveAt=new Date().toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"});
+    compute(); rerenderAll();
+    toast(`تم التحديث: ${reels.length} ريل${D.others.length?` و${D.others.length} منشور غير ريل`:""}.`);
+  }catch(e){ toast(e&&e.code==="shape"?("تعذّر قراءة رد Windsor: "+(e.message||"")):errMsg(e)); }
+  finally{refreshing=false;btn.disabled=false;btn.textContent=old}
+}
+function setSub(){$("#subline").textContent=(D.liveAt?`تحديث مباشر ${D.liveAt} · `:`آخر سحب من Windsor: ${D.pulledAt} · `)+`المنشورات من ${S.first} إلى ${S.last}`}
+function rerenderAll(){
+  charts.splice(0).forEach(c=>c.destroy());
+  Object.keys(built).forEach(k=>delete built[k]);
+  document.querySelectorAll("section.tab").forEach(s=>{s.innerHTML=""});
+  const cur=(location.hash||"#overview").slice(1);
+  setSub(); show(cur in R?cur:"overview");
+}
+/* header tools appear only where the capability exists */
+capP.mcp.then(m=>{if(m)$("#btn-refresh").hidden=false});
+capP.downloads.then(d=>{if(d)$("#btn-export").hidden=false});
+capP.comments.then(c=>{if(c)$("#btn-comment").hidden=false});
+$("#btn-refresh").onclick=liveRefresh;
+$("#btn-export").onclick=exportPosts;
+$("#btn-comment").onclick=async()=>{const c=await capP.comments;if(!c)return;try{const r=await c.openComposer({element:document.querySelector("section.tab.on")});if(r&&r.opened===false)toast("اضغط داخل الصفحة أولاً ثم جرّب التعليق.")}catch(e){toast(errMsg(e))}};
+
+/* ===================== ASK CLAUDE ===================== */
+const askTurns=[];
+let askCtl=null;
+function askContext(ideas){
+  const f=(n,d=0)=>n==null?"غير متوفر":nd(n,d);
+  const top=[...P].sort((a,b)=>b.reach-a.reach), t5=top.slice(0,5), b5=top.slice(-5);
+  const line=p=>`- «${p.title}» | نمط: ${CAT[p.cat]} | وصول ${f(p.reach)} | متوسط مشاهدة ${f(p.watchS,1)} ث | تجاوز 3 ث ${pc(p.skip)} | مشاركة/وصول ${pc(p.shareRate,2)} | ${dstr(p.ksa)}`;
+  const rM=S.recent.length?median(S.recent.map(p=>p.reach)):null, pM=S.prev.length?median(S.prev.map(p=>p.reach)):null;
+  return `أنت مستشار محتوى لحساب انستقرام «أسس المسافر» (@osusalmosafer): فنادق مكة والحرم وخدمات المعتمرين. جمهوره: ${nf(S.followers)} متابع، أغلبهم 35–54 سنة، والسعودية أكبر دولة ثم المغرب وعُمان والعراق ومصر.
+اكتب بالعربية بلهجة سعودية بسيطة وواضحة.
+قواعد صارمة: (1) استخدم الأرقام أدناه فقط ولا تخترع أي رقم أو نتيجة متوقعة. (2) كل فكرة أو توصية اربطها برقم من بيانات الحساب ومعيار من ملف ميتا (اذكر رمزه مثل M9). (3) لو السؤال يحتاج بيانات غير موجودة قل ذلك صراحة. (4) أرقام ميتا من دراسات إعلانية وليست وصولاً عضوياً؛ لا تعدها كضمان. (5) لا تعد بأي نتيجة.
+لكل فكرة ريل أعطني: العنوان، أول ثانيتين (الخطّاف)، الوسط (ماذا نعرض بالترتيب)، الختام مع دعوة الحجز، نمط القصة، لماذا (رقم + معيار)، ما يجب مراجعته في التصوير (نص فوق الفيديو، صوت، وجه، 9:16، منطقة آمنة)، وكيف نقيس نجاحها.
+
+بيانات الحساب (Windsor، ${S.n} ريل من ${S.first} إلى ${S.last}؛ كلها Reels ولا توجد منشورات كاروسيل أو صور${D.others&&D.others.length?" ما عدا "+D.others.length+" غير ريل":""}):
+- وسيط الوصول للريل ${f(S.medReach)} ، المتوسط ${f(S.meanReach)}؛ وسيط زمن المشاهدة ${f(S.medWatch,1)} ث؛ وسيط التجاوز في أول 3 ث ${pc(S.medSkip)}؛ معدل التفاعل الكلي ${pc(S.er)}.
+- ارتباط الوصول بمعدل التجاوز r=${nd(S.rSkip,2)} وبمتوسط زمن المشاهدة r=${nd(S.rWatch,2)} (عينة صغيرة، لا يثبت سببية).
+- آخر 30 يوماً: ${S.recent.length} ريل، وسيط وصول ${f(rM)} ؛ الـ30 قبلها: ${S.prev.length} ريل، وسيط ${f(pM)}.
+- نقرات روابط البروفايل آخر 30 يوماً: ${f(S.taps30)}؛ متابعون جدد (إجمالي) ${f(S.newF30)}.
+- الأنماط (تصنيف يدوي من الكابشن):
+${S.cats.map(c=>`  * ${c.name}: ${c.n} منشور، وسيط وصول ${f(c.medReach)}، أعلى وصول ${f(c.max)}`).join("\n")}
+- أعلى 5 ريلز:
+${t5.map(line).join("\n")}
+- أدنى 5 ريلز:
+${b5.map(line).join("\n")}
+- ${nf(S.hr.filter(h=>h.h===20||h.h===21).reduce((s,h)=>s+h.n,0))} من ${S.n} ريل نُشرت بين 8 و10 مساءً بتوقيت السعودية؛ الأوقات الأخرى منشور أو منشوران فقط فلا حكم عليها.
+${ideas&&ideas.length?"- بنك أفكار الفريق الحالي (تجنّب التكرار): "+ideas.slice(0,25).map(i=>i.title).join(" | ")+"\n":""}
+معايير ملف ميتا (Real Talk Creative Playbook — دليل إعلانات Reels):
+${Object.entries(META).map(([k,m])=>`${k} (ص${m.p}): ${m.t}`).join("\n")}`;
+}
+R.ask=async function(){
+  const root=$("#t-ask");
+  root.innerHTML=`<h2>اسأل كلاود</h2>
+  <p class="lead">اسأله عن فكرة ريل، وعلى إيش تركز، وكيف تصوّرها. يرد من أرقام حسابك ومعايير ميتا اللي في الداشبورد فقط.</p>
+  <div id="askbody"><div class="na-box">جارِ التحقق من الصلاحية…</div></div>`;
+  const sample=await capP.sample;
+  const body=$("#askbody");
+  if(!sample){body.innerHTML=NOCAP;return}
+  const st=await store("ideas");
+  body.innerHTML=`
+   <div class="note info">الرد اقتراحات مبنية على بيانات آخر تحديث (${D.liveAt?"تحديث مباشر "+D.liveAt:D.pulledAt}) وما يضمن وصولاً. أول سؤال يطلب موافقتك، والاستهلاك يُحسب على حسابك في Claude.</div>
+   <div class="pill-row" id="quick" style="margin-bottom:10px"></div>
+   <div id="chat" class="chat" aria-live="polite"></div>
+   <div class="askrow"><textarea id="askq" rows="3" placeholder="اكتب سؤالك… مثال: وش أصوّر هذا الأسبوع؟ وعلى إيش أركز؟"></textarea>
+     <div class="toolrow"><button class="btn primary" id="askgo">اسأل</button><button class="btn" id="askstop" hidden>وقّف</button><button class="btn" id="asknew">محادثة جديدة</button><button class="btn" id="asksave" hidden>احفظ آخر رد في بنك الأفكار</button></div></div>`;
+  const QUICK=["اقترح 5 أفكار ريلز لهذا الأسبوع","على إيش أركز الشهر الجاي؟","ليش نزل الوصول في سبتمبر، وإيش أسوي؟","اكتب سكريبت ريل «كيف توصل…» جاهز للتصوير","اقترح 3 ريلز تحوّل العروض لمحتوى مفيد","حسّن هذا الكابشن: "];
+  $("#quick").innerHTML=QUICK.map(q=>`<button class="btn" data-q="${esc(q)}">${esc(q.replace(/: $/,"…"))}</button>`).join("");
+  const chat=$("#chat");
+  const draw=()=>{chat.innerHTML=askTurns.map(t=>`<div class="bubble ${t.role}"><div class="who">${t.role==="user"?"أنت":"Claude"}</div><div class="txt">${esc(t.content)}</div></div>`).join("");chat.scrollTop=chat.scrollHeight;$("#asksave").hidden=!askTurns.some(t=>t.role==="assistant")};
+  draw();
+  const go=async()=>{
+    const q=$("#askq").value.trim(); if(!q||askCtl) return;
+    askTurns.push({role:"user",content:q}); $("#askq").value="";
+    askTurns.push({role:"assistant",content:"جارِ التفكير…"}); draw();
+    $("#askgo").disabled=true; $("#askstop").hidden=false; askCtl=new AbortController();
+    const ctx=askContext(st&&st.rows);
+    const history=askTurns.slice(0,-1).slice(-10);
+    const input=[{role:"user",content:ctx},...history];
+    try{
+      const {text,truncated}=await sample(input,{cache:false,signal:askCtl.signal,onText:({text})=>{askTurns[askTurns.length-1].content=text;const b=chat.lastElementChild&&chat.lastElementChild.querySelector(".txt");if(b)b.textContent=text;chat.scrollTop=chat.scrollHeight}});
+      askTurns[askTurns.length-1].content=text+(truncated?"\n\n(الرد انقطع، اطلب منه يكمل.)":"");
+    }catch(e){
+      const kept=e&&e.text;
+      if(e&&e.code==="cancelled"&&kept) askTurns[askTurns.length-1].content=kept+"\n\n(أوقفتَ الرد.)";
+      else{ askTurns.length-=2; toast(errMsg(e)); $("#askq").value=q; }
+    }finally{askCtl=null;$("#askgo").disabled=false;$("#askstop").hidden=true;draw()}
+  };
+  $("#askgo").onclick=go;
+  $("#askq").onkeydown=e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();go()}};
+  $("#askstop").onclick=()=>askCtl&&askCtl.abort();
+  $("#asknew").onclick=()=>{if(askCtl)askCtl.abort();askTurns.length=0;draw()};
+  $("#quick").onclick=e=>{const b=e.target.closest("button[data-q]");if(!b)return;const q=b.dataset.q;$("#askq").value=q;if(!q.endsWith(": "))go();else $("#askq").focus()};
+  $("#asksave").onclick=async()=>{
+    const last=[...askTurns].reverse().find(t=>t.role==="assistant"); if(!last)return;
+    const o=await store("ideas"); if(!o){toast("بنك الأفكار يحتاج تسجيل الدخول.");return}
+    const firstLine=last.content.split("\n").find(l=>l.trim())||"فكرة من Claude";
+    if(await put(o,{title:firstLine.replace(/^[#*\-\s]+/,"").slice(0,90),cat:"",status:"idea",date:"",sc:"",notes:last.content.slice(0,3500),src:"claude",at:Date.now()})) toast("انحفظت في بنك الأفكار.");
+  };
+};
+
+/* ===================== IDEAS + CALENDAR ===================== */
+const STATUS=[["idea","فكرة"],["shoot","تصوير"],["edit","مونتاج"],["ready","جاهز للنشر"],["done","نُشر"]];
+const STN=Object.fromEntries(STATUS);
+R.ideas=async function(){
+  const root=$("#t-ideas");
+  root.innerHTML=`<h2>الأفكار والتقويم</h2><p class="lead">سجّل الأفكار، حدد النمط وتاريخ النشر، وبعد النشر اربط الفكرة بالريل الفعلي عشان تشوف نتيجتها مقابل الوسيط (${nf(S.medReach)}).</p><div id="ideabody"><div class="na-box">جارِ التحميل…</div></div>`;
+  const o=await store("ideas"); const body=$("#ideabody");
+  if(!o){body.innerHTML=NOCAP;return}
+  body.innerHTML=`
+  <div class="card"><h3>فكرة جديدة</h3>
+   <div class="formgrid">
+    <label>العنوان<input type="text" id="i-title" placeholder="مثال: كيف توصل لمصلى في أبراج البيت"></label>
+    <label>النمط<select id="i-cat">${opts([["","غير محدد"],...Object.entries(CAT)],"")}</select></label>
+    <label>تاريخ النشر المخطط<input type="date" id="i-date"></label>
+    <label>الحالة<select id="i-status">${opts(STATUS,"idea")}</select></label>
+    <label class="wide">ملاحظات (الخطّاف، الختام، الدعوة)<textarea id="i-notes" rows="2"></textarea></label>
+   </div><div class="toolrow"><button class="btn primary" id="i-add">أضف الفكرة</button><button class="btn" id="i-export" ${""}>تصدير CSV</button></div></div>
+  <h3 style="margin-top:18px">تقويم الأسابيع القادمة</h3><div id="i-cal" class="cal"></div>
+  <h3 style="margin-top:18px">كل الأفكار</h3>
+  <div class="toolbar"><select id="i-filter">${opts([["","كل الحالات"],...STATUS],"")}</select><span class="small" id="i-count"></span></div>
+  <div id="i-list"></div>`;
+  $("#i-add").onclick=async()=>{
+    const title=$("#i-title").value.trim(); if(!title){toast("اكتب عنوان الفكرة.");return}
+    if(await put(o,{title,cat:$("#i-cat").value,status:$("#i-status").value,date:$("#i-date").value,sc:"",notes:$("#i-notes").value.trim(),src:"manual",at:Date.now()})){$("#i-title").value="";$("#i-notes").value=""}
+  };
+  $("#i-export").onclick=()=>saveFile(`osus-ideas-${todayStr()}.csv`,csvOf(["العنوان","النمط","الحالة","التاريخ","الريل","ملاحظات"],o.rows.map(r=>[r.title,CAT[r.cat]||"",STN[r.status]||"",r.date||"",r.sc||"",r.notes||""])));
+  const draw=()=>{
+    if(o.err){$("#i-list").innerHTML=`<div class="note bad">تعذّر قراءة الأفكار (${esc(o.err.code||"")}).</div>`;return}
+    const f=$("#i-filter").value; const rows=[...o.rows].filter(r=>!f||r.status===f).sort((a,b)=>(b.at||0)-(a.at||0));
+    $("#i-count").textContent=rows.length+" فكرة";
+    $("#i-list").innerHTML=rows.length?rows.map(r=>{
+      const p=r.sc&&postBySc(r.sc);
+      const res=p?`<div class="small">النتيجة الفعلية: وصول <strong>${nf(p.reach)}</strong> (${nd(p.reach/S.medReach,1)}× الوسيط) · مشاركة ${pc(p.shareRate,2)}</div>`:"";
+      return `<div class="rec" data-id="${esc(r.id)}"><div class="rh"><h3>${esc(r.title)}</h3><span>${r.src==="claude"?`<span class="tag">من Claude</span> `:""}<span class="tag ${r.status==="done"?"good":""}">${esc(STN[r.status]||"")}</span> ${r.cat?`<span class="tag">${esc(CAT[r.cat]||"")}</span>`:""}</span></div>
+       ${r.notes?`<div class="notes-txt">${esc(r.notes)}</div>`:""}${res}
+       <div class="toolrow"><label class="inl">الحالة <select data-f="status">${opts(STATUS,r.status)}</select></label>
+        <label class="inl">التاريخ <input type="date" data-f="date" value="${esc(r.date||"")}"></label>
+        <label class="inl">الريل المنشور <select data-f="sc">${postOpts(r.sc||"")}</select></label>
+        <button class="btn" data-del>حذف</button></div></div>`}).join(""):`<div class="na-box">ما فيه أفكار بعد. أضف أول فكرة فوق أو اطلب من «اسأل كلاود» واحفظ الرد هنا.</div>`;
+    const t0=todayStr(), days=[...Array(14)].map((_,i)=>{const d=new Date(t0+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+i);return d.toISOString().slice(0,10)});
+    $("#i-cal").innerHTML=days.map(d=>{const its=o.rows.filter(r=>r.date===d&&r.status!=="done");const wd=WD[new Date(d+"T00:00:00Z").getUTCDay()];
+      return `<div class="day${its.length?"":" off"}"><h4>${wd} <span class="small">${d.slice(5)}</span></h4>${its.length?its.map(r=>`<div class="small">• ${esc(r.title)} <span class="tag">${esc(STN[r.status]||"")}</span></div>`).join(""):`<div class="small">لا شي مخطط</div>`}</div>`}).join("");
+  };
+  $("#i-filter").onchange=draw;
+  $("#i-list").onchange=async e=>{const el=e.target.closest("[data-f]");const card=e.target.closest("[data-id]");if(!el||!card)return;await patch(o,card.dataset.id,{[el.dataset.f]:el.value})};
+  $("#i-list").onclick=async e=>{const b=e.target.closest("[data-del]");const card=e.target.closest("[data-id]");if(!b||!card)return;if(!b.dataset.sure){b.dataset.sure=1;b.textContent="تأكيد الحذف";return}await del(o,card.dataset.id)};
+  watch(o,root,draw);
+};
+
+/* ===================== BOOKINGS ===================== */
+R.bookings=async function(){
+  const root=$("#t-bookings");
+  root.innerHTML=`<h2>تتبع الحجوزات</h2><p class="lead">Windsor ما يقول لنا كم حجز جا من كل ريل. سجّل هنا كل حجز أو استفسار وصلك واربطه بالريل، وأربطها بالوصول.</p><div id="bkbody"><div class="na-box">جارِ التحميل…</div></div>`;
+  const o=await store("bookings"); const body=$("#bkbody");
+  if(!o){body.innerHTML=NOCAP;return}
+  body.innerHTML=`
+  <div class="card"><h3>تسجيل حجز أو استفسار</h3><div class="formgrid">
+   <label>التاريخ<input type="date" id="b-date" value="${todayStr()}"></label>
+   <label>الريل المسبب<select id="b-sc">${postOpts("")}</select></label>
+   <label>المصدر<select id="b-src">${opts([["whatsapp","واتساب"],["call","اتصال"],["link","رابط البايو"],["dm","رسالة خاصة"],["other","غير ذلك"]],"whatsapp")}</select></label>
+   <label>النوع<select id="b-kind">${opts([["booking","حجز مؤكد"],["inquiry","استفسار"]],"booking")}</select></label>
+   <label>العدد<input type="number" id="b-n" min="1" value="1"></label>
+   <label>القيمة (ريال، اختياري)<input type="number" id="b-val" min="0"></label>
+   <label class="wide">ملاحظة<input type="text" id="b-note"></label></div>
+   <div class="toolrow"><button class="btn primary" id="b-add">سجّل</button><button class="btn" id="b-export">تصدير CSV</button></div></div>
+  <div id="bk-sum" style="margin-top:14px"></div><h3 style="margin-top:18px">السجل</h3><div class="table-wrap" id="bk-list"></div>`;
+  $("#b-add").onclick=async()=>{const n=Math.max(1,Math.round(Number($("#b-n").value)||1));
+    if(await put(o,{date:$("#b-date").value||todayStr(),sc:$("#b-sc").value,src:$("#b-src").value,kind:$("#b-kind").value,n,value:Number($("#b-val").value)||0,note:$("#b-note").value.trim(),at:Date.now()})){$("#b-note").value="";$("#b-val").value="";toast("تم التسجيل.")}};
+  $("#b-export").onclick=()=>saveFile(`osus-bookings-${todayStr()}.csv`,csvOf(["التاريخ","الريل","المصدر","النوع","العدد","القيمة","ملاحظة"],o.rows.map(r=>[r.date,r.sc,r.src,r.kind,r.n,r.value,r.note])));
+  const draw=()=>{
+    if(o.err){$("#bk-list").innerHTML=`<div class="note bad">تعذّر قراءة السجل (${esc(o.err.code||"")}).</div>`;return}
+    const rows=[...o.rows].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+    const tot=k=>sum(rows.filter(r=>r.kind===k).map(r=>r.n||0));
+    const by={}; rows.forEach(r=>{const k=r.sc||"—";(by[k]=by[k]||{b:0,i:0,v:0});if(r.kind==="booking"){by[k].b+=r.n||0;by[k].v+=r.value||0}else by[k].i+=r.n||0});
+    const lines=Object.entries(by).filter(([k])=>k!=="—").map(([k,v])=>({p:postBySc(k),...v})).filter(x=>x.p).sort((a,b)=>(b.b+b.i)-(a.b+a.i));
+    $("#bk-sum").innerHTML=`<div class="grid kpis">${kpi("حجوزات مؤكدة",nf(tot("booking")),null,"سجلّك")}${kpi("استفسارات",nf(tot("inquiry")),null,"سجلّك")}${kpi("قيمة الحجوزات (ريال)",nf(sum(rows.filter(r=>r.kind==="booking").map(r=>r.value||0))),null,"سجلّك")}${kpi("حجوزات لكل 10,000 وصول",lines.length?nd(sum(lines.map(l=>l.b))/sum(lines.map(l=>l.p.reach))*1e4,1):"—",null,"محسوب: الحجوزات المربوطة بريلز ÷ وصولها")}</div>
+     ${lines.length?`<div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>الريل</th><th class="num">وصول</th><th class="num">حجوزات</th><th class="num">استفسارات</th><th class="num">لكل 10,000 وصول</th></tr></thead><tbody>${lines.map(l=>`<tr><td class="cap">${linkP(l.p)}</td><td class="num">${nf(l.p.reach)}</td><td class="num">${nf(l.b)}</td><td class="num">${nf(l.i)}</td><td class="num">${nd((l.b+l.i)/l.p.reach*1e4,1)}</td></tr>`).join("")}</tbody></table></div>`:`<div class="na-box" style="margin-top:12px">بعد ما تسجل حجوزات مربوطة بريلز يظهر هنا أي ريل يجيب حجز فعلي.</div>`}`;
+    $("#bk-list").innerHTML=rows.length?`<table><thead><tr><th>التاريخ</th><th>الريل</th><th>المصدر</th><th>النوع</th><th class="num">العدد</th><th class="num">القيمة</th><th>ملاحظة</th><th></th></tr></thead><tbody>${rows.map(r=>{const p=postBySc(r.sc);return `<tr data-id="${esc(r.id)}"><td>${esc(r.date)}</td><td class="cap">${p?linkP(p):"—"}</td><td>${esc(r.src)}</td><td>${r.kind==="booking"?"حجز":"استفسار"}</td><td class="num">${nf(r.n)}</td><td class="num">${nf(r.value)}</td><td class="cap">${esc(r.note)}</td><td><button class="btn" data-del>حذف</button></td></tr>`}).join("")}</tbody></table>`:`<div class="na-box">السجل فاضي.</div>`;
+  };
+  $("#bk-list").onclick=async e=>{const b=e.target.closest("[data-del]");const tr=e.target.closest("[data-id]");if(!b||!tr)return;if(!b.dataset.sure){b.dataset.sure=1;b.textContent="تأكيد";return}await del(o,tr.dataset.id)};
+  watch(o,root,draw);
+};
+
+/* ===================== VIDEO REVIEW + EXPERIMENTS ===================== */
+const AUD=[["text","نص فوق الفيديو","M5"],["audio","صوت (موسيقى/تعليق)","M6"],["person","شخص في الفيديو","M7"],["r916","9:16","M8"],["safe","داخل المنطقة الآمنة","M8"]];
+R.review=async function(){
+  const root=$("#t-review");
+  root.innerHTML=`<h2>مراجعة الفيديو والتجارب</h2><p class="lead">Windsor ما يقيس النص والصوت والوجه. تعبّي هنا بعينك لكل ريل، ونشوف هل لها أثر على وصولك أنت (مو على أرقام ميتا الإعلانية).</p><div id="rvbody"><div class="na-box">جارِ التحميل…</div></div>`;
+  const oa=await store("audits"), oe=await store("experiments"); const body=$("#rvbody");
+  if(!oa||!oe){body.innerHTML=NOCAP;return}
+  body.innerHTML=`<h3>تحليل المراجعات</h3><div id="rv-an"></div>
+   <h3 style="margin-top:18px">المراجعة لكل ريل</h3><div class="small">علّم ✓ لكل عنصر موجود. أول تعليم يحفظ الريل كمراجَع.</div><div class="table-wrap" id="rv-tbl"></div>
+   <h3 style="margin-top:26px">سجل التجارب (A/B) <span class="small">${""}</span></h3>
+   <div class="note info">ميتا توصي بتجربة أسبوعين، تثبيت باقي المتغيرات، وفرضية واضحة قبل التنفيذ ${crit("M13")}.</div>
+   <div class="card"><div class="formgrid">
+    <label>اسم التجربة<input type="text" id="e-name"></label>
+    <label>المتغير الوحيد<input type="text" id="e-var" placeholder="مثال: ساعة النشر"></label>
+    <label>النسخة A<input type="text" id="e-a"></label><label>النسخة B<input type="text" id="e-b"></label>
+    <label>البداية<input type="date" id="e-start"></label><label>النهاية<input type="date" id="e-end"></label>
+    <label class="wide">الفرضية<input type="text" id="e-hyp" placeholder="مثال: الريل الذي يبدأ بالمسافة أعلى وصولاً من الذي يبدأ بالسعر"></label></div>
+    <div class="toolrow"><button class="btn primary" id="e-add">أضف التجربة</button></div></div>
+   <div id="e-list" style="margin-top:12px"></div>`;
+  const drawAn=()=>{
+    const aud=Object.fromEntries(oa.rows.map(r=>[r.id,r]));
+    const rev=P.filter(p=>aud[p.sc]);
+    if(!rev.length){$("#rv-an").innerHTML=`<div class="na-box">ما فيه ريلز مراجَعة بعد. علّم ٣ ريلز على الأقل لكل حالة (فيه/ما فيه) عشان تظهر مقارنة.</div>`;return}
+    $("#rv-an").innerHTML=`<div class="table-wrap"><table><thead><tr><th>العنصر</th><th>معيار ميتا</th><th class="num">فيه (عدد)</th><th class="num">وسيط وصول «فيه»</th><th class="num">ما فيه (عدد)</th><th class="num">وسيط وصول «ما فيه»</th><th>القراءة</th></tr></thead><tbody>${AUD.map(([k,l,m])=>{
+      const y=rev.filter(p=>aud[p.sc][k]), n=rev.filter(p=>!aud[p.sc][k]); const ok=y.length>=3&&n.length>=3;
+      const my=median(y.map(p=>p.reach)), mn=median(n.map(p=>p.reach));
+      return `<tr><td>${l}</td><td>${crit(m)}</td><td class="num">${y.length}</td><td class="num">${ok?nf(my):"—"}</td><td class="num">${n.length}</td><td class="num">${ok?nf(mn):"—"}</td><td class="cap">${ok?(my>mn?"الريلز اللي فيها أعلى وسيطاً":"الريلز اللي فيها أقل وسيطاً")+" — عينة صغيرة، لا تثبت سببية":"العينة ما تكفي (٣ على الأقل لكل جهة)"}</td></tr>`}).join("")}</tbody></table></div><span class="src">المراجعات: ${rev.length} من ${P.length} ريل · Windsor media_reach + مراجعتك</span>`;
+  };
+  const drawTbl=()=>{
+    const aud=Object.fromEntries(oa.rows.map(r=>[r.id,r]));
+    $("#rv-tbl").innerHTML=`<table><thead><tr><th>الريل</th><th class="num">وصول</th>${AUD.map(a=>`<th>${a[1]}</th>`).join("")}</tr></thead><tbody>${[...P].sort((a,b)=>b.utc.localeCompare(a.utc)).map(p=>{const a=aud[p.sc];return `<tr data-sc="${esc(p.sc)}"><td class="cap">${linkP(p)}</td><td class="num">${nf(p.reach)}</td>${AUD.map(([k,l])=>`<td style="text-align:center"><input type="checkbox" data-k="${k}" aria-label="${esc(l)}"${a&&a[k]?" checked":""}></td>`).join("")}</tr>`}).join("")}</tbody></table>`;
+  };
+  $("#rv-tbl").onchange=async e=>{const c=e.target.closest("input[data-k]");const tr=e.target.closest("[data-sc]");if(!c||!tr)return;
+    const cur=oa.rows.find(r=>r.id===tr.dataset.sc)||{}; const next={text:!!cur.text,audio:!!cur.audio,person:!!cur.person,r916:!!cur.r916,safe:!!cur.safe,at:Date.now()};next[c.dataset.k]=c.checked;
+    if(!await put(oa,next,tr.dataset.sc)) c.checked=!c.checked};
+  let tblDrawn=false;
+  watch(oa,root,()=>{if(!tblDrawn){drawTbl();tblDrawn=true}drawAn()},"a");
+  $("#e-add").onclick=async()=>{const name=$("#e-name").value.trim(),hyp=$("#e-hyp").value.trim();if(!name||!hyp){toast("اكتب اسم التجربة والفرضية.");return}
+    if(await put(oe,{name,hyp,variable:$("#e-var").value.trim(),a:$("#e-a").value.trim(),b:$("#e-b").value.trim(),start:$("#e-start").value,end:$("#e-end").value,status:"planned",result:"",decision:"",at:Date.now()})){["e-name","e-var","e-a","e-b","e-hyp"].forEach(i=>$("#"+i).value="")}};
+  const ES=[["planned","مخطط"],["running","شغّال"],["done","انتهى"]];
+  const drawE=()=>{
+    if(oe.err){$("#e-list").innerHTML=`<div class="note bad">تعذّر قراءة التجارب (${esc(oe.err.code||"")}).</div>`;return}
+    const rows=[...oe.rows].sort((a,b)=>(b.at||0)-(a.at||0));
+    $("#e-list").innerHTML=rows.length?rows.map(r=>`<div class="rec" data-id="${esc(r.id)}"><div class="rh"><h3>${esc(r.name)}</h3><span class="tag ${r.status==="done"?"good":""}">${esc((ES.find(s=>s[0]===r.status)||[])[1]||"")}</span></div>
+      <dl><dt>الفرضية</dt><dd>${esc(r.hyp)}</dd><dt>المتغير</dt><dd>${esc(r.variable)} — A: ${esc(r.a)} / B: ${esc(r.b)}</dd><dt>المدة</dt><dd>${esc(r.start||"—")} → ${esc(r.end||"—")}</dd></dl>
+      <div class="toolrow"><label class="inl">الحالة <select data-f="status">${opts(ES,r.status)}</select></label><label class="inl wide">النتيجة <input type="text" data-f="result" value="${esc(r.result)}"></label><label class="inl wide">القرار <input type="text" data-f="decision" value="${esc(r.decision)}"></label><button class="btn" data-del>حذف</button></div></div>`).join(""):`<div class="na-box">ما فيه تجارب بعد. أول تجربة مقترحة: نفس نوع الريل بموعدين مختلفين لأسبوعين.</div>`;
+  };
+  $("#e-list").onchange=async e=>{const el=e.target.closest("[data-f]");const card=e.target.closest("[data-id]");if(!el||!card)return;await patch(oe,card.dataset.id,{[el.dataset.f]:el.value})};
+  $("#e-list").onclick=async e=>{const b=e.target.closest("[data-del]");const card=e.target.closest("[data-id]");if(!b||!card)return;if(!b.dataset.sure){b.dataset.sure=1;b.textContent="تأكيد";return}await del(oe,card.dataset.id)};
+  watch(oe,root,drawE,"e");
+};
+
+/* ===================== WEEKLY HISTORY ===================== */
+function weekSnapshot(){
+  const dd=D.daily, w=dd.slice(-7); if(w.length<7) return null;
+  const t=k=>sum(w.map(d=>d[k]));
+  const end=w[w.length-1].date, start=w[0].date;
+  const wp=P.filter(p=>dstr(p.ksa)>=start&&dstr(p.ksa)<=end);
+  return {weekStart:start,weekEnd:end,reach7:t("reach"),views7:t("views"),inter7:t("interactions"),newF7:t("newFollowers"),taps7:t("taps"),posts7:wp.length,
+    bestReach:wp.length?Math.max(...wp.map(p=>p.reach)):null,medReach90:S.medReach,followers:S.followers,savedAt:Date.now()};
+}
+R.history=async function(){
+  const root=$("#t-history");
+  root.innerHTML=`<h2>السجل الأسبوعي</h2><p class="lead">Windsor يعطي أرقام الحساب اليومية لآخر 30 يوماً فقط. نحفظ هنا لقطة كل أسبوع عشان يتكوّن تاريخ تقدر تقارن منه شهر بشهر.</p><div id="hsbody"><div class="na-box">جارِ التحميل…</div></div>`;
+  const o=await store("snapshots"); const body=$("#hsbody");
+  if(!o){body.innerHTML=NOCAP;return}
+  const cur=weekSnapshot();
+  body.innerHTML=`<div class="toolrow"><button class="btn primary" id="h-save"${cur?"":" disabled"}>احفظ لقطة آخر 7 أيام${cur?` (${cur.weekStart} → ${cur.weekEnd})`:""}</button></div>
+   <div class="card" style="margin-top:12px"><h3>وصول الحساب (مجموع 7 أيام) لكل أسبوع محفوظ</h3><div class="chart-box"><canvas id="c-hist"></canvas></div><span class="src">لقطات محفوظة من Windsor · reach_1d مجموع أسبوعي، يتكرر فيه الأشخاص</span></div>
+   <div class="table-wrap" style="margin-top:12px" id="h-tbl"></div>`;
+  $("#h-save").onclick=async()=>{const s=weekSnapshot();if(!s)return;if(await put(o,s,s.weekEnd)) toast("انحفظت اللقطة.")};
+  let ch=null;
+  const draw=()=>{
+    if(o.err){$("#h-tbl").innerHTML=`<div class="note bad">تعذّر قراءة السجل (${esc(o.err.code||"")}).</div>`;return}
+    const rows=[...o.rows].sort((a,b)=>a.weekEnd.localeCompare(b.weekEnd));
+    if(ch){ch.destroy();const i=charts.indexOf(ch);if(i>=0)charts.splice(i,1)}
+    $("#h-tbl").innerHTML=rows.length?`<table><thead><tr><th>الأسبوع</th><th class="num">وصول</th><th class="num">مشاهدات</th><th class="num">تفاعل</th><th class="num">متابعون جدد</th><th class="num">نقرات البروفايل</th><th class="num">ريلز</th><th class="num">أعلى وصول ريل</th></tr></thead><tbody>${[...rows].reverse().map(r=>`<tr><td>${esc(r.weekStart)} → ${esc(r.weekEnd)}</td><td class="num">${nf(r.reach7)}</td><td class="num">${nf(r.views7)}</td><td class="num">${nf(r.inter7)}</td><td class="num">${nf(r.newF7)}</td><td class="num">${nf(r.taps7)}</td><td class="num">${nf(r.posts7)}</td><td class="num">${nf(r.bestReach)}</td></tr>`).join("")}</tbody></table>`:`<div class="na-box">ما فيه لقطات محفوظة. اضغط «احفظ لقطة» أو انتظر تقرير الأحد.</div>`;
+    if(rows.length){mk("c-hist",{type:"bar",data:{labels:rows.map(r=>r.weekEnd.slice(5)),datasets:[{data:rows.map(r=>r.reach7),backgroundColor:"#2884FF",borderRadius:3,maxBarThickness:36}]},options:barOpts({plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>rows[i[0].dataIndex].weekStart+" → "+rows[i[0].dataIndex].weekEnd,label:c=>"وصول: "+nf(c.raw)}}}})});ch=charts[charts.length-1]}
+  };
+  watch(o,root,draw);
 };
 
 show((location.hash||"#overview").slice(1)in R?(location.hash||"#overview").slice(1):"overview");

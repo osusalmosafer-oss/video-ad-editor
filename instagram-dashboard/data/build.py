@@ -61,6 +61,7 @@ daily = [dict(zip(["date", "reach", "newFollowers", "views", "engaged", "interac
 out = {
     "pulledAt": W.PULLED_AT, "profile": W.PROFILE, "cats": CATS, "posts": posts, "daily": daily,
     "audience": {"gender": W.GENDER, "age": W.AGE, "country": W.COUNTRY, "city": W.CITY},
+    "tags": TAG, "others": [],
 }
 (HERE / "data.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
