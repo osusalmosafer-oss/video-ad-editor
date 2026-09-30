@@ -161,7 +161,7 @@ footer{margin-top:32px;color:var(--muted);font-size:12px;border-top:1px solid va
 <header class="top"><div class="top-inner">
   <div class="title-row">
     <h1><img class="mark" src="/*LOGOC*/" alt="شعار أسس المسافر Osus Almosafer"><span class="ttl">داشبورد انستقرام<small>أسس المسافر · @osusalmosafer</small></span></h1>
-    <div class="tools"><div class="sub" id="subline"></div><button class="btn" id="btn-refresh" hidden>حدّث من Windsor</button><button class="btn" id="btn-export" hidden>تصدير CSV</button><button class="btn" id="btn-comment" hidden>علّق</button></div>
+    <div class="tools"><div class="sub" id="subline"></div><button class="btn" id="btn-refresh" hidden>حدّث من Windsor</button><button class="btn" id="btn-export" hidden>تصدير CSV</button></div>
   </div>
   <nav class="tabs" id="tabs"></nav>
 </div></header>
@@ -585,7 +585,7 @@ R.roadmap=function(){
    ["d","السجل الأسبوعي","good","تم","لقطة أسبوعية محفوظة (وصول، مشاهدات، متابعون جدد، نقرات) عشان يتكوّن تاريخ أطول من 30 يوماً.","الحفظ بزر يدوي. الحفظ الآلي كل أحد ما تفعّل بعد.","تم"],
    ["d","تتبع الحجوزات","good","تم","تسجيل الحجز أو الاستفسار وربطه بالريل، وحساب الحجوزات لكل 10,000 وصول.","الإدخال يدوي منك أو من فريقك، لأن Windsor ما يعرف الحجوزات.","تم"],
    ["d","مراجعة الفيديو وسجل التجارب","good","تم","تعليم النص والصوت والشخص و9:16 والمنطقة الآمنة لكل ريل وقياس أثرها على وصولك، وسجل فرضيات A/B.","المقارنة لا تظهر قبل ٣ ريلز على الأقل لكل جهة.","تم"],
-   ["d","تصدير CSV والتعليقات","good","تم","تصدير الريلز والأفكار والحجوزات، وتعليق على أي تبويب لفريقك.","التصدير والتعليق يظهران فقط في الرابط.","تم"],
+   ["d","تصدير CSV","good","تم","تصدير الريلز والأفكار والحجوزات إلى ملف CSV.","يظهر فقط في الرابط.","تم"],
    ["h","نشر تلقائي للرابط بعد كل سحب","warn","لم يُبنَ","الرابط العام لا يتحدّث بنفسه؛ زر التحديث يغيّر عرضك أنت فقط. لتحديث الرابط لكل من يفتحه لازم إعادة نشر.","أضيفه لروتين الأحد إن أردت.","صغير"],
    ["m","سحب الستوري","warn","لم يُبنَ","حقول الستوري موجودة في Windsor لكنها رجعت فارغة آخر 30 يوماً؛ يبدأ العمل لما تنشر ستوري.","نشر ستوري لمدة أسبوعين.","صغير"],
    ["m","ساعات نشاط المتابعين","warn","غير متوفر","موصّل انستقرام في Windsor لا يرجع «متى المتابعين أونلاين». من دونه أوقات النشر تبقى فرضية.","إدخالها يدوياً من إنستقرام إنسايتس، أو مصدر آخر.","صغير"],
@@ -621,7 +621,7 @@ R.roadmap=function(){
 /* ===================== CAPABILITIES (each one hides itself when absent) ===================== */
 const CL = window.claude;
 const cap = name => (CL && typeof CL.use==="function") ? CL.use(name).catch(()=>null) : Promise.resolve(null);
-const capP = {db:cap("db"), sample:cap("sample"), mcp:cap("mcp"), downloads:cap("downloads"), comments:cap("comments")};
+const capP = {db:cap("db"), sample:cap("sample"), mcp:cap("mcp"), downloads:cap("downloads")};
 const NOCAP = `<div class="na-box">هذي الميزة تشتغل من رابط الداشبورد داخل claude.ai بعد تسجيل الدخول. النسخة المحفوظة كملف ما تدعمها.</div>`;
 const todayStr = ()=>new Date().toISOString().slice(0,10);
 function toast(msg){
@@ -726,10 +726,8 @@ function rerenderAll(){
 /* header tools appear only where the capability exists */
 capP.mcp.then(m=>{if(m)$("#btn-refresh").hidden=false});
 capP.downloads.then(d=>{if(d)$("#btn-export").hidden=false});
-capP.comments.then(c=>{if(c)$("#btn-comment").hidden=false});
 $("#btn-refresh").onclick=liveRefresh;
 $("#btn-export").onclick=exportPosts;
-$("#btn-comment").onclick=async()=>{const c=await capP.comments;if(!c)return;try{const r=await c.openComposer({element:document.querySelector("section.tab.on")});if(r&&r.opened===false)toast("اضغط داخل الصفحة أولاً ثم جرّب التعليق.")}catch(e){toast(errMsg(e))}};
 
 /* ===================== ASK CLAUDE ===================== */
 const askTurns=[];
