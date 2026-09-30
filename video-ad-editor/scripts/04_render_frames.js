@@ -46,21 +46,37 @@ const CHROME=findChrome();
   const b=await puppeteer.launch({executablePath:CHROME,headless:'new',
     args:['--no-sandbox','--allow-file-access-from-files','--font-render-hinting=none','--force-color-profile=srgb']});
   const p=await b.newPage();
-  p.on('pageerror',e=>console.log('PAGEERR',e.message));
+  /* أخطاء الصفحة تطلع بالطرفية (stderr) — بدونها المشهد اللي يسقط يتخطّى بصمت وما تدري ليش ما طلع */
+  const _seen=new Set(), perr=m=>{ if(_seen.has(m)) return; _seen.add(m); process.stderr.write('[compose] '+m+'\n'); };
+  p.on('pageerror',e=>perr('PAGEERR '+e.message));
+  p.on('console',m=>{ if(m.type()==='error') perr(m.text()); });
   await p.setViewport({width:1080,height:1920,deviceScaleFactor:1});
   await p.setCacheEnabled(false);   // لا تقرأ نسخة مخبّأة من compose.html
   await p.goto(fileURL(W+'compose.html'),{waitUntil:'networkidle0'});
   const FF=THEME.font||'Cairo';
   await p.evaluate(()=>new Promise(r=>{const l=document.getElementById('LOGO');l.complete?r():l.onload=r;}));
-  await p.evaluate((c,o,t,b)=>window.init({cards:c.cards,total:c.total,outro:o,theme:t,behind:b}),caps,OUT_D,THEME,BEHIND);
+  /* 🪝 v3.8.1: الهوك المكتوب (theme.json ← hook) — لو compose.html ما فيه hook-card.js (انسخ من المرجع من جديد / apply قبل وجوده)
+     نركّبه هني بدل ما يختفي الهوك بصمت. hook-card.js يمنع التركيب المزدوج وحده. */
+  if(THEME.hook&&!(await p.evaluate(()=>!!window.HookCard))){
+    const hc=[path.join(__dirname,'hook-card.js'),W+'hook-card.js'].find(f=>fs.existsSync(f));
+    if(hc){ await p.addScriptTag({path:hc}); console.log('🪝 الهوك: compose.html ما فيه hook-card.js — ركّبته من '+(hc.startsWith(W)?'مجلد الشغل':'السكل')+' (عشان ما يختفي بصمت)'); }
+    else console.log('⚠️ الهوك بـtheme.json بس ما لقيت hook-card.js — الهوك ما راح ينرسم');
+  }
+  const STUDIO=fs.existsSync(W+'studio.json')?JSON.parse(fs.readFileSync(W+'studio.json','utf8')):null;   // 📱 تعديلات استوديو الجوال
+  await p.evaluate((c,o,t,b,st)=>window.init({cards:c.cards,total:c.total,outro:o,theme:t,behind:b,studio:st}),caps,OUT_D,THEME,BEHIND,STUDIO);
   /* ⚠️ انتظار الخط لازم يجي **بعد** init: الخط اللي مو Cairo يُحقن داخل init نفسها،
      فانتظاره قبلها = انتظار لا شي، والنتيجة أول الفيديو بخط بديل ثم ينقلب بالنص.
      وكل الأوزان تُحمّل — الوزن 600 كان ناقصاً فيطلع بخط بديل لحاله. */
   const fontOK=await p.evaluate(async f=>{
     const W=['400','600','700','800','900'];
-    await Promise.all(W.map(w=>document.fonts.load(w+' 60px '+f)));
+    /* 28 سبتمبر (صفحة التعارف): ستايل الخط المحقون داخل init لازم يخلص تحميله أول — قبلها المتصفح ما يعرف الخط
+       فـfonts.load يرجع صفر وcheck يقول «تمام» (ما فيه خط = ما فيه شي ناقص) والمعاينة تطلع بخط بديل بلا تحذير */
+    await Promise.all([...document.querySelectorAll('link[rel=stylesheet]')].map(l=>l.sheet?0:new Promise(r=>{l.onload=l.onerror=r;setTimeout(r,10000);})));
+    /* 28 سبتمبر: نص عربي إلزامي — بدونه ينزل الجزء اللاتيني من خط قوقل بس، والعربي ينزل متأخر فأول الفريمات بخط بديل */
+    await Promise.all(W.map(w=>document.fonts.load(w+' 60px '+f,'عربي ـ 123')));
     await document.fonts.ready;
-    return W.every(w=>document.fonts.check(w+' 60px '+f));
+    const faces=(await document.fonts.load('400 60px '+f,'عربي')).length;   /* صفر = الخط ما انعرف أصلاً (ولا check يكشفه) */
+    return faces>0 && W.every(w=>document.fonts.check(w+' 60px '+f,'عربي'));
   },FF);
   if(!fontOK) console.log('⚠️ الخط '+FF+' ما اكتمل تحميله — الرسم بيكمل بخط بديل');
   const grab=async(t,file,q)=>{
@@ -83,7 +99,23 @@ const CHROME=findChrome();
   }else{
     fs.mkdirSync(W+'out',{recursive:true});
     const n=Math.round(dur*FPS);
-    const force=process.argv.includes('--force');
+    let force=process.argv.includes('--force');
+    /* 🧷 v3.5 (27 سبتمبر): رسم كامل طاح بنصه (خطأ شبكة) خلّى الفريمات بعد نقطة الطيحة من التصميم القديم، والاستئناف حسبها «جاهزة»
+       فطلع الريل خليط. الحين: بصمة لملفات التصميم بمجلد الشغل — لو تغيّرت من آخر رسم، أو انطلب --force، تنمسح الفريمات القديمة أول،
+       فأي استئناف بعد طيحة يكمّل الناقص بس. نافذة range ما تمسح شي (تعدّل مشهد وتجمّع) وتحدّث البصمة. */
+    const crypto=require('crypto'), FPF=W+'out/.design.sha1';
+    const fpNow=(()=>{ const h=crypto.createHash('sha1');
+      for(const f of fs.readdirSync(W).sort()) if(/\.(html|js|json)$/.test(f)&&!['shots.json','sfx.json','fixes.json','a.json','words.json','safe.json'].includes(f)) h.update(f).update(fs.readFileSync(W+f));
+      const ext=(fs.readFileSync(W+'compose.html','utf8').match(/src="(\.\.\/[^"]+\.js)"/g)||[]).map(m=>m.slice(5,-1));
+      for(const e of ext){ try{ h.update(e).update(fs.readFileSync(W+e)); }catch(_){} }
+      return h.digest('hex'); })();
+    let fpOld=''; try{ fpOld=fs.readFileSync(FPF,'utf8').trim(); }catch(_){}
+    if(mode==='all'){
+      if(!force&&fpOld&&fpOld!==fpNow){ console.log('🧷 التصميم تغيّر من آخر رسم — أعيد الرسم كامل (الفريمات القديمة ما تصلح)'); force=true; }
+      if(force){ let k=0; for(const f of fs.readdirSync(W+'out')) if(f.endsWith('.jpg')){ fs.unlinkSync(W+'out/'+f); k++; }
+        if(k) console.log('🧹 مسحت',k,'فريماً قديماً — لو طاح الرسم بنصه، أعد التشغيل بلا --force ويكمّل الناقص بس'); force=false; }
+    }
+    fs.writeFileSync(FPF,fpNow);
     let i0=0,i1=n;                       // نافذة زمنية اختيارية — تُعاد كتابتها دائماً
     if(mode==='range'){
       const a=Number(process.argv[4]), b=Number(process.argv[5]);
@@ -106,4 +138,5 @@ const CHROME=findChrome();
     }
   }
   await b.close();
+  setTimeout(()=>process.exit(0),300);   // (16 سبتمبر) كروم أحياناً ما يقفل فيتعلّق السكربت بعد ما يخلص الرسم — نخرج بأنفسنا
 })();

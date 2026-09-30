@@ -21,7 +21,7 @@ python3 scripts/12_montage.py <work> scan <مجلد_المقاطع> --shot 1.5
 
 ### 2) وريه اللقطات — ورقة وحدة مرقّمة
 ```bash
-python3 scripts/12_montage.py <work> sheet --cols 6
+python3 scripts/12_montage.py <work> sheet          # 4 أعمدة · ارتفاع اللقطة 180
 ```
 كل لقطة عليها رقم مقطعها. **اقرأ الورقة وحدة — لا تقرأ الصور فرادى.**
 واعرضها عليه: «هذي أحلى لحظة بكل مقطع — شنو تبي أشيل؟»
@@ -45,6 +45,10 @@ python3 scripts/12_montage.py <work> plan --dur 30 --shot 1.5
 | `--dur 0` | كل المقاطع بلا سقف |
 
 أطوال اللقطات تتغيّر بنمط متكرر (١.٠ · ٠.٨٢ · ١.٢٤ · ٠.٩٤ من `--shot`) عشان ما يصير رتيباً.
+
+🥁 **على نبضات الأغنية الفعلية (أدق من `--bpm`):** `python3 scripts/beat.py <work>/bg-audio.mp3 --out <work>/beats.json`
+ثم `plan … --beats <work>/beats.json [--on beats|accents|onsets]` — كل قطعة على فريم النبضة بالضبط، وبعد `build`
+المؤثرات والانتقالات على الضربات بـ`node scripts/23_beatfx_render.js`. التفاصيل → `references/beat-fx.md`.
 
 ### 5) التركيب
 ```bash

@@ -9,6 +9,7 @@ const LOGO=document.getElementById('LOGO'), VF=document.getElementById('VF');
 const W=1080,H=1920;
 /* ── الألوان والخط تجي من theme.json — لا تكتب لوناً ثابتاً هني ── */
 let BG='#F3EFEA',INK='#1F1F1D',ACC='#D97757',CLAY='#BD5D3A',MUT='#8A847A',FONT='Cairo',HANDLE='@handle';
+let CARD_TOP=null, CARD_ZOOM=1;   /* studio.json ← cardTop (23_headcrop.py) · theme.json ← cardZoom */
 let FACE_ANCH=0.30;   /* أين يقع وجه المتحدث داخل كرت الفيديو: 0 = فوق · 1 = تحت (theme.json ← faceAnchor) */
 let GRID=true;        /* شبكة خفيفة بالخلفية (theme.json ← grid:false يوقفها) */
 let BADGE_UNTIL=0;    /* ⛔ شارة الحساب مطفية (قرار ماجد ٢ سبتمبر): اسمه ظاهر بالمنصة نفسها
@@ -19,16 +20,43 @@ function init(d){
   BEHIND=d.behind||null;
   const t=d.theme||{};
   BG=t.bg||BG; INK=t.ink||INK; ACC=t.acc||ACC; CLAY=t.clay||CLAY; MUT=t.mut||MUT;
-  FONT=t.font||FONT; HANDLE=t.handle||HANDLE;
+  FONT=t.font||FONT; HANDLE=t.handle||HANDLE; CAPSTYLE=t.capStyle||CAPSTYLE;
+  ONACC=(typeof t.onAcc==='string'&&/^#[0-9A-Fa-f]{6}$/.test(t.onAcc))?t.onAcc:null;   /* لون النص فوق التمييز (صفحة التعارف تكتبه) — بدونه القاعدة القديمة */
   if(typeof t.faceAnchor==='number') FACE_ANCH=t.faceAnchor;
+  if(typeof t.cardZoom==='number') CARD_ZOOM=t.cardZoom;
   if(typeof t.badgeUntil==='number') BADGE_UNTIL=t.badgeUntil;
   if(typeof t.badge==='boolean') BADGE_UNTIL=t.badge?3:0;   /* توافق: مشاريع كتبت badge:false */
   if(typeof t.grid==='boolean') GRID=t.grid;
+  if(typeof t.hookZoom==='number') HOOK_END=t.hookZoom;
+  if(t.outro){ OUTRO_T={...OUTRO_T,...t.outro}; if(Array.isArray(t.outro.chips)) RECAP=t.outro.chips.map(c=>[c]); }   /* v3.5: كرت الختام من الثيم (الافتراضي إعلان السكل — ريل بودكاست لازم يغيّره) */   /* زوم الهوك + انتقال بعده (ثواني) — شوف hookZoom تحت */
   if(t.logo){const L=document.getElementById('LOGO'); if(L.getAttribute('src')!==t.logo) L.src=t.logo;}
   if(FONT!=='Cairo'){const l=document.createElement('link');l.rel='stylesheet';
     l.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(FONT)+':wght@400;600;700;800;900&display=swap';
     document.head.appendChild(l);}
-  return preloadBroll();   /* يرجّع Promise — المحرّك ينتظر تحميل لقطات البي-رول (إن وُجدت) */
+  if(d.studio){ const st=d.studio;
+    if(st.sceneFx===false) SCENE_LIST.length=0;
+    if(Array.isArray(st.sceneFx)) st.sceneFx.forEach(n=>{ const f=window[n];
+      if(typeof f!=='function'){ console.error('⚠️ sceneFx: ما فيه دالة اسمها',n); return; }
+      if(!SCENE_LIST.some(x=>x[0]===n)) SCENE_LIST.push([n,f,f.layer]); });   /* f.layer='video' = طبقة الفيديو */
+    if(Array.isArray(st.scenes)&&st.scenes.length) SCENES=st.scenes.map(x=>({...x,collage:x.m==='R_COLLAGE'||!!x.collage,m:(typeof x.m==='string'?rectByName(x.m):x.m)}));
+    if(Array.isArray(st.brollClips)) BROLL=st.brollClips;
+    if(typeof st.cardTop==='number') CARD_TOP=st.cardTop;
+    if(st.outro){ OUTRO_T={...OUTRO_T,...st.outro}; if(Array.isArray(st.outro.chips)) RECAP=st.outro.chips.map(c=>[c]); }
+    if(Array.isArray(st.stickers)) STICK=st.stickers;
+    BEHIND_OFF=Array.isArray(st.behindOff)?st.behindOff:[];
+    if(st.brNeed&&typeof BR_NEED==='object'){ for(const k in st.brNeed) BR_NEED[k]=st.brNeed[k]; }
+    if(Array.isArray(st.gen)) GEN=st.gen.map(g=>({...g})); if(st.genFrames) GEN_FR=st.genFrames; }
+  if(t.stack&&typeof t.stack==='object') STK={...STK,...t.stack};   /* «طبقات» — theme.json ← stack:{fill,shade,accent,font,weight} */
+  return Promise.all([preloadBroll(),preloadGen(),preloadStack(),fontReady()]);   /* يرجّع Promise — المحرّك ينتظر تحميل لقطات البي-رول وأقنعة «طبقات» (إن وُجدت) */
+}
+/* ⛔ 28 سبتمبر: خط الثيم لازم يكتمل **بحروفه العربية** قبل أول رسم — قوقل فونتس يقسم الخط لأجزاء، و document.fonts.load
+   بلا نص عربي ينزّل الجزء اللاتيني بس؛ فأي قياس (طبقات، كشيدة، التفاف الكابشن) ينحسب بخط بديل أضيق ~20٪.
+   هني عشان كل من يستدعي init (04 · 08 · الاستوديو) ينتظره — مو بس 04. سقف 10 ثوانٍ عشان النت الضعيف ما يعلّق الرسم. */
+function fontReady(){
+  const fam='"'+FONT+'"', go=()=>Promise.all(['400','600','700','800','900'].map(w=>document.fonts.load(w+' 60px '+fam,'عربي ـ 123'))).catch(()=>0);
+  const lk=[...document.querySelectorAll('link[rel=stylesheet]')].find(l=>l.href.indexOf('family='+encodeURIComponent(FONT))>=0);
+  const sheet=(lk&&!lk.sheet)?new Promise(r=>{ lk.addEventListener('load',r); lk.addEventListener('error',r); }):Promise.resolve();
+  return Promise.race([sheet.then(go).then(()=>document.fonts.ready), new Promise(r=>setTimeout(r,10000))]);
 }
 /* ---------- utils ---------- */
 /* ألوان مشتقّة من الثيم — لا تكتب rgba ثابتة */
@@ -38,7 +66,8 @@ function rgba(hex,a){const c=hx(hex);return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a
 function lum(hex){const c=hx(hex).map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
   return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];}
 const cBG=a=>rgba(BG,a), cINK=a=>rgba(INK,a);
-const onACC=()=>lum(ACC)>0.45?INK:'#FFFFFF';
+let ONACC=null;   /* theme.onAcc — صريح لأن القاعدة تحت تطلع أبيض على تمييز فاتح بثيم غامق (ذهبي/ليموني) */
+const onACC=()=>ONACC||(lum(ACC)>0.45?INK:'#FFFFFF');
 const DARK=()=>lum(BG)<0.4;
 
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -63,16 +92,44 @@ const R_LOWER={x:350,y:1370,w:380,h:520,r:32};   /* كرت صغير تحت — �
    بكرت 9:16 كامل بلا قصّ. عين المشاهد تمشي بخط واحد من فوق لتحت. لا تستخدم R_STAGE/R_SIDE (الفيديو بالنص + رسم فوق الراس
    + كابشن تحت = ثلاث نقاط تركيز، المشاهد يتوه). R_STAGE/R_SIDE باقيتان للتوافق فقط. */
 const R_DOWN={x:214,y:760,w:652,h:1160,r:40};
+/* 📱 استوديو الجوال (16 سبتمبر): المشاهد والملصقات وإطفاء «ورا الراس» تجي من studio.json عبر init({studio}) */
+let BEHIND_OFF=[]; const R_COLLAGE={x:0,y:1920,w:1080,h:1920,r:0};   /* كولاج: الفيديو تحت الشاشة، الشخص مقصوص فوق ورقة */
+let BROLL=[];   /* لقطات بي-رول من الاستوديو: {k,s,e,mode:'full'|'card'} */
+/* ═══ مشاهد الرسم الخاصة بالمشروع — SCENE_LIST (فاضية افتراضياً) ═══
+   المحرّك ما يرسم أي مشهد مخصص إلا اللي تسجّله أنت. كل عنصر: [اسم, دالة(t), طبقة?]
+     • بدون طبقة  → تنرسم فوق الفيديو والبي-رول والملصقات، وتحت الكابشن (المكان المعتاد للّوحات)
+     • 'video'   → تنرسم مباشرة بعد الفيديو (لمؤثر يشتغل على صورة الفيديو نفسها مثل القليتش)
+   طريقتان للتسجيل:
+     1) بـcompose.html مشروعك (تحت هذا السكربت أو بآخره):
+          function myPanel(t){ if(t<4.2||t>7.8) return; panelIn(t,4.2,7.8,()=>{ … }); }
+          SCENE_LIST.push(['myPanel',myPanel]);
+     2) من studio.json ← "sceneFx":["myPanel","glitch"] — الأسماء تتحوّل لدوال window بنفس الاسم
+        (الدالة لازم تكون معرّفة بـcompose.html أو بملف محمّل). "sceneFx":false يفرّغ القائمة.
+        دالة طبقة الفيديو تعلن عن نفسها: myFx.layer='video'.
+   كل مشهد يمرّ عبر safe(): لو سقط يتخطّى ويطبع سطر خطأ (04_render_frames.js يطبعه بالطرفية).
+   أمثلة جاهزة للقراءة: scripts/compose.EXAMPLES.js (ما يتحمّل افتراضياً — شوف راس الملف). */
+const SCENE_LIST=[];
+/* 🎬 زوم الهوك (ماجد 27 سبتمبر): theme.json ← hookZoom: <نهاية الهوك بالثواني> (0 = مطفي، الافتراضي)
+   أول نص ثانية: دخول ناعم 1.00→1.08 ويثبت · آخر 0.18 ث من الهوك: دخول سريع لـ1.30 · بعد اللحمة: يرجع 1.00 بـ0.3 ث.
+   بملء الشاشة بس (يعيد رسم فريم الفيديو مكبّراً حول الوجه) · الووش الخفيف معه: sfx.json ← soft */
+let HOOK_END=0;
+function hookScale(t){ const H0=HOOK_END; if(!H0||t>H0+0.3) return 1;
+  if(t<0.55) return 1+0.08*ease(t/0.55);
+  if(t<H0-0.18) return 1.08;
+  if(t<H0) return 1.08+0.22*Math.pow((t-(H0-0.18))/0.18,2);
+  return 1.30-0.30*ease((t-H0)/0.3); }
+function hookZoom(t){ if(t>=VEND) return; const s=hookScale(t); if(s<=1.001||!isFull(vtarget(t))) return;
+  if(_behindLine(t)) return;   /* 28 سبتمبر: الزوم يعيد رسم الفيديو فوق «ورا الراس/طبقات» فيمسحها، وقناع الشخص ما يطابق الصورة المكبّرة — النص نفسه ضربة الهوك */
+  const cx=540, cy=760; X.save(); X.translate(cx,cy); X.scale(s,s); X.translate(-cx,-cy); X.drawImage(VF,0,0,W,H); X.restore(); }
+SCENE_LIST.push(['hookZoom',hookZoom,'video']);
+function rectByName(n){return ({R_FULL,R_DOWN,R_LOWER,R_STAGE,R_SIDE,R_COLLAGE,R_OFF:(typeof R_OFF!=='undefined'?R_OFF:R_FULL)})[n]||R_FULL;}   /* عند النداء لا عند التحميل — R_OFF يتعرّف بعدين */
+let STICK=[];
 /* 🆕 v2.5 «شرح كامل» (R_OFF): المتحدث يختفي — كرته ينزلق تحت الشاشة (نفس مقاس R_LOWER بس y=1920)
    والشاشة كلها للرسم. صوته يكمّل والكابشن يبقى تحت عند 1460. مرة أو مرتين بالفيديو، 4-8 ثوانٍ، عند
    الأرقام والقوائم — لا بالهوك. مثال بالمشاهد: {s:12.4,e:18.9,m:R_OFF} */
 const R_OFF={x:350,y:1920,w:380,h:520,r:32,off:true};
-const SCENES=[
- {s:0.00,e:3.32,m:R_FULL},{s:3.32,e:8.00,m:R_DOWN},{s:8.00,e:11.45,m:R_FULL},
- {s:11.45,e:15.36,m:R_DOWN},{s:15.36,e:18.56,m:R_DOWN},{s:18.56,e:20.42,m:R_FULL},
- {s:20.42,e:25.76,m:R_FULL},{s:25.76,e:28.35,m:R_DOWN},{s:28.35,e:30.75,m:R_FULL},
- {s:30.75,e:34.90,m:R_DOWN},{s:34.90,e:38.38,m:R_DOWN},{s:38.38,e:39.76,m:R_FULL},
- {s:39.76,e:42.82,m:R_DOWN},{s:42.82,e:99,m:R_FULL}];
+let SCENES=[{s:0,e:99,m:R_FULL}];   /* الافتراضي: ملء الشاشة طول الفيديو. تخطيط المشاهد يجي من studio.json ← scenes أو تكتبه هني لمشروعك.
+                                       (تخطيط المثال القديم صار بـcompose.EXAMPLES.js ← EXAMPLE_LAYOUT) */
 const TR=0.42;
 /* الكرت المرن: يصغر نسبة وتناسب (9:16) حسب أسفل الرسم (gb) وعدد أسطر الكابشن بهاللحظة — فلا يتزاحم شي */
 const CAPH=l=>l*LH+PADY*2;
@@ -93,8 +150,11 @@ function vrect(t){
 }
 function drawVideo(t){
   const R=vrect(t), sw=VF.naturalWidth||1080, shh=VF.naturalHeight||1920;
-  const sc=Math.max(R.w/sw,R.h/shh), cw=R.w/sc, ch=R.h/sc;
-  const sx=(sw-cw)/2, sy=(shh-ch)*FACE_ANCH;
+  /* ⛔ v3.8 قاعدة المستخدم: بالكرت القصّ ثابت من فوق راسه بمساحة آمنة (cardTop من 23_headcrop.py) — بلا تتبع.
+     kc: 0 = ملء الشاشة (faceAnchor) · 1 = كرت (cardTop + cardZoom) — يتدرّج مع انتقال المستطيل فما فيه قفزة */
+  const kc=CARD_TOP==null?0:cl((1919-R.h)/300,0,1), z=lerp(1,CARD_ZOOM,kc);
+  const sc=Math.max(R.w/sw,R.h/shh)*z, cw=R.w/sc, ch=R.h/sc;
+  const sx=(sw-cw)/2, sy0=(shh-ch)*FACE_ANCH, sy=CARD_TOP==null?sy0:lerp(sy0,cl(CARD_TOP*shh,0,shh-ch),kc);
   X.save();
   if(R.r>0.5){sh(70,26,0.26);X.fillStyle='#000';rr(R.x,R.y,R.w,R.h,R.r);X.fill();nsh();}
   rr(R.x,R.y,R.w,R.h,R.r);X.clip();
@@ -153,7 +213,7 @@ function badge(t){
   const tw=X.measureText(s).width,lw=42,g=15,p=30,w=lw+g+tw+p*2,h=76,x=540-w/2,y=190;   /* 190 لا 74: أعلى الشاشة يغطيه انستقرام */
   sh(26,10,0.16);X.fillStyle=cBG(0.94);rr(x,y,w,h,h/2);X.fill();nsh();
   X.strokeStyle=cINK(0.08);X.lineWidth=2;rr(x,y,w,h,h/2);X.stroke();
-  X.drawImage(LOGO,x+w-p-lw,y+(h-lw)/2,lw,lw);
+  if(LOGO.naturalWidth) X.drawImage(LOGO,x+w-p-lw,y+(h-lw)/2,lw,lw);
   X.fillStyle=INK;X.direction='ltr';X.textAlign='right';X.textBaseline='middle';X.fillText(s,x+w-p-lw-g,y+h/2+2);
   X.restore();}
 function bar(t){let a=t>VEND-0.3?1-pr(t,VEND-0.3,VEND):1;if(a<=0)return;
@@ -173,7 +233,8 @@ function layout(ws){X.font='800 '+FS+'px '+FONT;
 function caption(t){
   if(SCENES.some(sc=>sc.nocap&&t>=sc.s&&t<sc.e)) return;   /* {s,e,m,nocap:true}: مشهد بلا كابشن — لما اللوحة فوق فيها النص نفسه (قرار المستخدم 8 سبتمبر) */
   /* لا تكرّر: لو الكلام يمرّ ورا الشخص بهاللحظة، كرت الكابشن يختفي */
-  if(BEHIND&&PRS_OK&&isFull(vrect(t))&&BEHIND.lines.some(l=>t>=l.s&&t<=l.e)) return;
+  if(BEHIND&&PRS_OK&&isFull(vrect(t))&&BEHIND.lines.some(l=>t>=l.s&&t<=l.e&&!BEHIND_OFF.includes(l.card))) return;
+  if(collageActive(t)) return;   /* الكولاج يرسم كلماته قصاصات */
   const c=CAPS.find(c=>t>=c.s&&t<c.e); if(!c)return;
   const lt=t-c.s,rt=c.e-t;let a=1,dy=0,sc=1;
   if(lt<0.2){const k=lt/0.2;a=ease(k);dy=(1-ease(k))*28;sc=0.93+0.07*back(k);}
@@ -184,10 +245,87 @@ function caption(t){
     let pg=pages.find(p=>{const f=p[0].items[0],l=p[p.length-1].items[p[p.length-1].items.length-1];return t>=f.s&&t<l.e;});
     if(!pg){pg=pages.find(p=>t<p[0].items[0].s)||pages[pages.length-1];}
     L=pg;}
+  if(CAPSTYLE!=='card'){ /* ── ستايلات بلا كرت: shadow (كبير بظل) · big (كلمة وحدة ضخمة) · underline (خط تحت الكلمة) · bar (شريط بلون التمييز) · type (ماكينة كاتبة) ── */
+    const GAP2=22,MAXW2=820 /* كان 940: يدخل عمود أزرار انستقرام (x>900) بـ110px — فحص 18 سبتمبر */, isNum=w=>/^[0-9٠-٩]+$/.test(w.t);
+    const wordFX=(i,k0)=>{ /* مؤثر الكلمة عند نطقها: drop · shake · type · pulse — يرجّع {ps,dx,dy,clip} */
+      const r={ps:1,dx:0,dy:0,clip:1}; const sp=t>=i.s; if(!sp) return r;
+      if(i.hot){const k=Math.min(1,(t-i.s)/0.35); r.ps=1+0.10*Math.sin(k*Math.PI)+0.06*k;}
+      const fx=i.fx; if(!fx) return r; const k=cl((t-i.s)/0.38,0,1);
+      if(fx==='drop'){ const kk=cl((t-i.s)/0.34,0,1); r.dy=kk<0.72?-(1-Math.pow(kk/0.72,2))*300:-Math.sin((kk-0.72)/0.28*Math.PI)*14; }   /* جاذبية ثم ارتداد صغير */
+      else if(fx==='crack'){ r.dx=Math.sin(k*46)*(1-k)*12; }
+      else if(fx==='shake'){ r.dx=Math.sin(k*46)*(1-k)*16; }
+      else if(fx==='type'){ r.clip=ease(k); }
+      else if(fx==='pulse'){ r.ps*=1+0.28*Math.sin(k*Math.PI); }
+      else if(fx==='slam'){ const k2=cl((t-i.s)/0.36,0,1); r.slam=k2; }
+      else if(fx==='stretch'){ if(/^[\u0621-\u064A]{3,}$/.test(i.t)) r.stretch=cl((t-i.s)/1.2,0,1); else r.ps*=1+0.25*Math.sin(k*Math.PI); }   /* التمدد لكلمة عربية متصلة فقط — الأرقام تنبض */
+      return r; };
+    /* تمدد بالكشيدة بالبكسل: نرسم الكلمة مرة بكشيدة طويلة ونعرض شريحة من وسطها بعرض متغيّر — الحروف تبقى متصلة */
+    const STC=window.__stc=window.__stc||{};
+    const stretchWord=(i,x,cy,fs,k,color)=>{ const key=i.t+'|'+fs; let C=STC[key];
+      if(!C){ const KA='\u0640'; const w=i.t; const _p=_pts(w); const pos=_p.length?_p[_p.length-1]:Math.max(1,w.length-1); const sw=w.slice(0,pos)+KA.repeat(14)+w.slice(pos);
+        const off=document.createElement('canvas'); const c=off.getContext('2d'); c.font='900 '+fs+'px '+FONT; c.direction='rtl'; c.textAlign='center'; c.textBaseline='middle';
+        const tw=Math.ceil(c.measureText(sw).width)+40; off.width=tw; off.height=Math.ceil(fs*2); c.font='900 '+fs+'px '+FONT; c.direction='rtl'; c.textAlign='center'; c.textBaseline='middle'; c.fillStyle='#fff'; c.fillText(sw,tw/2,off.height/2);
+        const d=c.getImageData(0,0,tw,off.height).data; const cols=[]; for(let xx=0;xx<tw;xx++){ let top=1e9,bot=-1; for(let y=0;y<off.height;y++){ if(d[(y*tw+xx)*4+3]>60){ if(y<top)top=y; if(y>bot)bot=y; } } cols.push(bot<0?null:[top,bot]); }
+        let best=[0,0],cur=0,h0=null; for(let xx=0;xx<tw;xx++){ const cc=cols[xx]; const hh=cc?cc[1]-cc[0]:-1; const thin=cc&&hh<fs*0.22&&(h0===null||Math.abs(hh-h0)<4); if(thin){ if(cur===0)h0=hh; cur++; if(cur>best[1]-best[0]) best=[xx-cur+1,xx+1]; } else { cur=0; h0=null; } }
+        C=STC[key]={off,tw,k0:best[0],k1:best[1]}; }
+      const {off,tw,k0,k1}=C; const kw=k1-k0, base=tw-kw, minW=Math.max(2,Math.round(fs*0.04));
+      const ph=Math.sin(k*Math.PI); const cw=Math.round(minW+(Math.min(kw,420)-minW)*ph); const y=cy-off.height/2; const rightW=tw-k1;
+      X.save(); X.globalCompositeOperation='source-over';
+      /* نلوّن الصورة البيضاء بلون الكلمة عبر قناع */
+      const tmp=document.createElement('canvas'); tmp.width=rightW+cw+k0+4; tmp.height=off.height; const tc=tmp.getContext('2d');
+      tc.drawImage(off,k1,0,rightW,off.height, tmp.width-rightW-2,0,rightW,off.height); const mid=Math.round((k0+k1)/2);
+      tc.drawImage(off,mid-1,0,2,off.height, tmp.width-rightW-2-cw,0,cw,off.height); tc.drawImage(off,0,0,k0,off.height, tmp.width-rightW-2-cw-k0,0,k0,off.height);
+      tc.globalCompositeOperation='source-in'; tc.fillStyle=color; tc.fillRect(0,0,tmp.width,tmp.height);
+      X.shadowColor='rgba(0,0,0,0.75)';X.shadowBlur=22;X.shadowOffsetY=5; X.drawImage(tmp,x-tmp.width+2,y); X.restore(); return tmp.width; };   /* حافة الكلمة اليمنى ثابتة عند x والتمدد يمشي لليسار */
+    const drawWord=(i,x,cy,fs)=>{ const sp=t>=i.s, act=t>=i.s&&t<i.e; const f=wordFX(i);
+      let lift=0; if(act&&!i.fx){const k=Math.min(1,(t-i.s)/0.12);lift=-6*Math.sin(k*Math.PI);}
+      if(f.stretch!==undefined&&f.stretch<1&&_pts(i.t).length){ /* تمدد: الكلمة تبقى بمكانها، ونسختها الذهبية تتمدد بالكشيدة فوق الكابشن كبطلة — فقط لو فيها موضع كشيدة صالح */
+        X.save(); X.font='900 '+Math.round(fs*1.35)+'px '+FONT; const bw=X.measureText(i.t).width; X.globalAlpha=Math.min(1,f.stretch*6,(1-f.stretch)*6);
+        stretchWord({...i,w:bw},540+bw/2+60,cy-fs*2.1,Math.round(fs*1.35),f.stretch,ACC); X.restore(); }
+      if(f.slam!==undefined&&f.slam<1){ /* ضربة: الكلمة تهبط ضخمة من فوق بالنص وتضرب ثم تصغر لمكانها */
+        const k=f.slam; const big=k<0.35; const sc0=big?(3.2-2.0*ease(k/0.35)):lerp(1.2,1,ease((k-0.35)/0.65)); const cy0=big?lerp(760,cy,ease(k/0.35)):cy; const jit=(k>0.33&&k<0.5)?Math.sin(k*300)*8*(1-(k-0.33)/0.17):0;
+        X.save(); X.translate(540+jit,cy0); X.scale(sc0,sc0); X.translate(-540,-cy0); X.shadowColor='rgba(0,0,0,0.8)';X.shadowBlur=30;X.shadowOffsetY=8; X.fillStyle=ACC; X.textAlign='center'; X.fillText(i.t,540,cy0); X.restore(); return; }
+      X.save(); const cxw=x-i.w/2; X.translate(cxw+f.dx,cy+lift+f.dy); X.scale(f.ps,f.ps); X.translate(-cxw,-(cy+lift));
+      if(f.clip<1){X.beginPath();X.rect(x-i.w*f.clip-4,cy-fs,i.w*f.clip+8,fs*2);X.clip();}
+      if(CAPSTYLE==='bar'&&act){ X.fillStyle=ACC; rr(x-i.w-16,cy+lift-fs*0.66,i.w+32,fs*1.28,18); X.fill(); }
+      X.shadowColor='rgba(0,0,0,0.75)';X.shadowBlur=22;X.shadowOffsetY=5;
+      X.fillStyle=(CAPSTYLE==='bar'&&act)?onACC():((i.hot&&sp)?ACC:'#FFFFFF');
+      X.fillText(i.t,x,cy+lift);
+      X.shadowColor='transparent';X.shadowBlur=0;
+      if(CAPSTYLE==='underline'&&sp){ const k=act?ease(Math.min(1,(t-i.s)/0.22)):1; X.fillStyle=ACC; rr(x-i.w*k,cy+lift+fs*0.52,i.w*k,10,5); X.fill(); }
+      X.restore(); };
+    if(CAPSTYLE==='big'){ /* كلمة وحدة ضخمة بالنص — الكلمة المنطوقة الحين */
+      const cur=c.w.filter(w=>t>=w.s).slice(-1)[0]; if(!cur) return;
+      let fs=170; X.font='900 '+fs+'px '+FONT; while(X.measureText(cur.t).width>960&&fs>70){fs-=10;X.font='900 '+fs+'px '+FONT;}
+      const wv={...cur,w:X.measureText(cur.t).width}; const k=ease(Math.min(1,(t-cur.s)/0.18));
+      const _Rb=vtarget(t), _yb=(_Rb.y>700&&!_Rb.off)?Math.max(260,_Rb.y-120):1200;   /* 23 سبتمبر: ما يطيح على وجهه بوضع الكرت */
+      X.save(); X.globalAlpha=a*k; X.textAlign='right'; X.textBaseline='middle';
+      X.translate(540,_yb); X.scale(0.85+0.15*k,0.85+0.15*k); X.translate(-540,-_yb);
+      drawWord(wv,540+wv.w/2,_yb,fs); X.restore(); return; }
+    let FS2=84, LL=null; const src=CAPSTYLE==='type'?c.w.filter(w=>t>=w.s):c.w;
+    if(!src.length) return;
+    for(let tr=0;tr<6;tr++){ X.font='900 '+FS2+'px '+FONT;
+      const it=c.w.map(w=>({...w,w:X.measureText(w.t).width})); const L2=[]; let cc=[],cw=0;
+      for(let k=0;k<it.length;k++){const i=it[k];const add=cc.length?i.w+GAP2:i.w;
+        const glue=(k+1<it.length&&isNum(i))?it[k+1].w+GAP2:0;   /* الرقم ووحدته بسطر واحد */
+        if(cw+add+glue>MAXW2&&cc.length){L2.push({items:cc,w:cw});cc=[i];cw=i.w;}else{cc.push(i);cw+=add;}}
+      if(cc.length)L2.push({items:cc,w:cw});
+      LL=L2; if(LL.length<=MAXLINES||FS2<=58) break; FS2=Math.round(FS2*0.9); }
+    const LH2=Math.round(FS2*1.33); const bh2=LL.length*LH2;
+    /* ⛔ قاعدة ماجد (23 سبتمبر): الكابشن ما ينكتب على وجهه أبداً. الستايلات بلا كرت كانت تثبّت عند 1400
+       مهما كان وضع الفيديو، فبوضع الكرت (R_DOWN/R_LOWER) تطيح الكلمات على وجهه. الحين تطلع فوق الكرت. */
+    const _Rc=vtarget(t), by2=(_Rc.y>700&&!_Rc.off)?Math.max(200,_Rc.y-46-bh2):(1400-bh2);
+    X.save();X.globalAlpha=a;X.translate(540,by2+bh2/2+dy);X.scale(sc,sc);X.translate(-540,-(by2+bh2/2));
+    X.textAlign='right';X.textBaseline='middle'; X.font='900 '+FS2+'px '+FONT;
+    let lastX=null,lastY=null;
+    LL.forEach((ln,li)=>{let x=540+ln.w/2;const cy=by2+LH2*li+LH2/2;
+      for(const i of ln.items){ if(CAPSTYLE==='type'&&t<i.s) break; drawWord(i,x,cy,FS2); lastX=x-i.w; lastY=cy; x-=i.w+GAP2;}});
+    if(CAPSTYLE==='type'&&lastX!==null&&Math.floor(t*3)%2===0){ X.fillStyle=ACC; X.fillRect(lastX-18,lastY-FS2*0.55,8,FS2*1.1); }
+    X.restore(); return; }
   const bh=L.length*LH+PADY*2,bw=Math.max(...L.map(l=>l.w))+PADX*2;
   const _R=vtarget(t), LOW=_R.y>700&&!_R.off;   /* R_OFF: الكابشن يبقى تحت عند 1460 · مستطيل الهدف لا المتحرّك: الكابشن يثبت بمكانه من أول فريم بلا قفزة */          /* R_DOWN أو R_LOWER → الكابشن فوق كرت الفيديو */          /* الفيديو تحت → الكابشن فوقه */
   const CUT=(cutoutActive(t)||headoutActive(t))&&PTOP>200;   /* الكابشن فوق راسه بالوضعين */
-  const SEAM=isFull(_R)?0:Math.round(bh*0.42);   /* ركوب الكابشن على حافة الفيديو */
+  const SEAM=0;   /* ⛔ 23 سبتمبر: كان الكرت يركب 42٪ منه على حافة الفيديو فيغطي جبهة المتحدث — الحين فوق الكرت بالكامل */
   const bx=540-bw/2,by=(CUT?PTOP-46:(LOW?_R.y-60+SEAM:1460))-bh;   /* 1460 عادةً · وعلى حافة الفيديو بوضع «الفيديو تحت» */
   X.save();X.globalAlpha=a;X.translate(540,by+bh/2+dy);X.scale(sc,sc);X.translate(-540,-(by+bh/2));
   sh(48,20,0.30);X.fillStyle=cBG(0.96);rr(bx,by,bw,bh,38);X.fill();nsh();
@@ -209,7 +347,7 @@ function safe(fn,t,name){
   try{ fn(t); }
   catch(e){
     if(!window.__scErr) window.__scErr={};
-    if(!window.__scErr[name]){window.__scErr[name]=1;console.log('⚠️ مشهد متخطّى:',name,'—',e.message);}
+    if(!window.__scErr[name]){window.__scErr[name]=1;console.error('⚠️ مشهد متخطّى: '+name+' — '+e.message);}
   }
   finally{ X.restore(); }
 }
@@ -220,13 +358,21 @@ window.__helpers={rr,sh,nsh,card,T,pr,ease,eio,back,lerp,cl};
    والكشيدة وحدها تمرّ ورا الراس. يشتغل بلحظات ملء الشاشة فقط. */
 const PRS=document.getElementById('PRS');
 let BEHIND=null, PRS_OK=false, PFACE=null;
+let CAPSTYLE='card';   /* theme.json ← capStyle:'shadow' = كلمات كبيرة بيضاء بظل بلا كرت (ستايل ثانٍ للكابشن، 16 سبتمبر) */
 const _MC=document.createElement('canvas'); _MC.width=W; _MC.height=H;
 const _MX=_MC.getContext('2d',{willReadFrequently:true});
 const _FC=document.createElement('canvas'); _FC.width=W; _FC.height=H;
 const _FX=_FC.getContext('2d',{willReadFrequently:true});
-const NO_FWD=new Set([...'اأإآدذرزوؤةءى']), AR=/[ء-ي]/;
-function _pts(w){const p=[];for(let i=0;i<w.length-1;i++){if(NO_FWD.has(w[i]))continue;
-  if(!AR.test(w[i+1])||w[i+1]==='ء')continue;p.push(i+1);}return p;}
+const NO_FWD=new Set([...'اأإآدذرزوؤةءى']), AR=/[ء-ي]/, MARK=/[ً-ٰٟـ]/;
+/* مواضع الكشيدة الصالحة. 28 سبتمبر: التشكيل (ّ َ ُ …) مو حرف — كان «تتحرّك» ياخذ كشيدة بعد الراء (ر ما تتصل) فتنكسر الكلمة؛
+   الحين الموضع يُحسب من الحرف الأساسي، والكشيدة تنحط بعد تشكيله. و«لا» ما تنفك (ل قبل ا/أ/إ/آ). */
+function _pts(w){const p=[];for(let i=0;i<w.length-1;i++){
+  if(MARK.test(w[i])) continue;
+  let j=i+1; while(j<w.length&&MARK.test(w[j])) j++;
+  if(j>=w.length||NO_FWD.has(w[i])) continue;
+  const nx=w[j]; if(!AR.test(nx)||nx==='ء') continue;
+  if(w[i]==='ل'&&'اأإآ'.includes(nx)) continue;
+  p.push(j);}return p;}
 function _span(yc,h){                       /* حدود جسم المتحدث عند هذا السطر */
   const y0=Math.max(0,Math.round(yc-h/2)),hh=Math.min(H-y0,Math.round(h));
   let d;try{d=_MX.getImageData(0,y0,W,hh).data;}catch(e){return null;}
@@ -244,6 +390,20 @@ function _bgLum(yc,h){                       /* إضاءة الخلفية خلف
       s+=(0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2])/255;n++;}}
   return n?s/n:0.5;
 }
+const _STC2={};
+function _stretchCache(word,fs){ const key=word+'|'+fs; if(key in _STC2) return _STC2[key];
+  const pts=_pts(word); if(!pts.length) return (_STC2[key]=null);   /* ⛔ ما فيه موضع كشيدة صالح (ا د ذ ر ز و…) → بلا تمدد */
+  const KA='ـ'; const pos=pts[pts.length-1]; const sw=word.slice(0,pos)+KA.repeat(16)+word.slice(pos);
+  const off=document.createElement('canvas'); const c=off.getContext('2d'); const F='900 '+fs+'px '+FONT;
+  c.font=F; c.direction='rtl'; const tw=Math.ceil(c.measureText(sw).width)+40; off.width=tw; off.height=Math.ceil(fs*2.2);
+  c.font=F; c.direction='rtl'; c.textAlign='center'; c.textBaseline='middle'; c.fillStyle='#fff'; c.fillText(sw,tw/2,off.height/2);
+  const d=c.getImageData(0,0,tw,off.height).data; const cols=[]; for(let x=0;x<tw;x++){ let top=1e9,bot=-1; for(let yy=0;yy<off.height;yy++){ if(d[(yy*tw+x)*4+3]>60){ if(yy<top)top=yy; if(yy>bot)bot=yy; } } cols.push(bot<0?null:[top,bot]); }
+  let best=[0,0],cur=0,h0=null; for(let x=0;x<tw;x++){ const cc=cols[x]; const hh=cc?cc[1]-cc[0]:-1; const thin=cc&&hh<fs*0.22&&(h0===null||Math.abs(hh-h0)<4); if(thin){ if(cur===0)h0=hh; cur++; if(cur>best[1]-best[0]) best=[x-cur+1,x+1]; } else { cur=0; h0=null; } }
+  return _STC2[key]={off,tw,k0:best[0],k1:best[1]}; }
+function _tint(C,cw,color){ const {off,tw,k0,k1}=C; const rightW=tw-k1; const tmp=document.createElement('canvas'); tmp.width=rightW+cw+k0+4; tmp.height=off.height; const tc=tmp.getContext('2d');
+  tc.drawImage(off,k1,0,rightW,off.height, tmp.width-rightW-2,0,rightW,off.height); const mid=Math.round((k0+k1)/2);
+  tc.drawImage(off,mid-1,0,2,off.height, tmp.width-rightW-2-cw,0,cw,off.height); tc.drawImage(off,0,0,k0,off.height, tmp.width-rightW-2-cw-k0,0,k0,off.height);
+  tc.globalCompositeOperation='source-in'; tc.fillStyle=color; tc.fillRect(0,0,tmp.width,tmp.height); return tmp; }
 function _layout(word,font,sp,gap){
   X.font=font;
   const p=_pts(word); const k=X.measureText('اـــا').width-X.measureText('اــا').width;
@@ -258,11 +418,15 @@ function _layout(word,font,sp,gap){
 function behindText(t){
   if(!BEHIND||!PRS_OK) return false;
   const R=vrect(t); if(!isFull(R)) return false;           /* ملء الشاشة فقط */
-  const L=BEHIND.lines.find(l=>t>=l.s&&t<=l.e); if(!L) return false;
+  const L=BEHIND.lines.find(l=>t>=l.s&&t<=l.e&&!BEHIND_OFF.includes(l.card)); if(!L) return false;
+  if(L.style==='stack'&&stackText(t,L)) return true;      /* «طبقات» — لو ما انبنى تخطيطه (قناع ناقص) يرجع للنمط العادي */
   _MX.clearRect(0,0,W,H); _MX.drawImage(PRS,0,0,W,H);
   _FX.clearRect(0,0,W,H); _FX.drawImage(VF,0,0,W,H);
   /* ⛔ ورا الراس ثلاث كلمات بالكثير (قرار المستخدم 5 سبتمبر) — الرابعة وما بعدها تطلع على صدره قدّامه */
-  const BW=L.words.slice(0,3), FW=L.words.slice(3);
+  /* الكلمة اللي ما فيها موضع كشيدة صالح (مثل «ورا») ما تروح ورا الراس — تنزل لكروت الصدر */
+  const _ok=L.words.filter(w=>_pts(w.t).length), _no=L.words.filter(w=>!_pts(w.t).length);
+  if(!_ok.length) return false;
+  const BW=_ok.slice(0,3), _spill=[]; let FW=_ok.slice(3).concat(_no);
   const FS0=Math.min(200, Math.round(760/Math.max(1,BW.length))+120), LH=Math.round(FS0*1.18);
   const blockH=(BW.length-1)*LH;
   /* 🧊 صندوق وجه ثابت لكل جملة (وسيط فريماتها) بدل صندوق كل فريم — كان النص يرجف ورا الراس (بلاغ المستخدم 11 سبتمبر) */
@@ -273,27 +437,30 @@ function behindText(t){
   X.save(); X.textAlign='right'; X.textBaseline='middle';
   BW.forEach((w,i)=>{
     const k=cl((t-w.s)/0.30,0,1); if(k<=0) return;
-    const y=top+i*LH, a=ease(k);
-    let fs=FS0, lay=null;
-    for(let tr=0;tr<5;tr++){
-      X.font='900 '+fs+'px '+FONT;
-      lay=_layout(w.t,'900 '+fs+'px '+FONT,_span(y,fs*0.9),26);
-      if(lay.left>=70) break; fs=Math.round(fs*0.9);
-    }
-    const dark=_bgLum(y,fs*0.8)>0.5;
-    X.save(); X.globalAlpha=a; X.font='900 '+fs+'px '+FONT;
-    X.translate(lay.x,y); X.scale(0.94+0.06*a,0.94+0.06*a); X.translate(-lay.x,-y);
-    X.lineWidth=Math.max(6,fs*0.05); X.lineJoin='round';
-    X.strokeStyle=dark?cBG(0.92):cINK(0.75); X.strokeText(lay.full,lay.x,y);
-    X.fillStyle=dark?INK:BG;          /* غامق على الفاتح وفاتح على الغامق — بلا لون تمييز حتى ما يختلط بالخلفية */
-    sh2(18,6,0.22); X.fillText(lay.full,lay.x,y); nsh();
+    const y=top+i*LH, a=ease(k), sp=_span(y,FS0*0.9);
+    /* 🧵 (17 سبتمبر — ملاحظة ماجد): الحروف ما تروح ورا الراس أبداً؛ الكشيدة وحدها تغطي عرض الراس + هامش،
+       وتطول ببطء وبنعومة (بالبكسل لا بعدد الحروف) طول مدة الجملة. الخط يصغر لو ما كفى العرض. */
+    const gap=36, headL=sp?sp.L:440, headR=sp?sp.R:640;
+    const grow=ease(cl((t-w.s)/Math.max(0.8,(L.e-L.s)),0,1));           /* تمدد بطيء من 1.0 إلى 1.22 عرض الراس */
+    const need=(headR-headL)+gap*2, cw=Math.round(need*(1+0.22*grow));
+    let fs=FS0, C=null, fits=false;
+    for(let tr=0;tr<14;tr++){ C=_stretchCache(w.t,fs); if(!C) break; const rightW=C.tw-C.k1, leftW=C.k0;
+      if(headR+gap+rightW<=W-40 && headR+gap-cw-leftW>=40){fits=true;break;} if(fs<=44) break; fs=Math.max(44,Math.round(fs*0.9)); }
+    if(!C||!fits){ _spill.push(w); return; }   /* ⛔ ما تدخل بالكادر → تنزل لكروت الصدر بدل ما تُقص */
+    const rightW=C.tw-C.k1, leftW=C.k0, xr=headR+gap;               /* بداية الكلمة يمين الراس */
+    const dark=_bgLum(y,fs*0.8)>0.5, col=dark?INK:BG;
+    const tmp=_tint(C,cw,col); const yy=y-C.off.height/2;
+    X.save(); X.globalAlpha=a; X.translate(540,y); X.scale(0.94+0.06*a,0.94+0.06*a); X.translate(-540,-y);
+    X.shadowColor=dark?cBG(0.9):cINK(0.6); X.shadowBlur=18; X.shadowOffsetY=6;
+    X.drawImage(tmp, xr+rightW-tmp.width, yy);
     X.restore();
   });
   X.restore();
+  if(_spill.length) FW=_spill.concat(FW);
   X.drawImage(PRS,0,0,W,H);                                /* الشخص فوق الكلام */
   /* الكلمة الرابعة (وما بعدها): على صدره، قدّامه، بكرت بلون الخلفية */
   FW.forEach((w,i)=>{const k=cl((t-w.s)/0.30,0,1); if(k<=0) return; const a=ease(k);
-    const cy=(f?f.y+f.h*1.75:1330)+i*150; const fs=Math.round(FS0*0.62);
+    const cy=(f?f.y+f.h*1.95:1380)+i*118; const fs=Math.round(FS0*0.48);
     X.save(); X.globalAlpha=a; X.font='900 '+fs+'px '+FONT; const tw=X.measureText(w.t).width, bw=tw+90, bh=fs*1.25;
     X.translate(540,cy); X.scale(0.9+0.1*a,0.9+0.1*a); sh2(30,12,0.28); X.fillStyle=cBG(0.97); rr(-bw/2,-bh/2,bw,bh,bh/2); X.fill(); nsh();
     X.fillStyle=INK; X.textAlign='center'; X.textBaseline='middle'; X.fillText(w.t,0,fs*0.06); X.restore(); });
@@ -310,6 +477,231 @@ function _faceForLine(L){
   return L._face||null;
 }
 function sh2(b,y,a){X.shadowColor=cINK(a);X.shadowBlur=b;X.shadowOffsetY=y;}
+/* السطر النشط من «ورا الراس» بهاللحظة (أي نمط) — يستخدمه الزوم عشان ما يمسحه */
+function _behindLine(t){ if(!BEHIND||!PRS_OK||!Array.isArray(BEHIND.lines)) return null;
+  return BEHIND.lines.find(l=>t>=l.s&&t<=l.e&&!BEHIND_OFF.includes(l.card))||null; }
+
+/* ═══ «طبقات» (stack) — 28 سبتمبر 2026، من مرجع ماجد ═══
+   الجملة تنقسم وحدها لثلاث طبقات بعمق:
+     1) كلمة فوق الراس — ضخمة وممدودة بالكشيدة بعرض الشاشة كامل
+     2) كلمة أو ثنتين ورا الراس/الرقبة — الحروف على الجانبين والكشيدة وحدها تمرّ ورا الشخص
+     3) باقي الجملة قدّام جسمه — أصغر، بلا كشيدة، و**تحت الوجه دايماً** (ما تنكتب على الذقن)
+   الخط أبيض ثقيل بحد رفيع غامق + ظل صلب لتحت + ظل ناعم — يُقرأ على أي خلفية.
+   التخطيط يُحسب مرة وحدة لكل جملة من «قناع الجمع» (bt/umask_<n>.png = متوسط أقنعة فريمات الجملة، يبنيه
+   11_behind_text.js stack) فما يرجف، والحروف ما تدخل منطقة الجسم بأي فريم.
+   🪑 عمود الراس: قصّ Vision يضم مسند الكرسي (السيارة) وأي شي لاصق بالراس، فالراس يطلع عرضه 700px وما يبقى مكان للحروف.
+   الحين من فوق الراس لين الرقبة: حدود الشخص = عمود صناديق الوجه (+6٪) بس، وطبقة الشخص تنقص بنفس العمود
+   فالمسند ينرسم تحت الحروف مو فوقها.
+   الألوان: theme.json ← stack:{fill:'#FFFFFF', shade:'#000000', accent:false|true (الكلمة الفوقية بلون ACC),
+   font:null (= خط الثيم), weight:900, maxBehind:2} — الافتراضي أبيض/أسود محايد، مو هوية أحد. */
+let STK={fill:'#FFFFFF',shade:'#000000',accent:false,font:null,weight:900,maxBehind:2};
+const STK_M=44, STK_TOP=170, STK_THR=13;   /* هامش الحواف · أعلى نص (حزام انستقرام فوق) · عتبة قناع الجمع (5٪ من الفريمات) */
+const STK_FBOT=1490, STK_FBOT2=1600;        /* آخر حد للنص القدّامي: فوق حزام الأسفل الحذر (1500) · وبالضيق داخل الحزام (المنطقة الممنوعة من 1620) */
+const STK_BMIN=64;                          /* أصغر خط للكلمات اللي ورا الراس (اللقطة القريبة تحتاج خط أصغر عشان الحروف تدخل على الجانبين) */
+function preloadStack(){
+  const ls=(BEHIND&&Array.isArray(BEHIND.lines))?BEHIND.lines.filter(l=>l.style==='stack'&&l.umask):[];
+  const ps=ls.map(l=>new Promise(r=>{ const im=new Image();
+    im.onload=()=>{ l._um=im; r(); }; im.onerror=()=>{ console.error('⚠️ طبقات: ما انقرى '+l.umask+' — الجملة بترجع للنمط العادي'); r(); };
+    im.src=l.umask; }));
+  if(ls.length&&STK.font&&STK.font!==FONT){   /* خط خاص للطبقات (اختياري) — ننتظره عشان أول فريم ما يطلع بخط بديل */
+    ps.push(new Promise(r=>{ const k=document.createElement('link'); k.rel='stylesheet';
+      k.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(STK.font)+(STK.weight&&STK.weight!=400?':wght@'+STK.weight:'')+'&display=swap';
+      k.onload=()=>document.fonts.load(STK.weight+' 100px "'+STK.font+'"','عربي ـ 123').then(r,r);   /* نص عربي إلزامي — بدونه ينزل الجزء اللاتيني بس */ k.onerror=()=>{ console.error('⚠️ طبقات: خط '+STK.font+' ما تحمّل'); r(); };
+      setTimeout(r,8000); document.head.appendChild(k); }));
+  }
+  return Promise.all(ps);
+}
+const _stkF=fs=>STK.weight+' '+Math.round(fs)+'px "'+(STK.font||FONT)+'"';
+/* ⛔ درس 28 سبتمبر: التخطيط انضبط وانحكم عليه بخط بديل (الجزء العربي من Cairo ما كان محمّلاً) — «إكسايت» أعرض 23٪ بالخط الحقيقي.
+   الحين: لا تخطيط ولا صورة كلمة تنحفظ بالذاكرة قبل ما يكتمل الخط العربي — تنحسب من جديد بالفريم الجاي. */
+function _stkFontOK(){ try{ return document.fonts.check(_stkF(100),'عربي'); }catch(e){ return true; } }
+/* عمود الراس من صناديق الوجه بكل فريمات الجملة (5٪↔95٪ عشان حركته) + 6٪ للأذنين، ونهايته تحت الذقن بشوي (الرقبة) */
+function _stkHead(L){ if(L._head!==undefined) return L._head;
+  if(!BEHIND||!BEHIND.faces) return (L._head=null);
+  const fps=(typeof FPS==='number'&&FPS)||30, x0=[],x1=[],yb=[];
+  for(let fr=Math.floor(L.s*fps)+1; fr<=Math.ceil(L.e*fps)+1; fr++){ const f=BEHIND.faces[fr]; if(f){ x0.push(f.x); x1.push(f.x+f.w); yb.push(f.y+f.h); } }
+  const f=_faceForLine(L); if(!f||x0.length<3) return (L._head=null);
+  const q=(a,p)=>{ const b=a.slice().sort((m,n)=>m-n); return b[Math.round(p*(b.length-1))]; };
+  const pad=f.w*0.06, chin=q(yb,0.9);
+  return (L._head={L:q(x0,0.05)-pad, R:q(x1,0.95)+pad, chin, yEnd:chin+f.h*0.14}); }
+/* حدود الشخص صف صف من قناع الجمع (مرة وحدة لكل جملة) — مقيّدة بعمود الراس من فوق لين الرقبة */
+function _stkProfile(L){ if(L._prof!==undefined) return L._prof;
+  const im=L._um; if(!im||!im.naturalWidth) return (L._prof=null);
+  const w=im.naturalWidth,h=im.naturalHeight,c=document.createElement('canvas'); c.width=w; c.height=h;
+  const g=c.getContext('2d',{willReadFrequently:true}); g.drawImage(im,0,0);
+  let d; try{ d=g.getImageData(0,0,w,h).data; }catch(e){ return (L._prof=null); }
+  const hd=_stkHead(L), sx=W/w, sy=H/h, rows=[]; let top=-1;
+  for(let y=0;y<h;y++){ let l=-1,r=-1; for(let x=0;x<w;x++){ if(d[(y*w+x)*4]>=STK_THR){ if(l<0)l=x; r=x; } }
+    let a=l<0?null:[l*sx,(r+1)*sx];
+    if(a&&hd&&y*sy<hd.yEnd){ a=[Math.max(a[0],hd.L),Math.min(a[1],hd.R)]; if(a[1]-a[0]<4) a=null; }
+    rows.push(a); if(top<0&&a&&a[1]-a[0]>=24) top=y*sy; }
+  return (L._prof=top<0?null:{rows,sy,top}); }
+function _pspan(P,y0,y1){ let a=1e9,b=-1;
+  for(let y=Math.max(0,Math.floor(y0/P.sy)); y<=Math.min(P.rows.length-1,Math.ceil(y1/P.sy)); y++){ const r=P.rows[y]; if(r){ if(r[0]<a)a=r[0]; if(r[1]>b)b=r[1]; } }
+  return b<0?null:{L:a,R:b}; }
+/* الكلمة مرسومة أبيض مع 16 كشيدة بموضع pt (أو بلا كشيدة لو pt=null) + حدود الحبر + مدى الكشيدة الرفيع [k0,k1] */
+const _SKC={};
+function _skGlyph(word,fs,pt){ const F=_stkF(fs), key=word+'|'+F+'|'+pt; if(_SKC[key]) return _SKC[key];
+  const sw=pt==null?word:word.slice(0,pt)+'ـ'.repeat(16)+word.slice(pt);
+  const off=document.createElement('canvas'), c=off.getContext('2d',{willReadFrequently:true}); c.font=F; c.direction='rtl';
+  const pad=Math.ceil(fs*0.35), tw=Math.ceil(c.measureText(sw).width)+pad*2, th=Math.ceil(fs*2.6);
+  off.width=tw; off.height=th; c.font=F; c.direction='rtl'; c.textAlign='center'; c.textBaseline='middle'; c.fillStyle='#fff'; c.fillText(sw,tw/2,th/2);
+  const d=c.getImageData(0,0,tw,th).data, cols=[]; let iL=1e9,iR=-1,iT=1e9,iB=-1;
+  for(let x=0;x<tw;x++){ let tp=1e9,bt=-1; for(let y=0;y<th;y++){ if(d[(y*tw+x)*4+3]>40){ if(y<tp)tp=y; if(y>bt)bt=y; } }
+    cols.push(bt<0?null:[tp,bt]); if(bt>=0){ if(x<iL)iL=x; if(x>iR)iR=x; if(tp<iT)iT=tp; if(bt>iB)iB=bt; } }
+  const G={off,tw,th,iL,iR:iR+1,iT,iB:iB+1,stretch:false};
+  if(pt!=null){ let best=[0,0],cur=0,h0=null;
+    for(let x=0;x<tw;x++){ const cc=cols[x], hh=cc?cc[1]-cc[0]:-1, thin=cc&&hh<fs*0.24&&(h0===null||Math.abs(hh-h0)<4);
+      if(thin){ if(cur===0)h0=hh; cur++; if(cur>best[1]-best[0]) best=[x-cur+1,x+1]; } else { cur=0; h0=null; } }
+    if(best[1]-best[0]>fs*0.5){ G.k0=best[0]+2; G.k1=best[1]-2; G.stretch=true; G.rw=G.iR-G.k1; G.lw=G.k0-G.iL; } }
+  if(!G.stretch){ G.rw=G.iR-G.iL; G.lw=0; }
+  if(_stkFontOK()) _SKC[key]=G;          /* بخط بديل؟ لا تحفظ */
+  return G; }
+/* يبني الكلمة بطول كشيدة cw بالبكسل (شريحة من وسط الكشيدة تتمدد — الحروف ما تتحرك ولا تنفك) */
+let _SKB=null;
+function _skBuild(G,cw){ if(!G.stretch) return G.off;
+  const cwi=Math.max(2,Math.round(cw)), rightW=G.tw-G.k1, w=G.k0+cwi+rightW;
+  if(!_SKB) _SKB=document.createElement('canvas');
+  _SKB.width=w; _SKB.height=G.th; const c=_SKB.getContext('2d'); const mid=Math.round((G.k0+G.k1)/2);
+  c.drawImage(G.off,0,0,G.k0,G.th, 0,0,G.k0,G.th);
+  c.drawImage(G.off,mid-1,0,2,G.th, G.k0-1,0,cwi+2,G.th);
+  c.drawImage(G.off,G.k1,0,rightW,G.th, G.k0+cwi,0,rightW,G.th);
+  return _SKB; }
+/* الرسم بالستايل: ظل ناعم واسع + ظل صلب لتحت + حد رفيع + التعبئة. cv أبيض، (x,y) = زاوية الكانفس.
+   28 سبتمبر: الطبقات كلها تنرسم كاملة على كانفس جانبي ثم تنحط مرة وحدة بالشفافية a — قبلها كل طبقة كانت تاخذ a لحالها
+   فالـ12 مرور حق الحد يتراكمون ويطلع «شبح» رمادي غامق أول 2-3 فريمات من ظهور الكلمة. */
+let _SKS=null, _SKT=null, _SKO=null;
+function _skPaint(cv,x,y,fs,a,fill){ if(!(a>0)) return;
+  if(!_SKS){ _SKS=document.createElement('canvas'); _SKT=document.createElement('canvas'); _SKO=document.createElement('canvas'); }
+  _SKS.width=cv.width; _SKS.height=cv.height; const s=_SKS.getContext('2d');
+  s.drawImage(cv,0,0); s.globalCompositeOperation='source-in'; s.fillStyle=STK.shade; s.fillRect(0,0,cv.width,cv.height);
+  let body=cv; if(fill&&fill.toUpperCase()!=='#FFFFFF'){ _SKT.width=cv.width; _SKT.height=cv.height; const q=_SKT.getContext('2d');
+    q.drawImage(cv,0,0); q.globalCompositeOperation='source-in'; q.fillStyle=fill; q.fillRect(0,0,cv.width,cv.height); body=_SKT; }
+  const pd=Math.ceil(fs*0.4); _SKO.width=cv.width+pd*2; _SKO.height=cv.height+pd*2; const o=_SKO.getContext('2d');
+  o.globalAlpha=0.55; o.filter='blur('+Math.max(2,Math.round(fs*0.09))+'px)'; o.drawImage(_SKS,pd,pd+fs*0.05);
+  o.globalAlpha=0.95; o.filter='blur('+Math.max(1,Math.round(fs*0.008))+'px)'; o.drawImage(_SKS,pd+fs*0.012,pd+fs*0.055);
+  o.filter='none'; o.globalAlpha=1; const r=Math.max(2,fs*0.024);
+  for(let k=0;k<12;k++){ const an=k*Math.PI/6; o.drawImage(_SKS,pd+r*Math.cos(an),pd+r*Math.sin(an)); }
+  o.drawImage(body,pd,pd);
+  X.save(); X.globalAlpha=Math.min(1,a); X.drawImage(_SKO,x-pd,y-pd); X.restore(); }
+/* أفضل موضع كشيدة للكلمة بين حدّين (xl..xr = حيث يبدأ/ينتهي الحبر) وفجوة الجسم (span) — يرجّع null لو ما تنفع */
+function _skFit(word,fs,span,xl,xr,gap){ let best=null;
+  for(const pt of _pts(word)){ const G=_skGlyph(word,fs,pt); if(!G.stretch) continue;
+    const s1=(xr-G.rw)-(span.R+gap), s2=(span.L-gap)-(xl+G.lw), sl=Math.min(s1,s2);
+    if(sl>=0&&(!best||sl>best.sl)) best={G,sl}; }
+  return best&&best.G; }
+/* مواضع الكلمات بسطر قدّامي بترتيب العرض الصحيح — المتصفح نفسه يحسب الاتجاه (bidi):
+   «iPhone 17» تبقى «iPhone 17» داخل جملة عربية (كان الرسم كلمة كلمة من اليمين يطلّعها «17 iPhone») */
+let _BIDI=null;
+function _bidiLine(items,font,sp){
+  if(!_BIDI){ _BIDI=document.createElement('div');
+    _BIDI.style.cssText='position:absolute;left:0;top:0;visibility:hidden;white-space:nowrap;direction:rtl;unicode-bidi:isolate;pointer-events:none';
+    document.body.appendChild(_BIDI); }
+  _BIDI.style.font=font; _BIDI.textContent='';
+  X.font=font; _BIDI.style.wordSpacing=Math.round(sp-X.measureText(' ').width)+'px';
+  const sps=items.map((it,i)=>{ const s=document.createElement('span'); s.textContent=it.w.t; _BIDI.appendChild(s);
+    if(i<items.length-1) _BIDI.appendChild(document.createTextNode(' ')); return s; });
+  const R0=_BIDI.getBoundingClientRect();
+  const out={w:R0.width, cx:sps.map(s=>{ const r=s.getBoundingClientRect(); return r.left-R0.left+r.width/2; })};
+  _BIDI.textContent=''; return out; }
+/* التخطيط الكامل للجملة — يُحسب مرة وحدة (ثابت طول الجملة فما يرجف) */
+function _stkLayout(L){ if(L._lay!==undefined) return L._lay;
+  const P=_stkProfile(L); if(!P) return (L._lay=null);
+  const f=_faceForLine(L), hd=_stkHead(L), ws=L.words; if(!ws.length) return (L._lay=null);
+  const fh=f?f.h:Math.max(140,(()=>{const s=_pspan(P,P.top+40,P.top+80);return s?(s.R-s.L)*1.1:200;})());
+  const eyeY=f?f.y+f.h*0.42:P.top+fh*0.55, gap=Math.max(20,Math.round(fh*0.07));   /* المسافة بين الحروف وحافة الراس (المرجع: لاصقة تقريباً) */
+  const rb=(y0,y1)=>(y1>1100&&y0<1750)?940:W-STK_M;          /* عمود أزرار انستقرام يمين (y 1100-1750) */
+  const tryLay=(nAbove)=>{
+    const fs0=cl(Math.round(fh*0.95),110,240);
+    let pick=null;
+    for(let fs=fs0; fs>=STK_BMIN; fs=Math.round(fs*0.93)){
+      const gapV=Math.round(fs*0.15), items=[]; let y=null, nb=0;   /* 0.15: بين سطرين ورا الراس فراغ يبان (0.07 كان يلزقهم) */
+      for(let i=nAbove;i<ws.length&&nb<STK.maxBehind;i++){
+        const w=ws[i].t, pts=_pts(w); if(!pts.length) break;          /* بلا موضع كشيدة (ورا، دار…) → تنزل قدّام */
+        const G0=_skGlyph(w,fs,pts[0]), hI=G0.iB-G0.iT;
+        const top=y===null?Math.max(P.top+hI*0.08,STK_TOP+hI*1.1):y+gapV, bot=top+hI;   /* أول سطر يبدأ عند قمة الراس (مثل المرجع) — الكشيدة تمرّ على الجبهة/العيون */
+        if(bot>1450) break;
+        const span=_pspan(P,top,bot)||{L:540,R:540}, xr=rb(top,bot);
+        const G=_skFit(w,fs,span,STK_M,xr,gap); if(!G) break;
+        items.push({w:ws[i],G,top,span,gap,xl:STK_M,xr,fs}); y=top+(G.iB-G.iT); nb++;
+      }
+      const want=Math.min(STK.maxBehind,ws.length-nAbove);
+      if(!pick||nb>pick.items.length) pick={fs,items};
+      if(nb>=want) break;
+    }
+    /* الكلمة الفوقية */
+    let above=null;
+    if(nAbove){ const w=ws[0].t, bTop=pick.items.length?pick.items[0].top:eyeY-fh*0.4;
+      const bottom=Math.min(P.top-Math.round(gap*0.6), bTop-Math.round(pick.fs*0.15)), avail=bottom-STK_TOP;
+      for(let fs=Math.min(240,Math.round(Math.max(pick.fs*1.35,150))); fs>=64; fs=Math.round(fs*0.93)){   /* البطلة: أكبر من سطور «ورا» بثلث (باللقطة القريبة سطور ورا تصغر، هي لا) */
+        const xr=rb(bottom-fs,bottom), full=xr-STK_M; let G=null;
+        const pts=_pts(w);
+        if(pts.length){ let bestD=1e9; for(const pt of pts){ const g=_skGlyph(w,fs,pt); if(!g.stretch) continue;
+            const d=Math.abs(g.rw-g.lw); if(g.rw+g.lw+fs*0.4<=full&&g.iB-g.iT<=avail&&d<bestD){ bestD=d; G=g; } } }
+        if(!G){ const g=_skGlyph(w,fs,null); if(g.iR-g.iL<=full&&g.iB-g.iT<=avail) G=g; }
+        if(G){ above={w:ws[0],G,top:bottom-(G.iB-G.iT),xl:STK_M,xr,fs}; break; }
+      }
+      if(!above) return null;
+    }
+    const used=nAbove+pick.items.length, rest=ws.slice(used);
+    /* الباقي قدّامه: أسطر ممركزة بعرض 820 (ما تدخل عمود الأزرار).
+       ⛔ ما ينكتب على الوجه أبداً: أول سطر يبدأ تحت الذقن (عمود الراس ← chin). يفضّل الصدر (1.95 من طول الوجه)،
+       وإذا ما فيه مكان تحت الذقن لين 1490 يصغر الخط، ثم يسمح لين 1600 (قبل المنطقة الممنوعة 1620). */
+    const front=[];
+    const lastBot=pick.items.length?pick.items[pick.items.length-1].top+(pick.items[pick.items.length-1].G.iB-pick.items[pick.items.length-1].G.iT):(above?above.top+(above.G.iB-above.G.iT):eyeY);
+    let fsF=0;
+    if(rest.length){
+      const f1=cl(Math.round(pick.fs*0.85),58,170);
+      const wrap=fz=>{ X.font=_stkF(fz); const sp=fz*0.28, out=[]; let cur=[],cw=0;
+        for(const w of rest){ const ww=X.measureText(w.t).width; if(cur.length&&cw+sp+ww>820){ out.push({ws:cur,w:cw}); cur=[]; cw=0; }
+          cur.push({w,ww}); cw+=(cur.length>1?sp:0)+ww; }
+        if(cur.length) out.push({ws:cur,w:cw}); return out; };
+      /* المرشّحون بالترتيب: سطر واحد بحجم معقول (≥ 0.45 من حجم الطبقات) ← سطرين ← أسطر أكثر بخط صغير */
+      const cands=[];
+      for(let z=f1; z>=Math.max(48,pick.fs*0.45); z=Math.round(z*0.94)){ const ls=wrap(z); if(ls.length===1) cands.push([z,ls]); }
+      for(let z=Math.round(f1*0.85); z>=44; z=Math.round(z*0.93)){ const ls=wrap(z); if(ls.length<=2) cands.push([z,ls]); }
+      for(let z=44; z>=36; z-=4) cands.push([z,wrap(z)]);
+      const chest=f?f.y+f.h*1.95:lastBot+f1;
+      let ch=null;
+      for(const lim of [STK_FBOT,STK_FBOT2]){
+        for(const [z,ls] of cands){ const LH=Math.round(z*1.25), bh=ls.length*LH;
+          const minTop=Math.max(lastBot+z*0.45, hd?hd.chin+z*0.30:(f?f.y+f.h*1.08:0));
+          if(minTop+bh<=lim){ ch={z,ls,LH,top:Math.min(Math.max(minTop,chest),lim-bh)}; break; } }
+        if(ch) break; }
+      if(!ch){ const [z,ls]=cands[cands.length-1], LH=Math.round(z*1.25); ch={z,ls,LH,top:STK_FBOT2-ls.length*LH};
+        console.error('⚠️ طبقات: اللقطة قريبة جداً — ما فيه مكان للباقي تحت الوجه (الجملة '+(L.card+1)+'). قصّرها: stack '+(L.card+1)+':1-'+used); }
+      fsF=ch.z;
+      ch.ls.forEach((ln,li)=>{ const cy=ch.top+li*ch.LH+ch.LH/2, B=_bidiLine(ln.ws,_stkF(ch.z),ch.z*0.28), x0=540-B.w/2;
+        ln.ws.forEach((it,j)=>front.push({w:it.w,G:_skGlyph(it.w.t,ch.z,null),cx:x0+B.cx[j],cy,fs:ch.z})); });
+    }
+    return {above,behind:pick.items,front,fs:pick.fs,fsF};
+  };
+  let lay=tryLay(ws.length>1?1:0); if(!lay) lay=tryLay(0);
+  if(lay&&!lay.above&&!lay.behind.length) lay=null;              /* ولا كلمة ورا ولا فوق = مو «طبقات» */
+  if(!_stkFontOK()) return lay||null;                            /* الخط ما اكتمل — لا تحفظ، أعد الحساب بالفريم الجاي */
+  return (L._lay=lay||null); }
+function stackText(t,L){
+  const Y=_stkLayout(L); if(!Y) return false;
+  const fo=t>L.e-0.10?cl((L.e-t)/0.10,0,1):1;                      /* خروج ناعم بآخر الجملة */
+  const wide=(it,k0)=>{ const k=cl((t-it.w.s+0.04)/0.42,0,1); if(k<=0) return;
+    const e=ease(k), G=it.G, a=Math.min(1,k*7)*fo;   /* يظهر بسرعة (0.06ث) — الظهور البطيء يطلّع الأبيض رمادي فوق ظله */
+    let xl0,xr0; if(it.span){ xr0=it.span.R+it.gap+G.rw; xl0=it.span.L-it.gap-G.lw; }       /* تبدأ ملاصقة للجسم وتنفتح */
+    else { const n=G.rw+G.lw+it.fs*0.3; xr0=540+n/2; xl0=540-n/2; }
+    const xl=lerp(xl0,it.xl,e), xr=lerp(xr0,it.xr,e);
+    if(!G.stretch){ const cx=(it.xl+it.xr)/2, gw=G.iR-G.iL; _skPaint(G.off,cx-gw/2-G.iL,it.top-G.iT,it.fs,a,it.fill); return; }
+    const cv=_skBuild(G,(xr-xl)-G.rw-G.lw);
+    _skPaint(cv,xl-G.iL,it.top-G.iT,it.fs,a,it.fill); };
+  if(Y.above){ Y.above.fill=STK.accent?ACC:STK.fill; wide(Y.above); }
+  for(const it of Y.behind){ it.fill=STK.fill; wide(it); }
+  /* الشخص فوق الطبقتين الأوليين — من فوق الراس لين الرقبة بعمود الراس بس (مسند الكرسي/اللي لاصق فيه ينرسم تحت الحروف) */
+  const hd=_stkHead(L);
+  if(hd){ X.save(); X.beginPath(); X.rect(hd.L,0,hd.R-hd.L,hd.yEnd); X.rect(0,hd.yEnd,W,H-hd.yEnd); X.clip(); X.drawImage(PRS,0,0,W,H); X.restore(); }
+  else X.drawImage(PRS,0,0,W,H);
+  for(const it of Y.front){ const k=cl((t-it.w.s+0.02)/0.26,0,1); if(k<=0) continue;
+    const s=0.82+0.18*back(k), G=it.G, gw=G.iR-G.iL, gh=G.iB-G.iT;
+    X.save(); X.translate(it.cx,it.cy); X.scale(s,s); X.translate(-it.cx,-it.cy);
+    _skPaint(G.off,it.cx-gw/2-G.iL,it.cy-gh/2-G.iT,it.fs,Math.min(1,k*2.5)*fo,STK.fill); X.restore(); }
+  return true; }
 const CVR=document.getElementById('CVR');let CVR_OK=false;
 window.setCover=src=>{ if(!src){CVR_OK=false;return Promise.resolve(0);} CVR.src=src; return (CVR.decode?CVR.decode():Promise.resolve()).then(()=>{CVR_OK=true;return 1;}).catch(()=>{CVR_OK=false;return 0;}); };
 window.setPerson=(src,face)=>{ PFACE=face||null;
@@ -423,290 +815,132 @@ function panelIn(t,s,e,fn){ if(t<s+TR-0.1||t>e)return; const k=ease(pr(t,s+TR-0.
 /* ملاحظة: اللوحة تبدأ بعد TR (0.42ث) — تنتظر الفيديو يخلص نزوله حتى ما ترتسم فوق وجهه */
 
 /* ================= SCENE GRAPHICS ================= */
-function stamp(t){ if(t<2.45||t>3.30)return;
-  const k=pr(t,2.45,2.75), a=t>3.10?1-pr(t,3.10,3.30):1;
-  X.save();X.globalAlpha=a;X.translate(540,300);X.rotate(-7*Math.PI/180);
-  const sc=lerp(1.6,1,back(k));X.scale(sc,sc);
-  const ar='مونتاج يدوي';
-  X.font='900 58px '+FONT;const nw=X.measureText('0%').width;
-  X.font='900 52px '+FONT;const aw=X.measureText(ar).width;
-  const w=nw+26+aw+84,h=112;
-  sh(40,16,0.26);X.fillStyle=ACC;rr(-w/2,-h/2,w,h,26);X.fill();nsh();
-  T('0%',w/2-42-nw/2,4,'900 58px '+FONT,onACC(),'center','ltr');
-  T(ar,-w/2+42+aw/2,4,'900 52px '+FONT,onACC());
-  X.restore();
-  const rk=pr(t,2.45,1.05); if(rk<1){X.save();X.globalAlpha=(1-rk)*0.45;X.strokeStyle=ACC;X.lineWidth=6;
-    X.beginPath();X.arc(540,300,60+rk*300,0,7);X.stroke();X.restore();}
+/* 🎥 حركة الكادر مع مؤثر الكلمة (ملاحظة ماجد 17 سبتمبر): طيحة = دفعة صغيرة لتحت عند الهبوط · اهتزاز/انكسار = رجّة خفيفة */
+function _fxWords(t,win){ const out=[]; for(const c of CAPS){ if(t<c.s-0.1||t>c.e+1) continue; for(const w of c.w){ if(w.fx&&t>=w.s&&t<w.s+win) out.push(w); } } return out; }
+function videoShift(t){ let x=0,y=0;
+  for(const w of _fxWords(t,0.6)){ const k=(t-w.s);
+    if(w.fx==='drop'&&k>0.30&&k<0.55){ y+=14*Math.sin((k-0.30)/0.25*Math.PI); }
+    if((w.fx==='shake'||w.fx==='crack')&&k<0.45){ const a=(1-k/0.45)*(w.fx==='crack'?7:4); x+=Math.sin(k*90)*a; y+=Math.cos(k*70)*a*0.6; } }
+  return (x||y)?{x,y}:null; }
+function cracks(t){ for(const w of _fxWords(t,0.7)){ if(w.fx!=='crack') continue; const k=(t-w.s)/0.7, seed=Math.round(w.s*97);
+    X.save(); X.globalAlpha=(k<0.15?k/0.15:1-Math.pow((k-0.15)/0.85,2))*0.9; X.strokeStyle='#FFFFFF'; X.lineWidth=5; X.lineJoin='round'; X.shadowColor='rgba(0,0,0,0.7)'; X.shadowBlur=10;
+    const cx=540+((seed*13)%120)-60, cy=880+((seed*7)%160)-80, n=6, L=Math.min(1,k/0.25);
+    for(let i=0;i<n;i++){ const ang=(i/n)*Math.PI*2+((seed+i*31)%100)/100; let px=cx,py=cy; X.beginPath(); X.moveTo(px,py); const segs=7;
+      for(let sgm=1;sgm<=segs*L;sgm++){ const len=60+((seed*(i+1)*(sgm+3))%70); const jit=(((seed*(sgm+1)*(i+5))%100)/100-0.5)*0.9; px+=Math.cos(ang+jit)*len; py+=Math.sin(ang+jit)*len; X.lineTo(px,py); } X.stroke(); }
+    X.restore(); } }
+/* 🎞️ لقطات بي-رول من الاستوديو: full = تغطي الشاشة · card = كرت فوق (130..950 × 250..810) */
+function coverImg(im,x,y,w,h){const s=Math.max(w/im.naturalWidth,h/im.naturalHeight),dw=im.naturalWidth*s,dh=im.naturalHeight*s;X.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh);}
+function brollClips(t){ for(const b of BROLL){ if(t<b.s||t>=b.e) continue; const im=brFrame(b.k,t-b.s,1); if(!im) continue;
+    const k=ease(pr(t,b.s,b.s+0.25)), ko=1-pr(t,b.e-0.25,b.e); X.save(); X.globalAlpha=k*ko;
+    if(b.mode==='card'){ sh(40,16,0.3); X.fillStyle=cBG(0.9); rr(130,250,820,560,40); X.fill(); nsh(); rr(130,250,820,560,40); X.clip(); coverImg(im,130,250,820,560); }
+    else coverImg(im,0,0,W,H);
+    X.restore(); } }
+/* ================= 🖼️ مشاهد مولّدة (v3.2) =================
+   صورة أو مقطع مولّد بالذكاء الاصطناعي (17_gen_scenes.py يجيبها لمجلد gen/) يدخل كمشهد، والمحرّك يرسم فوقه بالكود.
+   الفكرة (ماجد 18 سبتمبر): الصورة تعطي «الجو» اللي الرسم ما يقدر عليه، والرسم فوقها يعطي الحركة والمعلومة.
+   تُعرَّف بـstudio.json ← gen:[{s,e,k,mode,kb,draw:[...]}]
+     s/e   : ثوانٍ، أو "w:كلمة" = لحظة نطق الكلمة (يلتصق بالكلمة لا بتوقيت تقريبي) · "w:كلمة+" = نهاية نطقها
+     k     : اسم الأصل: gen/<k>.jpg صورة، أو gen/<k>_0001.jpg… فريمات مقطع (genFrames[k] = عددها)
+     mode  : 'bg' = خلفية ملء الشاشة وراه (مع R_LOWER يصير كرت صغير فوقها) · 'card' = كرت فوق (مع R_LOWER) · 'full' = تغطي كل شي (R_OFF)
+     kb    : حركة كن-بيرنز بطيئة (زوم 1→1.08 + انزياح) — الافتراضي true للصور، false للمقاطع
+     draw  : عمليات رسم فوقه، كل وحدة تدخل عند at (ثوانٍ أو "w:كلمة") وتبقى لنهاية المشهد. الإحداثيات نِسَب 0..1 من الكرت:
+       {op:'text',at,txt,x,y,size?}     كبسولة بلون التمييز فيها النص
+       {op:'num',at,txt,x?,y?}           رقم ضخم (نفس الكبسولة، أكبر)
+       {op:'circle',at,x,y,r}            حلقة بلون التمييز تنرسم حول نقطة (تدور 0.45ث)
+       {op:'vs',at,l,r}                  خط مقارنة بالنص + وسمان: l يمين (عربي) و r يسار
+       {op:'check',at,x,y}               دائرة صح بلون التمييز (الفائز)
+       {op:'underline',at,x,y,w}         خط يد تحت شي بالصورة
+   ⛔ قواعده: 2-4 مشاهد بالفيديو · الصورة تعبّر عن الفكرة لا عن المنتج (المنتج من موقعه الرسمي) · بلا نساء وبلا شعارات مرسومة. */
+let GEN=[], GEN_FR={}; const GENI={};
+const GCARD={x:130,y:230,w:820,h:1000,r:40};   /* كرت الصورة المولّدة مع R_LOWER: ينتهي عند 1230، والكابشن عند 1310 تحته */
+function _wordAt(v,from){ if(typeof v==='number') return v; if(typeof v!=='string'||!v.startsWith('w:')) return +v||0;
+  let q=v.slice(2), end=false; if(q.endsWith('+')){end=true;q=q.slice(0,-1);} const norm=x=>(x||'').replace(/[؟?!،,.:«»"']/g,'').trim();
+  for(const c of CAPS){ for(const w of c.w){ if(w.s>=(from||0)-0.6&&norm(w.t)===norm(q)) return end?w.e:w.s; } }
+  for(const c of CAPS){ for(const w of c.w){ if(norm(w.t)===norm(q)) return end?w.e:w.s; } } return 0; }
+let _GENRES=false;
+function resolveGen(){ if(_GENRES||!CAPS.length) return; _GENRES=true;
+  GEN.forEach(g=>{ g.s=_wordAt(g.s,0); g.e=_wordAt(g.e,g.s); if(g.kb===undefined) g.kb=!GEN_FR[g.k];
+    (g.draw||[]).forEach(d=>{ d.at=_wordAt(d.at,g.s); }); }); }
+function preloadGen(){ const ps=[];
+  GEN.forEach(g=>{ if(GENI[g.k]) return; const n=GEN_FR[g.k]|0;
+    if(n>0){ GENI[g.k]={imgs:[]}; for(let i=1;i<=n;i++){ const im=new Image(); im.src='gen/'+g.k+'_'+String(i).padStart(4,'0')+'.jpg'; GENI[g.k].imgs.push(im); ps.push(new Promise(r=>{im.onload=r;im.onerror=r;})); } }
+    else { const im=new Image(); im.src='gen/'+g.k+'.jpg'; GENI[g.k]={imgs:[im]}; ps.push(new Promise(r=>{im.onload=r;im.onerror=r;})); } });
+  return Promise.all(ps); }
+function genImg(g,t){ const a=GENI[g.k]; if(!a) return null; const n=a.imgs.length; if(n===1) return a.imgs[0].naturalWidth?a.imgs[0]:null;
+  const i=cl(Math.floor((t-g.s)*30),0,n-1); const im=a.imgs[i]; return im&&im.naturalWidth?im:null; }
+function genActive(t,modes){ resolveGen(); return GEN.filter(g=>t>=g.s&&t<g.e&&modes.includes(g.mode||'card')); }
+/* رسم الصورة داخل مستطيل بقصّ «تغطية» مع كن-بيرنز */
+function genDrawImg(g,im,t,x,y,w,h){ const k=g.kb?pr(t,g.s,g.e):0, sc=1+0.08*k, s0=Math.max(w/im.naturalWidth,h/im.naturalHeight)*sc;
+  const dw=im.naturalWidth*s0, dh=im.naturalHeight*s0; X.drawImage(im, x+(w-dw)/2+(-14*k), y+(h-dh)/2+(-10*k), dw, dh); }
+function genBg(t){ for(const g of genActive(t,['bg'])){ const im=genImg(g,t); if(!im) continue;
+    const k=ease(pr(t,g.s,g.s+0.35)), ko=1-pr(t,g.e-0.3,g.e); X.save(); X.globalAlpha=k*ko; genDrawImg(g,im,t,0,0,W,H);
+    /* تعتيم خفيف من تحت حتى الكرت الصغير والكابشن يطلعان */ const gr=X.createLinearGradient(0,H*0.45,0,H); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(0.55,'rgba(0,0,0,0.45)'); gr.addColorStop(1,'rgba(0,0,0,0.72)'); X.fillStyle=gr; X.fillRect(0,0,W,H);
+    genOps(g,t,{x:0,y:0,w:W,h:H*0.62}); X.restore(); } }
+function genCard(t){ for(const g of genActive(t,['card','full'])){ const im=genImg(g,t); if(!im) continue;
+    const k=ease(pr(t,g.s,g.s+0.3)), ko=1-pr(t,g.e-0.25,g.e); X.save(); X.globalAlpha=k*ko;
+    if(g.mode==='full'){ genDrawImg(g,im,t,0,0,W,H); genOps(g,t,{x:0,y:150,w:W,h:1330}); }
+    else { const R=g.rect||GCARD; const sc=lerp(0.94,1,back(k)); X.translate(R.x+R.w/2,R.y+R.h/2); X.scale(sc,sc); X.translate(-(R.x+R.w/2),-(R.y+R.h/2));
+      sh(60,24,0.30); X.fillStyle='#000'; rr(R.x,R.y,R.w,R.h,R.r); X.fill(); nsh(); X.save(); rr(R.x,R.y,R.w,R.h,R.r); X.clip(); genDrawImg(g,im,t,R.x,R.y,R.w,R.h); X.restore();
+      X.strokeStyle=cINK(0.16); X.lineWidth=3; rr(R.x,R.y,R.w,R.h,R.r); X.stroke(); genOps(g,t,R); }
+    X.restore(); } }
+/* عمليات الرسم فوق الصورة — كلها تدخل بسبرنق عند at */
+function _pill(txt,cx,cy,fs,k){ X.save(); X.font='900 '+fs+'px '+FONT; const tw=X.measureText(txt).width, bw=tw+fs*1.1, bh=fs*1.7;
+  X.translate(cx,cy); X.scale(k,k); sh(30,12,0.35); X.fillStyle=ACC; rr(-bw/2,-bh/2,bw,bh,bh/2); X.fill(); nsh();
+  X.fillStyle=onACC(); X.textAlign='center'; X.textBaseline='middle'; X.fillText(txt,0,fs*0.06); X.restore(); }
+function genOps(g,t,R){ for(const d of (g.draw||[])){ if(t<d.at) continue; const k=back(cl((t-d.at)/0.32,0,1)), kl=cl((t-d.at)/0.45,0,1);
+    const px=v=>R.x+(v===undefined?0.5:v)*R.w, py=v=>R.y+(v===undefined?0.5:v)*R.h;
+    if(d.op==='text') _pill(d.txt||'',px(d.x),py(d.y),d.size||60,k);
+    else if(d.op==='num') _pill(d.txt||'',px(d.x),py(d.y===undefined?0.18:d.y),d.size||120,k);
+    else if(d.op==='circle'){ const r=(d.r||0.18)*R.w; X.save(); X.strokeStyle=ACC; X.lineWidth=12; X.lineCap='round'; sh(20,6,0.35);
+      X.beginPath(); X.arc(px(d.x),py(d.y),r,-Math.PI/2,-Math.PI/2+Math.PI*2*ease(kl)); X.stroke(); X.restore(); }
+    else if(d.op==='check'){ const r=R.w*0.075; X.save(); X.translate(px(d.x),py(d.y)); X.scale(k,k); sh(30,10,0.35); X.fillStyle=ACC; X.beginPath(); X.arc(0,0,r,0,7); X.fill(); nsh();
+      X.strokeStyle=onACC(); X.lineWidth=r*0.22; X.lineCap='round'; X.lineJoin='round'; X.beginPath(); X.moveTo(-r*0.42,0.02*r); X.lineTo(-r*0.1,r*0.36); X.lineTo(r*0.46,-r*0.34); X.stroke(); X.restore(); }
+    else if(d.op==='vs'){ X.save(); X.strokeStyle='#FFFFFF'; X.lineWidth=6; X.lineCap='round'; sh(16,4,0.5); X.setLineDash([26,18]);
+      X.beginPath(); X.moveTo(px(0.5),py(0.10)); X.lineTo(px(0.5),py(0.10)+(R.h*0.80)*ease(kl)); X.stroke(); X.restore();
+      if(d.l) _pill(d.l,px(0.74),py(0.12),52,k); if(d.r) _pill(d.r,px(0.26),py(0.12),52,k); }
+    else if(d.op==='underline'){ const w=(d.w||0.3)*R.w; X.save(); X.strokeStyle=ACC; X.lineWidth=10; X.lineCap='round'; sh(14,4,0.35);
+      X.beginPath(); X.moveTo(px(d.x)+w/2,py(d.y)); X.lineTo(px(d.x)+w/2-w*ease(kl),py(d.y)+6); X.stroke(); X.restore(); } } }
+/* 🗞️ كولاج: الشاشة ورقة، الشخص قصاصة (personStage يرسمه)، وكلمات الجملة قصاصات ورقية تظهر بنطقها */
+function collageActive(t){ return SCENES.some(sn=>sn.collage&&t>=sn.s&&t<sn.e); }
+function collageScene(t){
+  const PAPER=lum(BG)<0.4?'#F3EFEA':BG, PINK=lum(BG)<0.4?'#1F1F1D':INK;   /* الورقة فاتحة حتى لو الهوية غامقة */
+  X.save(); X.fillStyle=PAPER; X.fillRect(0,0,W,H);
+  X.strokeStyle='rgba(0,0,0,0.06)'; X.lineWidth=2; for(let y=0;y<H;y+=64){X.beginPath();X.moveTo(0,y);X.lineTo(W,y);X.stroke();}
+  const c=CAPS.find(c=>t>=c.s&&t<c.e); if(c){ X.font='900 74px '+FONT; X.textAlign='center'; X.textBaseline='middle';
+    c.w.forEach((w,j)=>{ if(t<w.s) return; const k=back(cl((t-w.s)/0.3,0,1)); const tw=X.measureText(w.t).width+56, th=110;
+      const col=j%3, row=Math.floor(j/3); const x=540+(1-col)*330+((j*53)%41-20), y=330+row*150+((j*29)%23-11), rot=(((j*37)%9)-4)*Math.PI/180;
+      X.save(); X.translate(x,y); X.rotate(rot); X.scale(k,k); sh(26,10,0.28); X.fillStyle=(w.hot?ACC:'#FFFFFF'); rr(-tw/2,-th/2,tw,th,8); X.fill(); nsh();
+      X.fillStyle=w.hot?onACC():PINK; X.fillText(w.t,0,4); X.restore(); }); }
+  X.restore(); }
+/* 🏷️ ملصقات فوق الراس (عامة — تُضاف من استوديو الجوال أو يدوياً بـSTICK): {s,e,i:'🎂',t:'5 سنوات',y?} كبسولة غامقة بحافة التمييز تنبثق وتطفو */
+function stickers(t){
+  for(const st of STICK){ if(t<st.s||t>st.e) continue;
+    const k=ease(pr(t,st.s,st.s+0.32)), out=1-pr(t,st.e-0.22,st.e); const a=k*out; if(a<=0) continue;
+    const sc=(0.6+0.4*back(k))*(0.96+0.04*out), fl=Math.sin((t-st.s)*2.2)*7;
+    X.save(); X.globalAlpha=a; X.font='800 74px '+FONT; const tw=X.measureText(st.t||'').width;
+    const hasI=!!st.i, bw=tw+72+(hasI?130:40), bh=130, cx=540, cy=(st.y||300)+fl;
+    X.translate(cx,cy); X.scale(sc,sc); X.translate(-cx,-cy);
+    sh(30,10,0.35); X.fillStyle='rgba(18,16,14,0.62)'; rr(cx-bw/2,cy-bh/2,bw,bh,bh/2); X.fill(); nsh();
+    X.strokeStyle=ACC; X.lineWidth=3; rr(cx-bw/2,cy-bh/2,bw,bh,bh/2); X.stroke();
+    X.textBaseline='middle'; X.textAlign='right'; X.fillStyle='#FFFFFF'; X.font='800 74px '+FONT;
+    X.fillText(st.t||'',cx+bw/2-32,cy+4);
+    if(hasI){ X.font='76px "Apple Color Emoji","Noto Color Emoji",sans-serif'; X.textAlign='left'; X.fillText(st.i,cx-bw/2+30,cy+4); }
+    X.restore(); }
 }
-const CH=[{l:'الكابشن',i:iCaption},{l:'الزوم',i:iZoom},{l:'الكت',i:iCut},{l:'المؤثرات',i:iSpark}];
-function chips(t){ if(t<3.30||t>8.00)return;
-  const ws=wordsOf(1), pos=[[770,300],[310,300],[770,468],[310,468]];
-  const flip=7.09, out=pr(t,7.80,8.00);
-  for(let i=0;i<4;i++){
-    const st=ws[i].s; if(t<st)continue;
-    const k=pr(t,st,st+0.30), fk=pr(t,flip+i*0.07,flip+i*0.07+0.30);
-    const [cx,cy]=pos[i], w=418,h=124;
-    X.save();X.globalAlpha=1-out;
-    X.translate(cx,cy);X.scale(lerp(0.7,1,back(k)),lerp(0.7,1,back(k)));
-    X.rotate(lerp(-0.06*(i%2?-1:1),0,ease(k)));X.translate(-cx,-cy);
-    card(cx-w/2,cy-h/2,w,h,34,ease(k));
-    if(fk>0){X.save();X.globalAlpha*=fk;sh(34,14,0.22);X.fillStyle=ACC;rr(cx-w/2,cy-h/2,w,h,34);X.fill();nsh();X.restore();}
-    const col=fk>0.55?onACC():INK;
-    T(CH[i].l,cx-16,cy+3,'800 46px '+FONT,col,'center');
-    CH[i].i(cx+w/2-62,cy,58,fk>0.55?onACC():ACC);
-    if(fk>0.15)iCheck(cx-w/2+58,cy,46,fk>0.55?onACC():ACC,cl((fk-0.15)/0.5,0,1));
-    X.restore();}
-}
-function fileToCloud(t){ if(t<8.9||t>11.45)return;
-  const ck=pr(t,8.9,9.3), out=pr(t,11.2,11.45);
-  X.save();X.globalAlpha=(1-out)*ease(ck);
-  iCloud(540,300,230,ACC);
-  T('درايف',540,478,'700 40px '+FONT,MUT);
-  const pk=pr(t,10.9,11.25);
-  if(pk>0&&pk<1){X.save();X.globalAlpha=(1-pk)*0.5*(1-out);X.strokeStyle=ACC;X.lineWidth=7;
-    X.beginPath();X.arc(540,300,80+pk*180,0,7);X.stroke();X.restore();}
-  X.restore();
-  const k=pr(t,9.35,10.9); if(k<=0)return;
-  const e=eio(k), y=lerp(1660,320,e), x=540+Math.sin(e*Math.PI)*150, sc=lerp(1,0.25,e*e);
-  X.save();X.globalAlpha=(1-Math.pow(k,4))*(1-out);
-  X.translate(x,y);X.scale(sc,sc);X.rotate(Math.sin(e*Math.PI*2)*0.05);
-  const w=420,h=118;card(-w/2,-h/2,w,h,28,1);
-  iFile(w/2-62,0,58,ACC);
-  X.save();X.direction='ltr';T('IMG_0396.mov',-w/2+40,4,'700 36px '+FONT,INK,'left');X.restore();
-  X.restore();}
-function transcript(t){ if(t<11.55||t>15.36)return;
-  const a=ease(pr(t,11.55,11.9))*(1-pr(t,15.15,15.36));
-  const px=150,py=196,pw=780,ph=404;
-  X.save();X.globalAlpha=a;card(px,py,pw,ph,32,1);
-  X.fillStyle=cINK(0.22);
-  [0,1,2].forEach(i=>{X.beginPath();X.arc(px+pw-46-i*36,py+44,10,0,7);X.fill();});
-  T('تفريغ تلقائي — كلمة كلمة',px+pw-160,py+46,'700 34px '+FONT,MUT,'right');
-  X.strokeStyle=cINK(0.10);X.lineWidth=2;
-  X.beginPath();X.moveTo(px+28,py+86);X.lineTo(px+pw-28,py+86);X.stroke();
-  const ws=wordsOf(3), shown=ws.filter(w=>t>=w.s);
-  const RH=62, maxR=4, off=Math.max(0,shown.length-maxR);
-  X.save();X.beginPath();X.rect(px+18,py+96,pw-36,ph-112);X.clip();
-  shown.forEach((w,i)=>{
-    const k=pr(t,w.s,w.s+0.22), y=py+120+(i-off)*RH+ (1-ease(k))*16;
-    if(y<py+90||y>py+ph-10)return;
-    X.save();X.globalAlpha=ease(k)*(i<off?0.35:1);
-    T(w.t,px+pw-46,y,'800 44px '+FONT,i===shown.length-1?ACC:INK,'right');
-    X.save();X.direction='ltr';
-    const mm=String(Math.floor(w.s/60)).padStart(2,'0'),ss=(w.s%60).toFixed(2).padStart(5,'0');
-    T(mm+':'+ss,px+46,y,'600 30px '+FONT,MUT,'left');X.restore();
-    X.restore();});
-  X.restore();X.restore();}
-function cardStack(t){ if(t<15.45||t>18.56)return;
-  const a=ease(pr(t,15.45,15.75))*(1-pr(t,18.35,18.56));
-  X.save();X.globalAlpha=a;
-  const N=6;
-  for(let i=0;i<N;i++){const st=15.55+i*0.14,k=pr(t,st,st+0.30);if(k<=0)continue;
-    X.save();X.globalAlpha=ease(k);
-    X.translate(540+(i-2.5)*40,306+Math.abs(i-2.5)*9);X.rotate(((i-2.5)*5.6)*Math.PI/180*ease(k));
-    X.scale(lerp(0.8,1,back(k)),lerp(0.8,1,back(k)));
-    card(-170,-42,340,84,20,1);
-    X.fillStyle=cINK(0.16);rr(-130,-14,220,12,6);X.fill();
-    X.fillStyle=ACC;rr(-130,10,120,12,6);X.fill();
-    X.restore();}
-  const ck=pr(t,16.6,17.9), n=Math.round(lerp(1,15,eio(ck)));
-  X.save();X.direction='ltr';T(String(n),540,505,'900 104px '+FONT,ACC);X.restore();
-  T('كرت متحرك',540,585,'700 40px '+FONT,MUT);
-  X.restore();}
-function suspense(t){ if(t<18.6||t>20.42)return;
-  [0,0.55].forEach(d=>{const k=pr(t,18.7+d,18.7+d+1.1);
-    if(k>0&&k<1){X.save();X.globalAlpha=(1-k)*0.14;X.strokeStyle=ACC;X.lineWidth=5;
-      X.beginPath();X.arc(540,760,80+k*520,0,7);X.stroke();X.restore();}});}
-function syncViz(t){ if(t<20.5||t>25.76)return;
-  const a=ease(pr(t,20.5,20.9))*(1-pr(t,25.5,25.76));
-  const x0=110,x1=970,yb=1215,k=pr(t,20.6,25.5);
-  X.save();X.globalAlpha=a;
-  const chw=520;card(540-chw/2,1058,chw,84,42,1);
-  T('مزامنة على مستوى الكلمة',540,1102,'800 38px '+FONT,INK);
-  const N=68;
-  for(let i=0;i<N;i++){const px=x0+(x1-x0)*(i/(N-1));
-    const hgt=18+Math.abs(Math.sin(i*1.7)*Math.cos(i*0.53))*74;
-    const done=px<=x0+(x1-x0)*k;
-    X.fillStyle=done?ACC:cINK(0.20);
-    rr(px-4,yb-hgt/2,8,hgt,4);X.fill();}
-  [23.08,24.06,25.40].forEach(m=>{
-    const mx=x0+(x1-x0)*pr(m,20.6,25.5);
-    X.save();X.strokeStyle=cINK(0.25);X.lineWidth=2;X.setLineDash([6,8]);
-    X.beginPath();X.moveTo(mx,yb-72);X.lineTo(mx,yb+72);X.stroke();X.restore();
-    const hit=pr(t,m,m+0.42);
-    if(hit>0&&hit<1){X.save();X.globalAlpha=(1-hit)*0.9;X.strokeStyle=ACC;X.lineWidth=6;
-      X.beginPath();X.arc(mx,yb,14+hit*54,0,7);X.stroke();X.restore();
-      X.fillStyle=ACC;X.beginPath();X.arc(mx,yb,13,0,7);X.fill();}
-    else if(t>m){X.fillStyle=ACC;X.beginPath();X.arc(mx,yb,10,0,7);X.fill();}});
-  const px=x0+(x1-x0)*k;
-  X.strokeStyle=INK;X.lineWidth=4;X.beginPath();X.moveTo(px,yb-92);X.lineTo(px,yb+92);X.stroke();
-  X.fillStyle=INK;X.beginPath();X.arc(px,yb-100,11,0,7);X.fill();
-  X.restore();}
-function price(t){ if(t<25.9||t>28.35)return;
-  const a=ease(pr(t,25.9,26.2))*(1-pr(t,28.1,28.35));
-  X.save();X.globalAlpha=a;
-  T('تكلفة المونتاج',540,262,'700 44px '+FONT,MUT);
-  let s='$0.00',sc=1,sy=0;
-  if(t<27.27){const fi=Math.floor(t*30);const r=(Math.sin(fi*12.9898)*43758.5453);
-    const v=Math.abs(r-Math.floor(r))*90+2; s='$'+v.toFixed(2);}
-  else{const k=pr(t,27.27,27.52);sc=lerp(1.55,1,back(k));sy=Math.sin(k*Math.PI*3)*(1-k)*10;}
-  X.save();X.direction='ltr';X.translate(540,412+sy);X.scale(sc,sc);
-  T(s,0,0,'900 150px '+FONT,t<27.27?cINK(0.35):ACC);X.restore();
-  if(t>27.27){const uk=ease(pr(t,27.4,27.9));X.fillStyle=ACC;
-    rr(540-230*uk,502,460*uk,10,5);X.fill();
-    const rk=pr(t,27.27,27.85);
-    if(rk<1){X.save();X.globalAlpha=(1-rk)*0.4;X.strokeStyle=ACC;X.lineWidth=7;
-      X.beginPath();X.arc(540,412,120+rk*300,0,7);X.stroke();X.restore();}}
-  X.restore();}
-function glitch(t){
-  const g=pr(t,29.47,29.92);
-  if(g>0&&g<1){const amp=(1-g)*70;
-    for(let i=0;i<18;i++){const sy=i*(H/18),hh=H/18;
-      const r=Math.sin(i*7.3+Math.floor(t*30)*1.7),dx=r*amp;
-      X.drawImage(VF,0,sy,W,hh,dx,sy,W,hh);}
-    X.save();X.globalAlpha=(1-g)*0.15;X.fillStyle=ACC;X.fillRect(0,0,W,H);X.restore();}
-  const ck=pr(t,29.47,30.05), fo=1-pr(t,30.25,30.7);
-  if(ck>0&&fo>0){X.save();X.globalAlpha=fo*0.8;X.strokeStyle=ACC;X.lineWidth=5;X.lineCap='round';X.lineJoin='round';
-    const seeds=[[0,-1,0.9],[1,0.6,0.75],[-1,0.75,0.8]];
-    seeds.forEach((sd,si)=>{let x=540,y=820;X.beginPath();X.moveTo(x,y);
-      const steps=9;
-      for(let i=1;i<=steps;i++){const kk=cl(ck*steps-(i-1),0,1);if(kk<=0)break;
-        const nx=x+sd[0]*95*kk+Math.sin(i*3.1+si)*46*kk, ny=y+sd[1]*115*kk;
-        X.lineTo(nx,ny);x=nx;y=ny;}
-      X.stroke();});
-    X.restore();}}
-function titleChip(s,y,a,col){X.save();X.globalAlpha*=a;X.font='800 40px '+FONT;
-  const w=X.measureText(s).width+72,h=80;
-  X.fillStyle=col||cINK(0.07);rr(540-w/2,y-h/2,w,h,h/2);X.fill();
-  T(s,540,y+2,'800 40px '+FONT,col?onACC():INK);X.restore();}
-function rtlBug(t){ if(t<30.85||t>34.90)return;
-  const a=ease(pr(t,30.85,31.25))*(1-pr(t,34.72,34.90));
-  X.save();X.globalAlpha=a;
-  titleChip('المشكلة',202,1,ACC);
-  const bx=250,by=330,bw=580,bh=170;
-  card(bx,by,bw,bh,30,1);
-  const flip=t>=32.90;
-  const s=flip?'ايبرعلا':'العربية';
-  X.save();X.direction=flip?'ltr':'rtl';
-  T(s,540,by+bh/2+4,'800 60px '+FONT,flip?ACC:INK);X.restore();
-  const ak=pr(t,32.10,32.45), dir=flip?-1:1;
-  if(ak>0){X.save();X.globalAlpha=ak;X.strokeStyle=flip?ACC:MUT;X.lineWidth=7;X.lineCap='round';X.lineJoin='round';
-    const ay=by-56,x1=540-dir*130,x2=540+dir*130;
-    X.beginPath();X.moveTo(x1,ay);X.lineTo(x2,ay);X.moveTo(x2,ay);X.lineTo(x2-dir*34,ay-22);X.moveTo(x2,ay);X.lineTo(x2-dir*34,ay+22);X.stroke();X.restore();}
-  X.restore();
-  const bk=pr(t,33.76,34.15);
-  if(bk>0){const R=vrect(t);X.save();X.globalAlpha=bk*a;X.fillStyle='#0B0B0A';
-    rr(R.x,R.y,R.w,R.h,R.r);X.fill();
-    const wk=pr(t,34.10,34.45);
-    if(wk>0){X.globalAlpha=wk*a;X.strokeStyle=ACC;X.lineWidth=8;X.lineCap='round';
-      const cx=R.x+R.w/2,cy=R.y+R.h/2;
-      X.beginPath();X.arc(cx,cy-16,54,0,7);X.stroke();
-      X.beginPath();X.moveTo(cx,cy-42);X.lineTo(cx,cy-4);X.stroke();
-      X.beginPath();X.arc(cx,cy+16,6,0,7);X.fillStyle=ACC;X.fill();
-      T('الفيديو يطلع أسود',cx,cy+120,'800 44px '+FONT,'#F3EFEA');}
-    X.restore();}}
-function rtlFix(t){
-  const bk=(t>=34.90&&t<37.55)?1-pr(t,37.20,37.55):0;
-  if(bk>0){const R=vrect(t);X.save();X.globalAlpha=bk;X.fillStyle='#0B0B0A';rr(R.x,R.y,R.w,R.h,R.r);X.fill();
-    const cx=R.x+R.w/2,cy=R.y+R.h/2, pw=420, pk=pr(t,34.95,37.5);
-    T('جاري الإصلاح…',cx,cy-46,'800 44px '+FONT,'#F3EFEA');
-    X.fillStyle=cBG(0.18);rr(cx-pw/2,cy+16,pw,14,7);X.fill();
-    X.fillStyle=ACC;rr(cx-pw/2,cy+16,pw*eio(pk),14,7);X.fill();
-    X.save();X.direction='ltr';T(Math.round(eio(pk)*100)+'%',cx,cy+80,'700 34px '+FONT,cBG(0.65));X.restore();
-    X.restore();}
-  const hk=pr(t,37.30,37.95);
-  if(hk>0&&hk<1){const R=vrect(t);X.save();X.globalAlpha=(1-hk)*0.85;X.strokeStyle=ACC;X.lineWidth=9;
-    rr(R.x-hk*40,R.y-hk*40,R.w+hk*80,R.h+hk*80,R.r+hk*20);X.stroke();X.restore();}
-  if(t<34.95||t>38.38)return;
-  const a=ease(pr(t,34.95,35.3))*(1-pr(t,38.20,38.38));
-  X.save();X.globalAlpha=a;
-  titleChip('الإصلاح',202,1,null);
-  const rows=[['تشخيص',36.17],['تعديل',37.09],['اختبار',37.91]];
-  rows.forEach((r,i)=>{
-    const y=360+i*100, k=pr(t,r[1],r[1]+0.34);
-    X.save();X.globalAlpha=lerp(0.32,1,ease(k));
-    card(250,y-40,580,80,24,1);
-    T(r[0],790,y+2,'800 42px '+FONT,k>0.3?INK:MUT,'right');
-    if(k>0.1)iCheck(310,y,46,ACC,cl((k-0.1)/0.6,0,1));
-    X.restore();});
-  X.restore();}
-function solved(t){ if(t<38.45||t>39.76)return;
-  const k=pr(t,38.45,38.85), a=1-pr(t,39.55,39.76);
-  X.save();X.globalAlpha=a;
-  X.translate(540,320);X.scale(lerp(0.5,1,back(k)),lerp(0.5,1,back(k)));X.translate(-540,-320);
-  sh(36,14,0.24);X.fillStyle=ACC;X.beginPath();X.arc(540,320,86,0,7);X.fill();nsh();
-  iCheck(540,320,110,onACC(),cl(pr(t,38.60,39.05),0,1));
-  X.restore();
-  const rk=pr(t,38.5,39.2);
-  if(rk<1){X.save();X.globalAlpha=(1-rk)*0.4*a;X.strokeStyle=ACC;X.lineWidth=7;
-    X.beginPath();X.arc(540,320,90+rk*250,0,7);X.stroke();X.restore();}}
-function oneFile(t){ if(t<39.85||t>42.82)return;
-  const a=ease(pr(t,39.85,40.2))*(1-pr(t,42.62,42.82));
-  const px=170,py=200,pw=740,ph=400;
-  X.save();X.globalAlpha=a;
-  card(px,py,pw,ph,34,1);
-  iFile(px+pw-78,py+80,74,ACC);
-  T('ملف واحد',px+pw-150,py+82,'900 58px '+FONT,INK,'right');
-  X.strokeStyle=cINK(0.10);X.lineWidth=2;
-  X.beginPath();X.moveTo(px+34,py+142);X.lineTo(px+pw-34,py+142);X.stroke();
-  T('كل الخطوات من التصوير لين التصدير',540,py+205,'700 40px '+FONT,MUT);
-  const chips=[['الكت',40.44],['الكابشن',41.02],['الحل',41.52]];
-  chips.forEach((c,i)=>{
-    const k=pr(t,c[1],c[1]+0.5);if(k<=0)return;
-    const e=eio(k);
-    const sx=[210,540,880][i], sy=1180;
-    const x=lerp(sx,540,e), y=lerp(sy,py+310,e), sc=lerp(1,0.82,e);
-    X.save();X.globalAlpha=k<0.85?1:1-(k-0.85)/0.15;
-    X.translate(x,y);X.scale(sc,sc);
-    X.font='800 40px '+FONT;const w=X.measureText(c[0]).width+64,h=78;
-    sh(26,10,0.2);X.fillStyle=ACC;rr(-w/2,-h/2,w,h,h/2);X.fill();nsh();
-    T(c[0],0,3,'800 40px '+FONT,onACC());X.restore();});
-  const lk=pr(t,42.10,42.45);
-  if(lk>0){X.save();X.globalAlpha=a*ease(lk);
-    const y=py+312;X.font='800 44px '+FONT;const s='جاهز للتحميل',w=X.measureText(s).width+80;
-    X.fillStyle=rgba(ACC,0.14);rr(540-w/2,y-42,w,84,42);X.fill();
-    T(s,540,y+2,'800 44px '+FONT,CLAY);X.restore();}
-  X.restore();}
-function commentBox(t){ if(t<43.1||t>46.08)return;
-  const a=ease(pr(t,43.1,43.45))*(1-pr(t,45.92,46.08));
-  const bx=140,by=1120,bw=800,bh=124;
-  X.save();X.globalAlpha=a;
-  card(bx,by,bw,bh,62,1);
-  X.fillStyle=cINK(0.07);X.beginPath();X.arc(bx+bw-66,by+bh/2,42,0,7);X.fill();
-  X.drawImage(LOGO,bx+bw-66-26,by+bh/2-26,52,52);
-  const full='فيديو', tk=pr(t,43.88,44.55), n=Math.round(tk*full.length);
-  const shown=full.slice(0,n);
-  T(shown||'أضف تعليق…',bx+bw-130,by+bh/2+2,'700 46px '+FONT,shown?INK:cINK(0.30),'right');
-  if(tk>0&&tk<1&&Math.floor(t*6)%2===0){X.font='700 46px '+FONT;
-    const w=X.measureText(shown).width;X.fillStyle=ACC;X.fillRect(bx+bw-134-w,by+bh/2-26,4,52);}
-  const sk=pr(t,44.60,44.95);
-  if(sk>0){X.save();const sc=lerp(0.6,1,back(sk));X.translate(bx+72,by+bh/2);X.scale(sc,sc);
-    sh(24,10,0.22);X.fillStyle=ACC;X.beginPath();X.arc(0,0,44,0,7);X.fill();nsh();
-    X.strokeStyle=onACC();X.lineWidth=6;X.lineCap='round';X.lineJoin='round';
-    X.beginPath();X.moveTo(14,0);X.lineTo(-14,0);X.moveTo(-14,0);X.lineTo(-2,-12);X.moveTo(-14,0);X.lineTo(-2,12);X.stroke();
-    X.restore();}
-  const fk=pr(t,45.10,45.85);
-  if(fk>0&&fk<1){const e=eio(fk);
-    X.save();X.globalAlpha=(1-fk*fk);
-    const x=lerp(bx+72,930,e), y=lerp(by+bh/2,168,e), sc=lerp(1,0.55,e);
-    X.translate(x,y);X.scale(sc,sc);
-    sh(20,8,0.2);X.fillStyle=BG;rr(-52,-38,104,76,22);X.fill();nsh();
-    X.strokeStyle=ACC;X.lineWidth=5;X.lineJoin='round';
-    X.beginPath();X.moveTo(-38,-22);X.lineTo(0,8);X.lineTo(38,-22);X.stroke();
-    X.strokeRect(-38,-22,76,44);X.restore();}
-  X.restore();}
 /* ---------- outro ---------- */
-const RECAP=[['شيل السكتات'],['كابشن لحظي'],['موشن قرافيكس'],['حل اتجاه العربي']];
+let RECAP=[['شيل السكتات'],['كابشن لحظي'],['موشن قرافيكس'],['حل اتجاه العربي']];
+let OUTRO_T={l1:'كل اللي شفته — الكت والكابشن والزوم والموشن',l2:'سواه كلود بروحه',cta:'علّق بكلمة',word:'فيديو',sub:'والملف كامل يوصلك على الخاص'};
 function outro(t){ const s=VEND; if(t<s)return;
   const wipe=eio(pr(t,s,s+0.45)), top=H*(1-wipe);
   X.save();X.fillStyle=BG;X.fillRect(0,top,W,H);
   X.beginPath();X.rect(0,top,W,H);X.clip();X.translate(0,top);
   const ap=d=>pr(t,s+d,s+d+0.42);
   let a=ap(0.30);
-  if(a>0){X.save();X.globalAlpha=a;const L=180,fl=Math.sin((t-s)*1.6)*5;X.drawImage(LOGO,540-L/2,196+fl-(1-ease(a))*18,L,L);X.restore();}
+  if(a>0&&LOGO.naturalWidth){X.save();X.globalAlpha=a;const L=180,fl=Math.sin((t-s)*1.6)*5;X.drawImage(LOGO,540-L/2,196+fl-(1-ease(a))*18,L,L);X.restore();}   /* بلا شعار = بلا رسم (كان يكسر الكرت كله) */
   a=ap(0.42);
   if(a>0){X.save();X.globalAlpha=a;
-    T('كل اللي شفته — الكت والكابشن والزوم والموشن',540,470+(1-ease(a))*14,'700 40px '+FONT,MUT);
-    T('سواه كلود بروحه',540,532+(1-ease(a))*14,'700 40px '+FONT,MUT);X.restore();}
+    T(OUTRO_T.l1,540,470+(1-ease(a))*14,'700 40px '+FONT,MUT);
+    T(OUTRO_T.l2,540,532+(1-ease(a))*14,'700 40px '+FONT,MUT);X.restore();}
   RECAP.forEach((r,i)=>{
     const k=ap(0.62+i*0.11); if(k<=0)return;
     const cx=i%2?300:780, cy=660+Math.floor(i/2)*104;
@@ -719,18 +953,18 @@ function outro(t){ const s=VEND; if(t<s)return;
   a=ap(1.15);
   if(a>0){X.save();X.globalAlpha=a;const sc=(0.94+0.06*back(Math.min(1,a)))*(1+0.014*Math.sin((t-s-1.15)*2.4));
     X.translate(540,1010);X.scale(sc,sc);X.translate(-540,-1010);
-    T('علّق بكلمة',540,1010,'900 88px '+FONT,INK);
-    X.font='900 100px '+FONT;const w=X.measureText('فيديو').width+96;
+    T(OUTRO_T.cta,540,1010,'900 88px '+FONT,INK);
+    X.font='900 100px '+FONT;const w=X.measureText(OUTRO_T.word).width+96;
     sh(40,16,0.22);X.fillStyle=ACC;rr(540-w/2,1110,w,148,44);X.fill();nsh();
-    T('فيديو',540,1186,'900 100px '+FONT,onACC());
+    T(OUTRO_T.word,540,1186,'900 100px '+FONT,onACC());
     X.restore();}
   a=ap(1.42);
-  if(a>0){X.save();X.globalAlpha=a;T('والملف كامل يوصلك على الخاص',540,1370,'700 42px '+FONT,MUT);X.restore();}
+  if(a>0&&OUTRO_T.sub){X.save();X.globalAlpha=a;T(OUTRO_T.sub,540,1370,'700 42px '+FONT,MUT);X.restore();}
   a=ap(1.6);
   if(a>0){X.save();X.globalAlpha=a;X.font='700 40px '+FONT;X.direction='ltr';
-    const ht=HANDLE,hw=X.measureText(ht).width,tot=54+18+hw,sx=540-tot/2;
-    X.drawImage(LOGO,sx,1540-27,54,54);
-    T(ht,sx+54+18,1542,'700 40px '+FONT,INK,'left','ltr');X.restore();}
+    const lg=LOGO.naturalWidth?54+18:0, ht=HANDLE,hw=X.measureText(ht).width,tot=lg+hw,sx=540-tot/2;   /* بلا شعار: الحساب وحده بالنص (كان يسقط المشهد) */
+    if(lg) X.drawImage(LOGO,sx,1540-27,54,54);
+    T(ht,sx+lg,1542,'700 40px '+FONT,INK,'left','ltr');X.restore();}
   X.restore();}
 /* ---------- master ---------- */
 function draw(t){
@@ -738,15 +972,19 @@ function draw(t){
   X.setTransform(1,0,0,1,0,0); X.globalAlpha=1; X.filter='none';
   X.shadowColor='transparent'; X.shadowBlur=0; X.shadowOffsetY=0; X.globalCompositeOperation='source-over';
   X.clearRect(0,0,W,H);X.fillStyle=BG;X.fillRect(0,0,W,H);safe(grid,t,'grid');
+  if(t<VEND) safe(genBg,t,'genBg');   /* 🖼️ v3.2: صورة/مقطع مولّد كخلفية وراه (وضع bg) */
   const _cut=(t<VEND)&&cutoutActive(t), _ho=(t<VEND)&&headoutActive(t);
   if(t<VEND&&_ho){safe(headOut,t,'headout');}
   const _off=vrect(t).y>=1919;   /* R_OFF: الكرت انزلق تحت الشاشة بالكامل */
-  if(t<VEND&&!_cut&&!_ho&&!_off){safe(drawVideo,t,'video');safe(behindText,t,'behind');if(typeof glitch==='function')safe(glitch,t,'glitch');}
-  badge(t);bar(t);
-  [['stamp',stamp],['chips',chips],['fileToCloud',fileToCloud],['transcript',transcript],
-   ['cardStack',cardStack],['suspense',suspense],['syncViz',syncViz],['price',price],
-   ['rtlBug',rtlBug],['rtlFix',rtlFix],['solved',solved],['oneFile',oneFile],
-   ['commentBox',commentBox]].forEach(x=>safe(x[1],t,x[0]));
+  const _vs=videoShift(t); if(_vs){X.save();X.translate(_vs.x,_vs.y);}
+  if(t<VEND&&!_cut&&!_ho&&!_off){safe(drawVideo,t,'video');safe(behindText,t,'behind');
+    for(const sc of SCENE_LIST) if((sc[2]||sc[1].layer)==='video') safe(sc[1],t,sc[0]);}   /* مشاهد طبقة الفيديو (مسجّلة بـSCENE_LIST) */
+  if(_vs)X.restore(); if(t<VEND) safe(cracks,t,'cracks');
+  if(t<VEND&&collageActive(t)) safe(collageScene,t,'collage');
+  if(t<VEND) safe(brollClips,t,'brollClips');
+  if(t<VEND) safe(genCard,t,'genCard');   /* 🖼️ v3.2: صورة/مقطع مولّد بكرت فوق + رسم فوقه (وضع card/full) */
+  badge(t);bar(t); if(t<VEND) safe(stickers,t,'stickers');
+  for(const sc of SCENE_LIST) if((sc[2]||sc[1].layer)!=='video') safe(sc[1],t,sc[0]);   /* مشاهد المشروع — فاضية افتراضياً (شوف SCENE_LIST فوق) */
   if(_cut) safe(personStage,t,'cutout');   /* هو قدام اللوحة */
   safe(caption,t,'caption'); safe(outro,t,'outro');
 }
