@@ -322,7 +322,7 @@ function validate(b){
 }
 async function nextNo(){
   const meta=db.doc('meta/counter');
-  const lease=await meta.acquire({ttlMs:8000});
+  const lease=await meta.acquire({holder:String(myId||'viewer')+'-'+Math.random().toString(36).slice(2),ttlMs:8000});
   if(!lease.acquired)throw new Error('busy');
   const snap=await meta.get();
   const maxList=bookings.reduce((m,x)=>Math.max(m,parseInt(String(x.no).replace(/\D/g,''))||0),0);
@@ -344,7 +344,7 @@ async function save(){
     await db.doc('bookings/'+b.no).set(b);
     editing=b;$('mode').textContent='تعديل الحجز '+b.no;$('f-no').value=b.no;refresh();
     return b;
-  }catch(e){msg('تعذر الحفظ، حاول مرة أخرى.','err');return null}
+  }catch(e){msg('تعذر الحفظ ('+errText(e)+'). حاول مرة أخرى.','err');return null}
 }
 $('btn-save').onclick=async()=>{const b=await save();if(b)msg('تم حفظ الحجز '+b.no,'okk')};
 $('form').addEventListener('submit',async e=>{
