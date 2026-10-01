@@ -45,8 +45,8 @@ function nextBookingNo(prefix) {
 // ---------- الحسابات ----------
 export function compute(data) {
   const fin = data.financial || {};
-  const vatRate = fin.vatRate ?? 15; // نسبة ضريبة القيمة المضافة في السعودية
-  const vatMode = fin.vatMode || 'exclusive'; // exclusive: السعر قبل الضريبة | inclusive: شامل | none
+  const vatRate = 0;
+  const vatMode = 'none'; // الوكالة غير خاضعة لضريبة القيمة المضافة // exclusive: السعر قبل الضريبة | inclusive: شامل | none
   const rooms = data.stays.map((s) => {
     const nights = nightsBetween(s.checkIn, s.checkOut);
     const qty = s.rooms ?? 1;
@@ -136,9 +136,8 @@ function render(data, c) {
         </table>
       </div>
       <div class="summary">
-        ${c.vatMode === 'inclusive' ? '' : sumLine('المجموع', c.subtotal)}
+        ${c.discount ? sumLine('المجموع', c.subtotal) : ''}
         ${c.discount ? sumLine('الخصم', -c.discount) : ''}
-        ${c.vatMode === 'none' ? '' : sumLine(`ضريبة القيمة المضافة ${c.vatRate}%${c.vatMode === 'inclusive' ? ' (مشمولة)' : ''}`, c.vat)}
         ${sumLine('الإجمالي المستحق', c.total, 'total')}
         ${sumLine('المدفوع', c.paid)}
         ${sumLine('المتبقي', Math.max(c.balance, 0), 'bal ' + balState[1])}
@@ -219,7 +218,7 @@ footer{position:fixed;bottom:6mm;inset-inline:13mm;border-top:1px solid var(--li
   <div class="head">
     <h1>تأكيد حجز الفندق</h1>
     <div class="agency">${esc(ag.name)}</div>
-    <div class="addr">${esc(ag.address)}${ag.phone ? ` &nbsp;|&nbsp; <span class="num" style="display:inline">${esc(ag.phone)}</span>` : ''}${ag.crNo ? ` &nbsp;|&nbsp; س.ت: <span class="num" style="display:inline">${esc(ag.crNo)}</span>` : ''}${ag.vatNo ? ` &nbsp;|&nbsp; الرقم الضريبي: <span class="num" style="display:inline">${esc(ag.vatNo)}</span>` : ''}</div>
+    <div class="addr">${esc(ag.address)}${ag.phone ? ` &nbsp;|&nbsp; <span class="num" style="display:inline">${esc(ag.phone)}</span>` : ''}${ag.crNo ? ` &nbsp;|&nbsp; س.ت: <span class="num" style="display:inline">${esc(ag.crNo)}</span>` : ''}</div>
   </div>
   <div class="meta">
     <div><span>رقم الحجز</span><span class="no num">${esc(data.bookingNo)}</span></div>
@@ -291,9 +290,9 @@ async function main() {
   const sc = data.supplierCost; // تكلفة الوكالة المورّدة — داخلي فقط ولا يظهر في الملف
   if (sc) {
     const costNet = toCents(sc.net), costVat = toCents(sc.vat ?? 0);
-    const profit = c.net - costNet; // الربح = صافي البيع − صافي التكلفة (الضريبة خارج الربح)
+    const profit = c.total - (costNet + costVat); // غير خاضعين للضريبة: ضريبة المورّد تكلفة فعلية
     console.log(`[داخلي] المورّد ${sc.name || ''}: صافي ${fmt(costNet)} + ضريبة ${fmt(costVat)} = ${fmt(costNet + costVat)}`);
-    console.log(`[داخلي] صافي البيع ${fmt(c.net)} − صافي التكلفة ${fmt(costNet)} = الربح ${fmt(profit)} (${c.net ? ((profit / c.net) * 100).toFixed(1) : 0}%)`);
+    console.log(`[داخلي] البيع ${fmt(c.total)} − إجمالي التكلفة ${fmt(costNet + costVat)} = الربح ${fmt(profit)} (${c.total ? ((profit / c.total) * 100).toFixed(1) : 0}%)`);
   }
   if (data.showPrices !== false)
     console.log(`الإجمالي ${fmt(c.total)} | المدفوع ${fmt(c.paid)} | المتبقي ${fmt(c.balance)} ${data.financial?.currency || 'SAR'}`);

@@ -26,8 +26,6 @@
   ],
   "financial": {
     "currency": "SAR",
-    "vatMode": "exclusive",
-    "vatRate": 15,
     "discount": 0,
     "payments": [
       {
