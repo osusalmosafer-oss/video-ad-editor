@@ -1,0 +1,38 @@
+{
+  "bookingNo": "WO00015",
+  "issueDate": "15/10/2026",
+  "status": "مؤكد",
+  "confirmationNo": "",
+  "client": {
+    "name": "يحيى إبراهيم المطيري",
+    "idNo": "",
+    "adults": 4,
+    "children": 0,
+    "phone": "",
+    "email": "",
+    "guests": []
+  },
+  "stays": [
+    {
+      "hotel": "Hilton Suites Makkah",
+      "city": "مكة المكرمة",
+      "roomType": "جناح غرفتين وصالة إطلالة",
+      "meals": "شامل الإفطار",
+      "checkIn": "15/10/2026",
+      "checkOut": "17/10/2026",
+      "rooms": 1,
+      "ratePerNight": 2500
+    }
+  ],
+  "financial": {
+    "currency": "SAR",
+    "vatMode": "exclusive",
+    "vatRate": 15,
+    "discount": 0,
+    "payments": [
+      { "date": "14/10/2026", "method": "تحويل بنكي", "ref": "TRX-1001", "amount": 3000 }
+    ]
+  },
+  "notes": "",
+  "showPrices": true
+}
