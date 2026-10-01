@@ -176,9 +176,11 @@ td.n{direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
       <div class="actions">
         <button class="btn pri" id="btn-pdf" type="submit">حفظ وتنزيل PDF</button>
         <button class="btn" id="btn-save" type="button">حفظ فقط</button>
+        <button class="btn" id="btn-dl" type="button" hidden>إعادة تنزيل الملف</button>
         <button class="btn" id="btn-reset" type="button">حجز جديد</button>
       </div>
       <div class="msg" id="msg" role="status"></div>
+      <div id="fallback" hidden class="card" style="background:var(--soft)"><b>إن لم يبدأ التنزيل، احفظ الصفحتين كصور (اضغط مطولًا أو زر الفأرة الأيمن ثم حفظ الصورة):</b><div id="fbimgs" style="display:flex;flex-direction:column;gap:8px"></div></div>
     </form>
 
     <div class="pvwrap" id="pvwrap"><div class="pv" id="pv"></div></div>
@@ -349,23 +351,34 @@ $('form').addEventListener('submit',async e=>{
   e.preventDefault();$('btn-pdf').disabled=true;msg('جارٍ الحفظ وتجهيز الملف…');
   try{const b=await save();if(b)await makePdf(b)}finally{$('btn-pdf').disabled=false}
 });
+let lastPdf=null;
+const errText=e=>e?[e.code,e.message].filter(Boolean).join(': ')||String(e):'غير معروف';
+async function deliver(){
+  if(!lastPdf)return;
+  if(!dl){msg('تنزيل الملفات غير متاح في هذا العرض. افتح الرابط في متصفح عادي، أو احفظ الصور أدناه.','err');showFallback();return}
+  try{await dl.save({filename:lastPdf.name,data:lastPdf.blob});msg('تم حفظ الحجز '+lastPdf.no+' وتجهيز الملف. إن لم يظهر في التنزيلات اضغط زر "تنزيل الملف".','okk');$('fallback').hidden=true}
+  catch(e){if(e&&e.code==='declined'){msg('تم حفظ الحجز دون تنزيل الملف. اضغط زر "تنزيل الملف" عند الحاجة.')}else{msg('تعذر تنزيل الملف ('+errText(e)+'). اضغط زر "تنزيل الملف" أو احفظ الصور أدناه.','err');showFallback()}}
+}
+function showFallback(){if(!lastPdf)return;$('fbimgs').innerHTML=lastPdf.imgs.map(u=>`<img src="${u}" style="width:100%;max-width:520px;border:1px solid var(--line)">`).join('');$('fallback').hidden=false}
+$('btn-dl').onclick=deliver;
 async function makePdf(b){
-  if(!window.html2canvas||!window.jspdf){msg('تعذر تحميل أدوات PDF، تحقق من الاتصال.','err');return}
-  if(!dl){msg('حُفظ الحجز '+b.no+'، لكن تنزيل الملفات غير متاح في هذا العرض.','err');return}
+  if(!window.html2canvas||!window.jspdf){msg('تعذر تحميل أدوات PDF، تحقق من الاتصال وحدّث الصفحة.','err');return}
   const cap=$('cap');cap.innerHTML=sheetsHtml(b);
   try{
     await document.fonts.ready;
     const pdf=new jspdf.jsPDF({unit:'pt',format:'a4',compress:true});
-    const sheets=[...cap.querySelectorAll('.sheet')];
+    const sheets=[...cap.querySelectorAll('.sheet')],imgs=[];
     for(let i=0;i<sheets.length;i++){
       const cv=await html2canvas(sheets[i],{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+      const u=cv.toDataURL('image/jpeg',.92);imgs.push(u);
       if(i)pdf.addPage();
-      pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,595.28,841.89);
+      pdf.addImage(u,'JPEG',0,0,595.28,841.89);
     }
-    await dl.save({filename:`${b.no}-confirmation.pdf`,data:pdf.output('blob')});
-    msg('تم حفظ الحجز '+b.no+' وتجهيز الملف.','okk');
-  }catch(e){msg(e&&e.code==='declined'?'تم حفظ الحجز دون تنزيل الملف.':'تعذر إنشاء الملف.',e&&e.code==='declined'?'':'err')}
+    lastPdf={no:b.no,name:`${b.no}-confirmation.pdf`,blob:pdf.output('blob'),imgs};
+    $('btn-dl').hidden=false;$('btn-dl').textContent='تنزيل الملف '+b.no;$('btn-dl').classList.add('pri');
+  }catch(e){msg('تم حفظ الحجز '+b.no+' لكن تعذر إنشاء الملف ('+errText(e)+').','err');return}
   finally{cap.innerHTML=''}
+  await deliver();
 }
 
 /* ---------- السجل ---------- */
