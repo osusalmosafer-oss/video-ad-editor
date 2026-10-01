@@ -288,6 +288,13 @@ async function main() {
   await browser.close();
   fs.unlinkSync(tmp);
   console.log(`تم إنشاء الملف: ${out}`);
+  const sc = data.supplierCost; // تكلفة الوكالة المورّدة — داخلي فقط ولا يظهر في الملف
+  if (sc) {
+    const costNet = toCents(sc.net), costVat = toCents(sc.vat ?? 0);
+    const profit = c.net - costNet; // الربح = صافي البيع − صافي التكلفة (الضريبة خارج الربح)
+    console.log(`[داخلي] المورّد ${sc.name || ''}: صافي ${fmt(costNet)} + ضريبة ${fmt(costVat)} = ${fmt(costNet + costVat)}`);
+    console.log(`[داخلي] صافي البيع ${fmt(c.net)} − صافي التكلفة ${fmt(costNet)} = الربح ${fmt(profit)} (${c.net ? ((profit / c.net) * 100).toFixed(1) : 0}%)`);
+  }
   if (data.showPrices !== false)
     console.log(`الإجمالي ${fmt(c.total)} | المدفوع ${fmt(c.paid)} | المتبقي ${fmt(c.balance)} ${data.financial?.currency || 'SAR'}`);
 }

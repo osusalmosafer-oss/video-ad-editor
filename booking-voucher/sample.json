@@ -30,9 +30,19 @@
     "vatRate": 15,
     "discount": 0,
     "payments": [
-      { "date": "14/10/2026", "method": "تحويل بنكي", "ref": "TRX-1001", "amount": 3000 }
+      {
+        "date": "14/10/2026",
+        "method": "تحويل بنكي",
+        "ref": "TRX-1001",
+        "amount": 3000
+      }
     ]
   },
   "notes": "",
-  "showPrices": true
+  "showPrices": true,
+  "supplierCost": {
+    "name": "HotelsCart #1054",
+    "net": 3530.43,
+    "vat": 529.57
+  }
 }
