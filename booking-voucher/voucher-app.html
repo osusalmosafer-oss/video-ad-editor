@@ -38,6 +38,7 @@ input[type=date],input[type=number],.ltr{direction:ltr;text-align:right}
 .tot{background:var(--soft);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
 .tot div{display:flex;flex-direction:column;font-size:12px;color:var(--mute)}
 .tot b{font-size:17px;color:var(--ink);direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.drop{border:2px dashed var(--blue);border-radius:10px;padding:12px;text-align:center;font-size:13px;color:var(--mute)}.drop.on{background:var(--soft)}
 .quick{border-color:var(--blue)}.quick h2{color:var(--blue)}
 .internal{border-color:var(--warn)}
 .internal h2{color:var(--warn)}
@@ -121,8 +122,10 @@ td.n{direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
       <label>اسم العميل<input id="q-name"></label>
       <label>رقم الجوال<input id="q-phone" class="ltr"></label>
       <label>سعر البيع الإجمالي (ريال)<input id="q-price" type="number" min="0" step="0.01"></label>
-      <label>ملف تأكيد الوكالة المورّدة (PDF أو صورة)<input id="q-file" type="file" accept=".pdf,image/*"></label>
+      <label>ملف تأكيد الوكالة المورّدة (PDF أو صورة)<input id="q-file" type="file" accept=".pdf,image/*,application/pdf"></label>
     </div>
+    <div id="q-drop" class="drop" tabindex="0">اسحب الملف وأفلته هنا، أو انسخه والصقه (Ctrl+V). <b id="q-fn"></b></div>
+    <label>إن لم يعمل رفع الملف: انسخ نص التأكيد من الـPDF والصقه هنا<textarea id="q-text" placeholder="الصق نص التأكيد"></textarea></label>
     <div class="actions"><button class="btn pri" id="q-go" type="button">استخراج وتعبئة</button><span class="msg" id="qmsg" role="status"></span></div>
     <div style="font-size:12px;color:var(--mute)">يُستخرج الفندق والتواريخ والغرفة والوجبات والتكلفة من الملف، ثم راجع الحقول أدناه قبل الحفظ. أو عبّئ كل فقرة بنفسك أدناه.</div>
   </section>
@@ -420,15 +423,15 @@ const PROMPT=`أنت تستخرج بيانات حجز فندقي من تأكيد
 "costTotal":إجمالي المبلغ النهائي المستحق للوكالة المورّدة شاملًا الضريبة والرسوم كرقم بالريال}
 التواريخ في الملف غالبًا بصيغة يوم/شهر/سنة.`;
 async function quickFill(){
-  const name=$('q-name').value.trim(),phone=$('q-phone').value.trim(),price=$('q-price').value,file=$('q-file').files[0];
+  const name=$('q-name').value.trim(),phone=$('q-phone').value.trim(),price=$('q-price').value,file=qFile||$('q-file').files[0],pasted=$('q-text').value.trim();
   $('q-go').disabled=true;let x=null;
   try{
-    if(file){
+    if(file||pasted.length>=30){
       qmsg('جارٍ قراءة الملف…');
       const sample=await claude.use('sample');
       if(!sample)throw {code:'nosample'};
       let src;
-      if(file.type==='application/pdf'||/\.pdf$/i.test(file.name))src=await pdfRead(file);
+      if(!file)src={text:pasted};else if(file.type==='application/pdf'||/\.pdf$/i.test(file.name))src=await pdfRead(file);
       else src={image:file};
       qmsg('جارٍ استخراج البيانات…');
       if(src.image){const l=await sample.limits();if(!l.images)throw {code:'noimg'}}
@@ -437,7 +440,7 @@ async function quickFill(){
   }catch(e){
     const m={nosample:'الاستخراج غير متاح في هذا العرض. عبّئ البيانات يدويًا.',noimg:'رفع الصور غير متاح هنا. ارفع ملف PDF أو عبّئ يدويًا.',not_granted:'لم تتم الموافقة على الاستخراج.',rate_limited:'تم تجاوز حد الاستخدام، حاول بعد قليل.'};
     qmsg(m[e&&e.code]||'تعذر قراءة الملف. عبّئ البيانات يدويًا أو جرّب ملفًا آخر.','err');x=null;
-    if(file){$('q-go').disabled=false;return}
+    if(file||pasted.length>=30){$('q-go').disabled=false;return}
   }
   if(x){editing=null;$('mode').textContent='حجز جديد';fill({})}
   const b=collect();
@@ -456,6 +459,14 @@ async function quickFill(){
   $('q-go').disabled=false;
 }
 $('q-go').onclick=quickFill;
+let qFile=null;
+const setQ=f=>{if(!f)return;qFile=f;$('q-fn').textContent='الملف: '+(f.name||'صورة ملصوقة');qmsg('')};
+$('q-file').addEventListener('change',e=>setQ(e.target.files[0]));
+const dz=$('q-drop');
+['dragenter','dragover'].forEach(n=>dz.addEventListener(n,e=>{e.preventDefault();dz.classList.add('on')}));
+['dragleave','drop'].forEach(n=>dz.addEventListener(n,e=>{e.preventDefault();dz.classList.remove('on')}));
+dz.addEventListener('drop',e=>setQ(e.dataTransfer&&e.dataTransfer.files[0]));
+document.addEventListener('paste',e=>{const f=e.clipboardData&&e.clipboardData.files&&e.clipboardData.files[0];if(f){e.preventDefault();setQ(f)}});
 
 /* ---------- بدء التشغيل ---------- */
 fill({});
