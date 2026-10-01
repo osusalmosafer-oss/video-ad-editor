@@ -142,7 +142,7 @@ td.n{direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
       <div class="sub"><div class="sub-h">بيانات العميل</div>
         <div class="row">
           <label style="grid-column:1/-1">اسم العميل<input id="c-name" required></label>
-          <label>الهوية / الجواز<input id="c-id" class="ltr"></label>
+          <label>الهوية / الجواز (اختياري)<input id="c-id" class="ltr"></label>
           <label>الجوال<input id="c-phone" class="ltr"></label>
           <label>البريد<input id="c-email" class="ltr"></label>
           <label>البالغون<input id="c-adults" type="number" min="1" value="2"></label>
@@ -258,7 +258,7 @@ function sheetsHtml(b){
   const kv=(l,v,ltr)=>`<div><span>${l}</span><b${ltr?' class="num" style="text-align:right"':''}>${esc(v)||'—'}</b></div>`;
   const p1=`<div class="sheet">${head}
   <div class="greet"><b>السادة الكرام،</b><br>يسعدنا الترحيب بكم في ${AGENCY.name}، ونتشرف بتأكيد الحجز التالي على أساس قطعي.</div>
-  <h3>بيانات العميل</h3><div class="box"><div class="kv">${kv('اسم العميل',cl.name)}${kv('رقم الهوية / جواز السفر',cl.idNo,1)}${kv('رقم التأكيد (الفندق)',b.confirmationNo||'قيد الإرسال',1)}${kv('عدد البالغين',cl.adults)}${kv('عدد الأطفال',cl.children)}${kv('الجوال',cl.phone,1)}${cl.email?kv('البريد الإلكتروني',cl.email,1):''}</div>${guests.length?`<div style="margin-top:8px;font-size:12px"><b>أسماء النزلاء:</b> ${guests.map((g,i)=>`${i+1}. ${esc(g)}`).join(' · ')}</div>`:''}</div>
+  <h3>بيانات العميل</h3><div class="box"><div class="kv">${kv('اسم العميل',cl.name)}${cl.idNo?kv('رقم الهوية / جواز السفر',cl.idNo,1):''}${kv('رقم التأكيد (الفندق)',b.confirmationNo||'قيد الإرسال',1)}${kv('عدد البالغين',cl.adults)}${kv('عدد الأطفال',cl.children)}${kv('الجوال',cl.phone,1)}${cl.email?kv('البريد الإلكتروني',cl.email,1):''}</div>${guests.length?`<div style="margin-top:8px;font-size:12px"><b>أسماء النزلاء:</b> ${guests.map((g,i)=>`${i+1}. ${esc(g)}`).join(' · ')}</div>`:''}</div>
   <h3>تفاصيل الإقامة</h3><div class="box" style="padding:0;border:none"><table><thead><tr><th>فندق الإقامة</th><th>نوع الغرفة</th><th>الوجبات</th><th>تاريخ الدخول</th><th>تاريخ المغادرة</th><th>الليالي</th><th>الغرف</th></tr></thead><tbody>${stayRows}</tbody></table></div>
   ${b.notes?`<div class="notes"><b>ملاحظات:</b> ${esc(b.notes).replace(/\n/g,'<br>')}</div>`:''}${fin}${foot}</div>`;
   const p2=`<div class="sheet">${head}<div style="height:12px"></div><div class="rule"></div><h2>الشروط والأحكام</h2>${TERMS.map((t,i)=>`<div class="tl"><b>${i+1}. ${t[0]}</b><p>${t[1]}</p></div>`).join('')}${foot}</div>`;
