@@ -849,7 +849,7 @@ function updateMeta(){
   }[liveState.code] || `تعذر جلب البيانات الحية (${liveState.code||'خطأ غير معروف'})، فبقيت النسخة المحفوظة.`) : '';
   note.hidden=!msg; note.textContent=msg;
 }
-function rowsOf(res){ const p=res && res.payload; const rows = p && Array.isArray(p.result) ? p.result : (Array.isArray(p) ? p : null); if(!rows) throw {code:'bad_shape'}; return rows; }
+function rowsOf(res){ const p=res && res.payload; const rows = p && Array.isArray(p.result) ? p.result : p && Array.isArray(p.data) ? p.data : (Array.isArray(p) ? p : null); if(!rows) throw {code:'bad_shape'}; return rows; }
 function transformWindsor(vids, ret, src, aud, act, day){
   const R={}; ret.forEach(r=>{ if(r.video_view_retention_second==null) return; (R[r.video_id]=R[r.video_id]||{})[+r.video_view_retention_second]=r.video_view_retention_percentage; });
   const SK={'For You':'foryou','Search':'search','Personal Profile':'profile','Follow':'follow','Others':'others','Sound':'sound','Direct Message':'dm'};

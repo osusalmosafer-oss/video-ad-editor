@@ -17,7 +17,9 @@ from pathlib import Path
 from daily import DAILY, PULLED_AT
 
 HERE = Path(__file__).parent
-raw = lambda name: json.load(open(HERE / "raw" / f"{name}.json"))["result"]
+def raw(name):
+    d = json.load(open(HERE / "raw" / f"{name}.json"))
+    return d["result"] if "result" in d else d["data"]  # Windsor switched result -> data in Oct 2026
 
 retention = defaultdict(dict)
 for r in raw("retention"):
