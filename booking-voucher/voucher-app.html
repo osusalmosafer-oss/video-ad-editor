@@ -159,7 +159,7 @@ td.n{direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
 
       <div class="row">
         <label>خصم (ريال)<input id="f-disc" type="number" min="0" step="0.01" value="0"></label>
-        <label class="check" style="align-self:end;padding-bottom:8px"><input id="f-show" type="checkbox" checked>إظهار الأسعار في الملف</label>
+        <label class="check" style="align-self:end;padding-bottom:8px"><input id="f-show" type="checkbox">إظهار الأسعار في الملف</label>
       </div>
       <label>ملاحظات تظهر في الملف<textarea id="f-notes"></textarea></label>
 
@@ -288,7 +288,7 @@ function fill(b){
   const c=b.client||{};$('c-name').value=c.name||'';$('c-id').value=c.idNo||'';$('c-phone').value=c.phone||'';$('c-email').value=c.email||'';
   $('c-adults').value=c.adults??2;$('c-kids').value=c.children??0;$('c-guests').value=(c.guests||[]).join('\n');
   stays=(b.stays&&b.stays.length?b.stays:[emptyStay()]).map(s=>({...s}));pays=(b.payments||[]).map(p=>({...p}));
-  $('f-disc').value=b.discount??0;$('f-paid').value=b.paidAmount||'';setFull(!!b.paidFull,false);$('f-show').checked=b.showPrices!==false;$('f-notes').value=b.notes||'';
+  $('f-disc').value=b.discount??0;$('f-paid').value=b.paidAmount||'';setFull(!!b.paidFull,false);$('f-show').checked=b.showPrices===true;$('f-notes').value=b.notes||'';
   const k=b.cost||{};$('s-name').value=k.supplier||'';$('s-ref').value=k.ref||'';$('s-cost').value=k.total??'';
   renderLists();refresh();
 }
