@@ -1,0 +1,15 @@
+{
+  "bg": "#1F2449",
+  "ink": "#FFFFFF",
+  "acc": "#2884FF",
+  "clay": "#1C6FE0",
+  "mut": "#A9B1D6",
+  "font": "Cairo",
+  "handle": "@osusalmosafer",
+  "logo": "logos/icon-on-dark.png",
+  "grade": false,
+  "badge": false,
+  "badgeUntil": 0,
+  "grid": false,
+  "pace": "calm"
+}
