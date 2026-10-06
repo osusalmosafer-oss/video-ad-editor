@@ -52,25 +52,33 @@ body{font-family:Cairo,sans-serif;direction:rtl;color:${INK}}
 .logo{position:absolute;left:0;right:0;display:flex;justify-content:center}
 .logo img{width:520px}
 .foot{position:absolute;left:0;right:0;text-align:center;font-weight:700;font-size:38px;color:${MUT};direction:ltr}
+.cm{display:flex;gap:26px;align-items:flex-start;direction:rtl}
+.av{flex:0 0 96px;width:96px;height:96px;border-radius:50%;background:#D5DAE8;position:relative;overflow:hidden}
+.av:before{content:'';position:absolute;left:30px;top:16px;width:36px;height:36px;border-radius:50%;background:#fff}
+.av:after{content:'';position:absolute;left:14px;top:58px;width:68px;height:60px;border-radius:50%;background:#fff}
+.bub{background:#EEF1F8;color:${NAVY};border-radius:36px;border-top-right-radius:8px;padding:34px 40px;font-weight:700;font-size:62px;line-height:1.45}
+.from{font-weight:700;font-size:32px;color:${BLUE};margin:0 0 14px 0}
 .sample{position:absolute;top:28px;right:60px;background:#C0392B;color:#fff;font-weight:700;font-size:30px;padding:6px 24px;border-radius:12px}
 `;
 const sample = cfg.sample ? '<div class="sample">عيّنة — بيانات تجريبية</div>' : '';
 const tag = `<div class="tag">${esc(cfg.series || 'سؤال من الحرم')}</div>`;
-const qcard = q => `<div class="qcard"><small>سؤال وصلنا</small><b>${esc(q)}</b></div>`;
+const qcard = (q, it) => it && it.comment
+  ? `<div class="qcard"><small>من تعليقات الجمهور</small><div class="cm"><div class="av"></div><div class="bub">${esc(it.comment)}</div></div></div>`
+  : `<div class="qcard"><small>سؤال وصلنا</small><b>${esc(q)}</b></div>`;
 
 const views = it => ({
   'video-full': { w: 1080, h: 1920, transparent: false, html:
     `<div class="fill bg"></div>${sample}
      <div class="logo" style="top:200px"><img src="${logoD}"></div>
-     <div class="col" style="top:520px">${tag}${qcard(it.question)}
+     <div class="col" style="top:520px">${tag}${qcard(it.question, it)}
        <div class="note" style="margin-top:56px;text-align:center">الجواب من الساحات 👇</div></div>
      <div class="foot" style="top:1560px">${esc(theme.handle)}</div>` },
   'video-overlay': { w: 1080, h: 1920, transparent: true, html:
-    `<div class="col" style="top:330px">${tag}${qcard(it.question)}</div>` },
+    `<div class="col" style="top:330px">${tag}${qcard(it.question, it)}</div>` },
   'carousel': { w: 1080, h: 1350, transparent: false, html:
     `<div class="fill bg"></div>${sample}
      <div class="logo" style="top:120px"><img src="${logoD}" style="width:420px"></div>
-     <div class="col" style="top:300px">${tag}${qcard(it.question)}
+     <div class="col" style="top:300px">${tag}${qcard(it.question, it)}
        <div class="ans"><span>${esc(it.answer)}</span></div>
        ${it.note ? `<div class="note">${esc(it.note)}</div>` : ''}</div>
      <div class="foot" style="top:1240px">${esc(theme.handle)}</div>` },
