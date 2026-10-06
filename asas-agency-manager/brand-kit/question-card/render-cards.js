@@ -89,6 +89,7 @@ const views = it => ({
   const br = await chromium.launch({ executablePath: chromePath });
   for (const it of cfg.items) {
     for (const [name, v] of Object.entries(views(it))) {
+      if (name === 'carousel' && !it.answer) continue;   // الكاروسيل يحتاج جواباً مؤكداً
       const pg = await br.newPage({ viewport: { width: v.w, height: v.h } });
       await pg.setContent(`<html><head><meta charset=utf-8><style>${css}${v.transparent ? 'html,body{background:transparent}' : ''}</style></head><body>${v.html}</body></html>`);
       await pg.evaluate(() => document.fonts.ready);
