@@ -11,5 +11,21 @@
   "badge": false,
   "badgeUntil": 0,
   "grid": false,
-  "pace": "calm"
+  "pace": "calm",
+  "keywordStyle": "pill",
+  "sfx": {
+    "maxPerMinute": 15,
+    "peakDbfs": -18,
+    "allowed": [
+      "click",
+      "soft-riser",
+      "soft-chime",
+      "soft-shutter"
+    ],
+    "banned": [
+      "cash-register",
+      "metal-impact",
+      "meme-sounds"
+    ]
+  }
 }
