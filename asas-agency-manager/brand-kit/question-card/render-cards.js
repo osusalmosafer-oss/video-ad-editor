@@ -1,4 +1,4 @@
-/* يولّد بطاقات «سؤال من الحرم» بهوية أسس المسافر.
+/* يولّد بطاقات «أسئلة من التعليقات» بهوية أسس المسافر.
    الاستعمال:  node render-cards.js [questions.json] [--out مجلد] [--chrome مسار_كروم]
    يحتاج: npm i playwright-core  +  متصفح كروم (أو إدج) منصّب.
    المخرجات لكل سؤال:
@@ -60,10 +60,17 @@ body{font-family:Cairo,sans-serif;direction:rtl;color:${INK}}
 .from{font-weight:700;font-size:32px;color:${BLUE};margin:0 0 14px 0}
 .sample{position:absolute;top:28px;right:60px;background:#C0392B;color:#fff;font-weight:700;font-size:30px;padding:6px 24px;border-radius:12px}
 `;
+const ic = {
+  tiktok: '<svg width="46" height="46" viewBox="0 0 48 48"><rect width="48" height="48" rx="12" fill="#111"/><path d="M26 10v18a5 5 0 1 1-5-5" fill="none" stroke="#25F4EE" stroke-width="4" transform="translate(-1.5 1)"/><path d="M26 10v18a5 5 0 1 1-5-5" fill="none" stroke="#FE2C55" stroke-width="4" transform="translate(1.5 -1)"/><path d="M26 10v18a5 5 0 1 1-5-5M26 10c1 4 4 6 8 6" fill="none" stroke="#fff" stroke-width="4"/></svg>',
+  instagram: '<svg width="46" height="46" viewBox="0 0 48 48"><defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset=".4" stop-color="#FA7E1E"/><stop offset=".7" stop-color="#D62976"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect width="48" height="48" rx="13" fill="url(#g)"/><rect x="11" y="11" width="26" height="26" rx="8" fill="none" stroke="#fff" stroke-width="3.5"/><circle cx="24" cy="24" r="6.5" fill="none" stroke="#fff" stroke-width="3.5"/><circle cx="32" cy="16" r="2" fill="#fff"/></svg>',
+  facebook: '<svg width="46" height="46" viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#1877F2"/><path d="M26.5 40V27h4.4l.7-5h-5.1v-3.2c0-1.5.5-2.5 2.6-2.5h2.6V11.8c-.5-.1-2-.2-3.8-.2-3.8 0-6.3 2.300-6.300 6.500V22H17v5h4.600v13z" fill="#fff"/></svg>',
+};
+const icons = `<span style="display:inline-flex;gap:12px;vertical-align:middle;margin-inline-start:18px;direction:ltr">${ic.facebook}${ic.instagram}${ic.tiktok}</span>`;
+const srcName = {tiktok:'تيك توك', instagram:'إنستقرام', facebook:'فيسبوك'};
 const sample = cfg.sample ? '<div class="sample">عيّنة — بيانات تجريبية</div>' : '';
-const tag = `<div class="tag">${esc(cfg.series || 'سؤال من الحرم')}</div>`;
+const tag = `<div class="tag" style="display:flex;align-items:center;gap:6px">${esc(cfg.series || 'أسئلة من التعليقات')}${icons}</div>`;
 const qcard = (q, it) => it && it.comment
-  ? `<div class="qcard"><small>من تعليقات الجمهور</small><div class="cm"><div class="av"></div><div class="bub">${esc(it.comment)}</div></div></div>`
+  ? `<div class="qcard"><small>من تعليقات الجمهور${it.platform ? ' · ' + srcName[it.platform] : ''}</small><div class="cm"><div class="av"></div><div class="bub">${esc(it.comment)}</div></div></div>`
   : `<div class="qcard"><small>سؤال وصلنا</small><b>${esc(q)}</b></div>`;
 
 const views = it => ({
