@@ -472,3 +472,6 @@ python3 -m whisper <work>/fa.wav --language ar --model small --output_format jso
 
 ## 🪟 ويندوز
 `python` مو `python3` · المسارات بصيغة `C:/…` · «الكلام ورا الشخص» والبودكاست ماك فقط. التفاصيل: `references/windows.md`.
+
+## بطاقات أسئلة التعليقات (اختياري)
+لتركيب بطاقة تعليق حقيقي فوق الفيديو بتوقيت محدد: `references/question-cards.md` و`scripts/17_question_cards.py`.
