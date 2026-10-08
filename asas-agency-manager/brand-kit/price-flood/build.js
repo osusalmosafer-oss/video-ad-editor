@@ -59,7 +59,7 @@ const $=id=>document.getElementById(id);
 const N=${CARDS.length}, STEP=0.3, T0=0.5, FLOOD_END=5.0;
 const caps=[[5.2,7.2,'ليش ما نكتب السعر في الفيديو؟'],[7.2,11,'لأنه يتغير حسب خمسة أشياء'],[11,14,'ولو كتبنا رقماً عاماً ممكن يضلل'],[14,15.6,'أرسل لنا تاريخك وعدد الأشخاص'],[15.6,17,'ونعطيك السعر الدقيق']];
 const pillT=[7.6,8.3,9.0,9.7,10.4];
-for(let i=0;i<N;i++){const tx=document.querySelector('#c'+i+' .tx');let fs=46;while(tx.scrollWidth>tx.clientWidth&&fs>26){fs-=2;tx.style.fontSize=fs+'px'}}
+function fit(){for(let i=0;i<N;i++){const tx=document.querySelector('#c'+i+' .tx');let fs=46;tx.style.fontSize=fs+'px';while(tx.scrollWidth>tx.clientWidth+1&&fs>26){fs-=2;tx.style.fontSize=fs+'px'}}}
 function render(t){
   // سيل البطاقات: كل بطاقة تدخل بفارق STEP وتتراكم متداخلة
   for(let i=0;i<N;i++){
@@ -87,7 +87,7 @@ function render(t){
 (async()=>{
   const frames=path.join(__dirname,'_frames');fs.rmSync(frames,{recursive:true,force:true});fs.mkdirSync(frames);
   const br=await chromium.launch({executablePath:chrome});const pg=await br.newPage({viewport:{width:W,height:H}});
-  await pg.setContent(html);await pg.evaluate(()=>document.fonts.ready);await pg.waitForTimeout(300);
+  await pg.setContent(html);await pg.evaluate(()=>document.fonts.ready);await pg.waitForTimeout(300);await pg.evaluate(()=>fit());
   for(let i=0;i<FPS*DUR;i++){await pg.evaluate(t=>render(t),i/FPS);await pg.screenshot({path:path.join(frames,String(i).padStart(5,'0')+'.jpg'),type:'jpeg',quality:90});}
   await br.close();
   const wav=path.join(__dirname,'_sfx.wav');cp.execFileSync(process.platform==='win32'?'python':'python3',[path.join(__dirname,'sfx.py'),wav],{stdio:'inherit'});
