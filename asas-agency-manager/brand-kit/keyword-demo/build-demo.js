@@ -9,6 +9,7 @@ const kit = path.join(__dirname, '..');
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
 const out = path.resolve(opt('--out', path.join(__dirname, 'demo.mp4')));
+const SAMPLE = args.includes('--sample');
 const FPS = +opt('--fps', 30), DUR = 20, W = 1080, H = 1920;
 const chrome = [opt('--chrome', ''), process.env.CHROME_PATH || '',
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -20,6 +21,10 @@ const font = (w, f) => `@font-face{font-family:C;font-weight:${w};src:url(data:f
 const logoH = 'data:image/png;base64,' + b64('logos/logo-horizontal-on-dark.png');
 const logoV = 'data:image/png;base64,' + b64('logos/logo-vertical-on-dark.png');
 const theme = JSON.parse(fs.readFileSync(path.join(kit, 'theme.json'), 'utf8'));
+const ICONS = [
+ '<svg width="46" height="46" viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#1877F2"/><path d="M26.5 40V27h4.4l.7-5h-5.1v-3.2c0-1.5.5-2.5 2.6-2.5h2.6V11.8c-.5-.1-2-.2-3.8-.2-3.8 0-6.3 2.3-6.3 6.5V22H17v5h4.6v13z" fill="#fff"/></svg>',
+ '<svg width="46" height="46" viewBox="0 0 48 48"><defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset=".4" stop-color="#FA7E1E"/><stop offset=".7" stop-color="#D62976"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect width="48" height="48" rx="13" fill="url(#g)"/><rect x="11" y="11" width="26" height="26" rx="8" fill="none" stroke="#fff" stroke-width="3.5"/><circle cx="24" cy="24" r="6.5" fill="none" stroke="#fff" stroke-width="3.5"/><circle cx="32" cy="16" r="2" fill="#fff"/></svg>',
+ '<svg width="46" height="46" viewBox="0 0 48 48"><rect width="48" height="48" rx="12" fill="#111"/><path d="M26 10v18a5 5 0 1 1-5-5M26 10c1 4 4 6 8 6" fill="none" stroke="#fff" stroke-width="4"/></svg>'].join('');
 const html = `<html><head><meta charset=utf-8><style>
 ${font(500,'Cairo-500.ttf')}${font(700,'Cairo-700.ttf')}${font(900,'Cairo-900.ttf')}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -28,7 +33,7 @@ body{width:${W}px;height:${H}px;overflow:hidden;background:${theme.bg};font-fami
 #bg{inset:0;background:linear-gradient(165deg,#1F2449,#272E5C)}
 #grid{inset:0;opacity:.07;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:60px 60px}
 #ph{left:90px;right:90px;top:340px;height:900px;border-radius:40px;border:3px dashed rgba(255,255,255,.28);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:54px;color:rgba(255,255,255,.55);text-align:center;line-height:1.5}
-#cap{left:80px;right:80px;bottom:460px;background:rgba(31,36,73,.96);border:3px solid rgba(255,255,255,.14);border-radius:38px;padding:30px 40px;font-weight:800;font-size:56px;line-height:1.45;text-align:center;box-shadow:0 20px 48px rgba(0,0,0,.35)}
+#cap{left:80px;right:80px;bottom:520px;background:rgba(31,36,73,.96);border:3px solid rgba(255,255,255,.14);border-radius:38px;padding:30px 40px;font-weight:800;font-size:56px;line-height:1.45;text-align:center;box-shadow:0 20px 48px rgba(0,0,0,.35)}
 #tag{background:${theme.acc};color:#fff;font-weight:900;font-size:42px;padding:10px 38px;border-radius:60px}
 #q{background:#fff;color:${theme.bg};border-radius:44px;padding:58px 56px 62px;box-shadow:0 24px 70px #0007}
 #q small{display:block;font-weight:700;font-size:34px;color:${theme.acc};margin-bottom:16px}
@@ -40,7 +45,7 @@ body{width:${W}px;height:${H}px;overflow:hidden;background:${theme.bg};font-fami
 #kwB span{background:${theme.acc};color:#fff;font-weight:900;font-size:92px;padding:20px 54px;border-radius:30px;box-shadow:0 18px 44px rgba(40,132,255,.45)}
 #lab{top:48px;left:50px;font-weight:700;font-size:34px;color:rgba(255,255,255,.65)}
 #smp{top:36px;right:50px;background:#C0392B;color:#fff;font-weight:700;font-size:30px;padding:6px 24px;border-radius:12px}
-#bar{left:60px;right:60px;top:1492px;height:7px;border-radius:4px;background:rgba(255,255,255,.18)}
+#bar{left:60px;right:60px;top:1432px;height:7px;border-radius:4px;background:rgba(255,255,255,.18)}
 #bar div{height:100%;background:${theme.acc};border-radius:4px;width:0}
 #flash{inset:0;background:#fff;opacity:0}
 #end{inset:0;background:${theme.bg};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:50px;opacity:0}
@@ -50,23 +55,23 @@ body{width:${W}px;height:${H}px;overflow:hidden;background:${theme.bg};font-fami
 </style></head><body>
 <div id=bg class=abs></div><div id=grid class=abs></div>
 <div id=ph class=abs>لقطتك هنا<br>(فيديو المتحدث)</div>
-<div id=qwrap class=abs style="left:80px;right:80px;top:520px"><div id=tag style="display:inline-block;margin-bottom:34px">سؤال من الحرم</div><div id=q><small>من تعليقات الجمهور</small><b>هل أقدر أصلي في مصلى برج الساعة؟</b></div></div>
-<div id=kwA class=abs style="top:1010px;opacity:0"><span></span><i></i></div>
-<div id=kwB class=abs style="top:1060px;opacity:0"><span></span></div>
+<div id=qwrap class=abs style="left:80px;right:80px;top:520px"><div id=tag style="display:inline-flex;align-items:center;gap:14px;margin-bottom:34px">أسئلة من التعليقات<span style="display:inline-flex;gap:10px;direction:ltr">${ICONS}</span></div><div id=q><small>من تعليقات الجمهور</small><b>هل أقدر أصلي في مصلى برج الساعة؟</b></div></div>
+<div id=kwA class=abs style="top:960px;opacity:0"><span></span><i></i></div>
+<div id=kwB class=abs style="top:1000px;opacity:0"><span></span></div>
 <div id=cap class=abs style="opacity:0"></div>
 <div id=bar class=abs><div></div></div>
 <div id=flash class=abs></div>
 <div id=end class=abs><img src="${logoV}"><h1>عندك سؤال؟</h1><p>اكتبه في التعليقات</p></div>
-<div id=lab class=abs></div><div id=smp class=abs>عيّنة تجريبية</div>
+${SAMPLE ? '<div id=lab class=abs></div><div id=smp class=abs>عيّنة تجريبية</div>' : ''}
 <script>
 const E=t=>1-Math.pow(1-Math.min(1,Math.max(0,t)),3);
 const B=t=>{t=Math.min(1,Math.max(0,t));const c=1.9;return 1+ (c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2)};
 const $=id=>document.getElementById(id);
 const caps=[[2.6,6.8,'المصلى يعتمد على إدارة الفندق'],[6.8,11,'أحياناً يسمحون وأحياناً لا'],[11,14.5,'فالأفضل تتأكد قبل لا تروح'],[14.5,17,'وانظر أين المدخل بنفسك']];
 const kws=[
- {s:3.2,e:6.0,st:'A',t:'إدارة الفندق'},
- {s:7.5,e:10.5,st:'B',t:'أحياناً يسمحون'},
- {s:11.5,e:14.0,st:'B',t:'تأكد قبل لا تروح'},
+ {s:3.2,e:6.0,st:'A',t:'القرار للفندق'},
+ {s:7.5,e:10.5,st:'B',t:'مو دايماً'},
+ {s:11.5,e:14.0,st:'B',t:'اسأل أول'},
  {s:14.5,e:16.8,st:'A',t:'المدخل'}];
 function render(t){
   // بطاقة السؤال 0 إلى 2.4
@@ -82,13 +87,13 @@ function render(t){
   for(const k of kws){ if(t>=k.s&&t<k.e){
     const el=$(k.st==='A'?'kwA':'kwB'); const sp=el.querySelector('span'); sp.textContent=k.t;
     let fs=k.st==='A'?128:92; sp.style.fontSize=fs+'px'; while(sp.offsetWidth>(k.st==='A'?900:880)&&fs>40){fs-=4;sp.style.fontSize=fs+'px'}
-    const p=(t-k.s)/0.28, out=Math.min(1,(k.e-t)/0.2);
-    el.style.opacity=Math.min(E(p*1.2),out);
+    const p=(t-k.s)/0.16, out=Math.min(1,(k.e-t)/0.2);
+    el.style.opacity=Math.min(E(p*1.6),out);
     const sc=0.7+0.3*B(p); el.style.transform='scale('+sc+') rotate('+(k.st==='B'?-2*(1-E(p)):0)+'deg)';
     if(k.st==='A'){el.querySelector('i').style.transform='scaleX('+E((t-k.s-0.1)/0.35)+')'}
     lab= k.st==='A'?'نمط أ: كلمة كبيرة':'نمط ب: مستطيل أزرق';
   }}
-  $('lab').textContent=lab;
+  if($('lab'))$('lab').textContent=lab;
   // وميض خفيف جداً مع الكاميرا 14.5
   $('flash').style.opacity = (t>=14.5&&t<14.65)? 0.10*(1-(t-14.5)/0.15):0;
   // شريط التقدم
