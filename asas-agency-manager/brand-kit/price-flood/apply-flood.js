@@ -34,7 +34,7 @@ if (STYLE === 'stack') {
   // تتتابع أسرع فأسرع (تصاعد توتر)، وتتراكم فوق بعض قرب منتصف الشاشة العلوي
   const steps = [0.6, 0.52, 0.45, 0.4, 0.35, 0.31, 0.28, 0.25, 0.23, 0.21]; let tt = 0.3;
   cards = comments.map((c, i) => { const t = tt; tt += steps[Math.min(i, steps.length - 1)];
-    return { t, x: (rnd() - 0.5) * 90, y: 560 + (rnd() - 0.5) * 170, rot: (rnd() - 0.5) * 10, sc: 1 + rnd() * 0.06,
+    return { t, x: (rnd() - 0.5) * 130, y: 540 + (rnd() - 0.5) * 230, rot: (rnd() - 0.5) * 14, sc: 1 + rnd() * 0.06,
       w: 900 + Math.floor(rnd() * 110), shake: 1, p: c.platform, text: c.text }; });
   DUR = cards[N - 1].t + FALL + HOLD;
 } else {
@@ -124,7 +124,7 @@ w=wave.open(sys.argv[2],'wb');w.setnchannels(1);w.setsampwidth(2);w.setframerate
   const ms = 0;
   const hasAudio = cp.spawnSync('ffprobe', ['-v','error','-select_streams','a','-show_entries','stream=index','-of','csv=p=0', src]).stdout.toString().trim() !== '';
   const fc = `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2[b];[1:v]format=rgba,setpts=PTS+${START}/TB[o];[b][o]overlay=eof_action=pass:format=auto[v]` +
-    (hasAudio ? `;[2:a]adelay=${ms}|${ms}[r];[0:a][r]amix=inputs=2:duration=first:normalize=0[a]` : `;[2:a]adelay=${ms}|${ms}[a]`);
+    (hasAudio ? `;[2:a]adelay=${ms}|${ms}[r];[0:a][r]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.89[a]` : `;[2:a]adelay=${ms}|${ms}[a]`);
   cp.execFileSync('ffmpeg', ['-y','-v','error','-i', src, '-framerate', String(FPS), '-i', path.join(frames,'%05d.png'), '-i', wav,
     '-filter_complex', fc, '-map','[v]','-map','[a]','-c:v','libx264','-pix_fmt','yuv420p','-crf','20','-c:a','aac','-b:a','160k','-shortest', out], { stdio: 'inherit' });
   fs.rmSync(frames, { recursive: true, force: true }); console.log('تم:', out, '| بطاقات:', N);
