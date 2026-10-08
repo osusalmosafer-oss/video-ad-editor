@@ -34,7 +34,7 @@ body{width:${W}px;height:${H}px;overflow:hidden;background:${theme.bg};font-fami
 #tag span{display:inline-flex;gap:10px;direction:ltr}
 .cd{left:90px;right:90px;background:#fff;color:${theme.bg};border-radius:34px;padding:22px 34px;display:flex;align-items:center;gap:22px;box-shadow:0 16px 44px #0006;font-weight:800;font-size:46px;line-height:1.3;white-space:nowrap;overflow:hidden;opacity:0}
 .cd .ic{flex:0 0 40px}
-.cd .tx{flex:1}
+.cd .tx{flex:1;min-width:0}
 .pill{left:0;right:0;display:flex;justify-content:center;opacity:0}
 .pill span{background:${theme.acc};color:#fff;font-weight:900;font-size:76px;padding:14px 50px;border-radius:28px;box-shadow:0 14px 38px rgba(40,132,255,.45);white-space:nowrap}
 #cap{left:80px;right:80px;bottom:520px;background:rgba(31,36,73,.96);border:3px solid rgba(255,255,255,.14);border-radius:38px;padding:30px 40px;font-weight:800;font-size:56px;line-height:1.45;text-align:center;box-shadow:0 20px 48px rgba(0,0,0,.35);opacity:0}
