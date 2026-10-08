@@ -86,7 +86,7 @@ for t0,a in ev:
     x=(slap+thump)*a*(0.75+rng.random()*0.5)
     i=int(t0*SR);buf[i:i+n]+=x[:max(0,len(buf)-i)]
 buf*=10**(-18/20)/np.max(np.abs(buf))
-w=wave.open(r'${wav.replace(/\/g,'\\')}','wb');w.setnchannels(1);w.setsampwidth(2);w.setframerate(SR);w.writeframes((buf*32767).astype(np.int16).tobytes());w.close()`, JSON.stringify(ev)]);
+w=wave.open(sys.argv[2],'wb');w.setnchannels(1);w.setsampwidth(2);w.setframerate(SR);w.writeframes((buf*32767).astype(np.int16).tobytes());w.close()`, JSON.stringify(ev), wav]);
   const ms = 0;
   const hasAudio = cp.spawnSync('ffprobe', ['-v','error','-select_streams','a','-show_entries','stream=index','-of','csv=p=0', src]).stdout.toString().trim() !== '';
   const fc = `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2[b];[1:v]format=rgba,setpts=PTS+${START}/TB[o];[b][o]overlay=eof_action=pass:format=auto[v]` +
