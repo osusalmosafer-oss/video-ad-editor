@@ -83,11 +83,12 @@ mark{background:${theme.acc};color:#fff;border-radius:28px;padding:0 26px;box-de
 .pill span{background:${theme.acc};font-weight:900;font-size:64px;padding:20px 64px;border-radius:32px;box-shadow:0 18px 44px rgba(40,132,255,.45)}
 .chip{position:absolute;left:80px;bottom:60px;display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.2);border-radius:60px;padding:8px 34px 8px 12px;font-weight:700;font-size:36px;direction:ltr}
 .chip img{width:60px;height:60px;border-radius:50%}
+.pill span.sw{display:inline-flex;align-items:center;gap:26px;font-size:54px;padding:18px 48px;background:rgba(40,132,255,.22);border:3px solid ${theme.acc};box-shadow:0 0 40px rgba(40,132,255,.5)}
 .swipe{position:absolute;right:80px;bottom:76px;font-weight:700;font-size:34px;color:${theme.mut}}
 `;
 function slide(s, i) {
   let b = '';
-  if (s.type === 'cover') b = `<div class=body style="top:300px"><h1 class=big>${hl(s.title, s.hl)}</h1><div class=sub>${esc(s.sub)}</div></div><div class=pill style="bottom:240px"><span style="background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.25);box-shadow:none;font-size:48px">اسحب لليسار</span></div>`;
+  if (s.type === 'cover') b = `<div class=body style="top:300px"><h1 class=big>${hl(s.title, s.hl)}</h1><div class=sub>${esc(s.sub)}</div></div><div class=pill style="bottom:240px"><span class=sw>اسحب لليسار<svg width="74" height="48" viewBox="0 0 74 48" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M70 24H8"/><path d="M26 8L8 24l18 16"/></svg></span></div>`;
   else if (s.type === 'step') b = `<div class=body><div class=kick>الخطوة ${esc(s.n)}</div><h1>${hl(s.title, s.hl)}</h1><div class=card><small>${esc(s.card.label)}</small>${s.card.lines.map(l => `<b>${esc(l)}</b>`).join('')}</div><div class=foot>${esc(s.foot)}</div></div>`;
   else b = `<div class=body><h1 class=cta>${hl(s.title, s.hl)}</h1><div class=list>${s.list.map((l, k) => `<div><i>${k + 1}</i>${esc(l)}</div>`).join('')}</div></div><div class=pill style="bottom:150px"><span>${esc(s.pill)}</span></div>`;
   return `<html><head><meta charset=utf-8><style>${css}</style></head><body>
