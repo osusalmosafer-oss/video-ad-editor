@@ -56,6 +56,9 @@ const css = `${font(500,'Cairo-500.ttf')}${font(700,'Cairo-700.ttf')}${font(900,
 *{box-sizing:border-box;margin:0;padding:0}
 body{width:1080px;height:1350px;overflow:hidden;font-family:C,sans-serif;direction:rtl;color:#fff;position:relative;
  background:radial-gradient(120% 80% at 50% 0%,#2C3570 0%,${theme.bg} 55%,#161A38 100%)}
+.photo{position:absolute;inset:0;background-size:cover;background-position:center top;filter:grayscale(.85) contrast(1.08) brightness(.9);opacity:.42;
+ -webkit-mask-image:linear-gradient(to bottom,transparent 8%,rgba(0,0,0,.55) 30%,#000 55%);mask-image:linear-gradient(to bottom,transparent 8%,rgba(0,0,0,.55) 30%,#000 55%)}
+.tint{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(31,36,73,.35),rgba(31,36,73,.15) 60%,rgba(22,26,56,.55));mix-blend-mode:multiply}
 .glow{position:absolute;left:0;right:0;bottom:0;height:900px;background:radial-gradient(70% 55% at 50% 100%,rgba(70,120,255,.38) 0%,rgba(40,132,255,.10) 55%,transparent 100%)}
 .sky{position:absolute;left:0;bottom:0;width:1080px;height:880px;-webkit-mask-image:linear-gradient(to top,#000 50%,rgba(0,0,0,.85) 80%,rgba(0,0,0,.6) 100%);mask-image:linear-gradient(to top,#000 50%,rgba(0,0,0,.85) 80%,rgba(0,0,0,.6) 100%)}
 .sky .far{fill:rgba(140,170,255,.10)}.sky .near{fill:rgba(150,180,255,.18)}.sky .near rect.win{fill:rgba(255,255,255,.09)}
@@ -92,7 +95,7 @@ function slide(s, i) {
   else if (s.type === 'step') b = `<div class=body><div class=kick>الخطوة ${esc(s.n)}</div><h1>${hl(s.title, s.hl)}</h1><div class=card><small>${esc(s.card.label)}</small>${s.card.lines.map(l => `<b>${esc(l)}</b>`).join('')}</div><div class=foot>${esc(s.foot)}</div></div>`;
   else b = `<div class=body><h1 class=cta>${hl(s.title, s.hl)}</h1><div class=list>${s.list.map((l, k) => `<div><i>${k + 1}</i>${esc(l)}</div>`).join('')}</div></div><div class=pill style="bottom:150px"><span>${esc(s.pill)}</span></div>`;
   return `<html><head><meta charset=utf-8><style>${css}</style></head><body>
-<div class=glow></div><svg class=sky viewBox="0 0 1080 700" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${SKY[s.sky || 'clock']}</svg>
+${s.photo ? `<div class=photo style="background-image:url(data:image/jpeg;base64,${fs.readFileSync(path.join(__dirname,'bg',s.photo)).toString('base64')})"></div><div class=tint></div>` : ''}<div class=glow></div>${s.photo ? '' : `<svg class=sky viewBox="0 0 1080 700" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${SKY[s.sky || 'clock']}</svg>`}
 <div class=top><div class=tag>${esc(cfg.tag)}</div>${s.type === 'cover' ? '' : `<div class=cnt>${i + 1}/${N}</div>`}</div>${b}
 <div class=chip><img src="${logo}"><span>@osusalmosafer</span></div></body></html>`;
 }

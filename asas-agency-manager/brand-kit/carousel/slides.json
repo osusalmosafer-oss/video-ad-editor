@@ -6,7 +6,8 @@
    "title": "ليش ما نكتب سعر الفندق؟",
    "hl": "سعر",
    "sub": "خمسة أشياء تغيّر السعر، وكل واحد منها يهمك",
-   "sky": "clock"
+   "sky": "clock",
+   "photo": "haram-courtyard-a.jpg"
   },
   {
    "type": "step",
@@ -21,7 +22,8 @@
     ]
    },
    "foot": "نفس الغرفة، وتاريخ مختلف، وسعر مختلف.",
-   "sky": "haram"
+   "sky": "haram",
+   "photo": "haram-courtyard-b.jpg"
   },
   {
    "type": "step",
@@ -36,7 +38,8 @@
     ]
    },
    "foot": "القرب من الحرم والنجوم يغيّران السعر.",
-   "sky": "address"
+   "sky": "address",
+   "photo": "jabal-omar-towers.jpg"
   },
   {
    "type": "step",
@@ -51,7 +54,8 @@
     ]
    },
    "foot": "السرير الإضافي له سعر.",
-   "sky": "haram"
+   "sky": "haram",
+   "photo": "haram-courtyard-a.jpg"
   },
   {
    "type": "step",
@@ -66,7 +70,8 @@
     ]
    },
    "foot": "الجناح غير الغرفة في السعر وفي المساحة.",
-   "sky": "address"
+   "sky": "address",
+   "photo": "jabal-omar-towers.jpg"
   },
   {
    "type": "step",
@@ -81,7 +86,8 @@
     ]
    },
    "foot": "الإطلالة تختلف بين الفنادق وبين الأدوار.",
-   "sky": "clock"
+   "sky": "clock",
+   "photo": "haram-courtyard-b.jpg"
   },
   {
    "type": "cta",
@@ -95,7 +101,8 @@
     "الإطلالة"
    ],
    "pill": "راسلنا على الخاص",
-   "sky": "clock"
+   "sky": "clock",
+   "photo": "haram-courtyard-a.jpg"
   }
  ]
 }
