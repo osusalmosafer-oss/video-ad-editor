@@ -52,6 +52,7 @@ const SKY = {
 };
 
 const N = cfg.slides.length;
+const PH = s => s.photo || cfg.photo;
 const css = `${font(500,'Cairo-500.ttf')}${font(700,'Cairo-700.ttf')}${font(900,'Cairo-900.ttf')}
 *{box-sizing:border-box;margin:0;padding:0}
 body{width:1080px;height:1350px;overflow:hidden;font-family:C,sans-serif;direction:rtl;color:#fff;position:relative;
@@ -91,11 +92,11 @@ mark{background:${theme.acc};color:#fff;border-radius:28px;padding:0 26px;box-de
 `;
 function slide(s, i) {
   let b = '';
-  if (s.type === 'cover') b = `<div class=body style="top:300px"><h1 class=big>${hl(s.title, s.hl)}</h1><div class=sub>${esc(s.sub)}</div></div><div class=pill style="bottom:240px"><span class=sw>اسحب لليسار<svg width="74" height="48" viewBox="0 0 74 48" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M70 24H8"/><path d="M26 8L8 24l18 16"/></svg></span></div>`;
-  else if (s.type === 'step') b = `<div class=body><div class=kick>الأمر ${esc(s.n)}</div><h1>${hl(s.title, s.hl)}</h1><div class=card><small>${esc(s.card.label)}</small>${s.card.lines.map(l => `<b>${esc(l)}</b>`).join('')}</div><div class=foot>${esc(s.foot)}</div></div>`;
+  if (s.type === 'cover') b = `<div class=body style="top:250px"><h1 class=big style="font-size:118px">${hl(s.title, s.hl)}</h1><div class=sub>${esc(s.sub)}</div></div><div class=pill style="bottom:160px"><span class=sw>اسحب لليسار<svg width="74" height="48" viewBox="0 0 74 48" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M70 24H8"/><path d="M26 8L8 24l18 16"/></svg></span></div>`;
+  else if (s.type === 'step') b = `<div class=body><div class=kick>الأمر ${esc(s.n)}</div><h1>${hl(s.title, s.hl)}</h1><div class=card><small>${esc(s.card.label)}</small>${s.card.lines.map(l => `<b>${esc(l)}</b>`).join('')}</div>${s.foot ? `<div class=foot>${esc(s.foot)}</div>` : ''}</div>`;
   else b = `<div class=body style="top:420px"><h1 class=big>${hl(s.title, s.hl)}</h1><div class=sub style="margin-top:30px;font-size:64px;line-height:1.6">${esc(s.sub)}</div></div>`;
   return `<html><head><meta charset=utf-8><style>${css}</style></head><body>
-${s.photo ? `<div class=photo style="background-image:url(data:image/jpeg;base64,${fs.readFileSync(path.join(__dirname,'bg',s.photo)).toString('base64')})"></div><div class=tint></div>` : ''}<div class=glow></div>${s.photo ? '' : `<svg class=sky viewBox="0 0 1080 700" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${SKY[s.sky || 'clock']}</svg>`}
+${PH(s) ? `<div class=photo style="background-position:${s.pos || 'center top'};background-image:url(data:image/jpeg;base64,${fs.readFileSync(path.join(__dirname,'bg',PH(s))).toString('base64')})"></div><div class=tint></div>` : ''}<div class=glow></div>${PH(s) ? '' : `<svg class=sky viewBox="0 0 1080 700" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">${SKY[s.sky || 'clock']}</svg>`}
 <div class=top><div class=tag>${esc(cfg.tag)}</div>${s.type === 'cover' ? '' : `<div class=cnt>${i + 1}/${N}</div>`}</div>${b}
 <div class=chip><img src="${logo}"><span>@osusalmosafer</span></div></body></html>`;
 }
