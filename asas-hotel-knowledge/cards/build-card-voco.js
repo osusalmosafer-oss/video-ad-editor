@@ -6,7 +6,7 @@ const b64=f=>fs.readFileSync(f).toString('base64');
 const font=w=>`@font-face{font-family:C;font-weight:${w};src:url(data:font/ttf;base64,${b64(R+'fonts/Cairo-'+w+'.ttf')})}`;
 const qr=b64(path.join(__dirname,'qr-voco.png'));
 const logo=b64(R+'logos/logo-horizontal-white.png');
-const ph=photo?`<img class=ph src="data:image/jpeg;base64,${b64(photo)}">`:`<div class=ph2>صورة الفندق تُضاف هنا</div>`;
+const ph=photo?`<img class=ph style="object-position:50% 62%" src="data:image/jpeg;base64,${b64(photo)}">`:`<div class=ph2>صورة الفندق تُضاف هنا</div>`;
 const row=(t,v)=>`<div class=r><b>${t}</b><span>${v}</span></div>`;
 const html=`<html dir=rtl><meta charset=utf-8><style>${font(500)}${font(700)}${font(900)}
 body{margin:0;width:1080px;background:#1F2449;font-family:C;color:#fff}
@@ -34,11 +34,11 @@ ${row('المصليات','في كل برج مصلى مستقل للنساء وم
 ${row('المجمع التجاري','في الأسفل')}
 ${row('الغرف','كينغ، أسرّة منفصلة، ثلاثية، رباعية. نحو 80% من الغرف رباعية')}
 ${row('الجناح العائلي','غرفتان بباب واحد، 7 أسرّة، بدون صالة، بدورتي مياه')}
-${row('المواصلات','مجانية من وإلى الحرم. الباصات توقف في مواقف كدي، ومنها باصات ترددية للحرم')}
+${row('المواصلات','مجانية من وإلى الحرم. الباصات توقف في مواقف كدي، ومنها باصات ترددية للحرم تنزل خلف برج الساعة')}
 ${row('المواقف','مدفوعة، 60 ريالاً لليوم، وتختلف في المواسم. تُدفع في مواقف الفندق')}
 </div>
 <div class=map><img src="data:image/png;base64,${qr}"><div>الموقع على الخرائط<small>امسح الرمز بالجوال لفتح الموقع</small></div></div>
-<div class=note>يحتاج تأكيد قبل قوله للعميل: نقطة نزول الباص وتردده. لا نقول للعميل إطلالة حرم أو كعبة. سعر الغرف من المبيعات فقط.</div>
+<div class=note>يحتاج تأكيد قبل قوله للعميل: تردد الباص. لا نقول للعميل إطلالة حرم أو كعبة. سعر الغرف من المبيعات فقط.</div>
 </body></html>`;
 (async()=>{const br=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
 const p=await br.newPage({viewport:{width:1080,height:1000}});await p.setContent(html);await p.waitForTimeout(400);
