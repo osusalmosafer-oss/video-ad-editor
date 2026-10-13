@@ -336,7 +336,7 @@ R.overview=function(){
   const bestCat=[...S.cats].filter(c=>c.n>=3).sort((a,b)=>b.medReach-a.medReach)[0]||S.cats[0];
   $("#t-overview").innerHTML=`
   <h2>نظرة عامة</h2>
-  <p class="lead">${S.n} منشوراً في بيانات Windsor (من ${S.first} إلى ${S.last}) — <strong>كلها Reels</strong>: لم يُرجع الكونكتور أي Carousel أو صورة ثابتة، ولا Stories (نتيجة فارغة لآخر 30 يوماً).</p>
+  <p class="lead">${S.n} منشوراً في بيانات Windsor (من ${S.first} إلى ${S.last}) — <strong>كلها Reels</strong> (استثنيت كاروسيل واحد بتاريخ 2026-10-05: وصول 124، عرض سعر فوكو). لا Stories في Windsor. ملاحظة: عدد إعادة النشر غير متاح حالياً من Windsor، فهو محفوظ من السحب السابق للريلات القديمة وصفر للجديدة.</p>
   <div class="grid kpis">
    ${kpi("المشاهدات (مجموع المنشورات)",nf(S.views),null,"Windsor · media_views")}
    ${kpi("وصول المنشورات (مجموع)",nf(S.reach),null,"Windsor · media_reach — قد يتكرر الحساب نفسه بين منشورات")}
