@@ -27,7 +27,9 @@
  {
   "slug": "fairmont",
   "txt": "../hotels/staff-card-فيرمونت-برج-الساعة.txt",
-  "image": null
+  "image": null,
+  "bgphoto": "fairmont-front.jpg",
+  "useBg": true
  },
  {
   "slug": "raffles",
