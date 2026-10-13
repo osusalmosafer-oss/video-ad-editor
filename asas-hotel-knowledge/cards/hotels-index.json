@@ -6,7 +6,8 @@
   "photos": [
    "hilton-front-strip.jpg"
   ],
-  "bgphoto": "hilton-front.jpg"
+  "bgphoto": "hilton-front.jpg",
+  "useBg": true
  },
  {
   "slug": "voco",
