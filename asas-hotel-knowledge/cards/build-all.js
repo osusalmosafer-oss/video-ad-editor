@@ -12,7 +12,7 @@ function body(txt,photos){
   let title=lines.shift(),tag='';
   if(title.startsWith('بيانات أولية')){tag=title;const k=lines.findIndex(l=>l.startsWith('فندق اليوم:'));title=lines.splice(k,1)[0].replace('فندق اليوم:','').trim();}
   const rows=[],notes=[];
-  for(const l of lines){if(!l)continue;const i=l.indexOf(':');
+  for(const l of lines){if(!l||l.startsWith('لا تقل')||l.startsWith('السعر'))continue;const i=l.indexOf(':');
     if(i>0&&i<28)rows.push(`<div class=r><b>${esc(l.slice(0,i))}</b><span>${esc(l.slice(i+1).trim())}</span></div>`);else notes.push(esc(l));}
   const ph=(photos||[]).map(f=>`<img class=p src="data:image/jpeg;base64,${b64(path.join(__dirname,f))}">`).join('');
   return `<div class=top><img src="data:image/png;base64,${logo}"></div><h1>${esc(title)}</h1>${tag?`<div class=tag>${esc(tag)}</div>`:''}${ph?`<div class=ps>${ph}</div>`:''}<div class=box>${rows.join('')}</div>${notes.length?`<div class=note>${notes.join('<br>')}</div>`:''}`;
