@@ -14,16 +14,21 @@ const whyH = t => esc(t).split('\n').map(l => `<div dir="auto">${l}</div>`).join
 const isEn = s => /^[\x20-\x7E]+$/.test(s) && /[a-z]/i.test(s);
 
 /* ---------- state ---------- */
-const def = () => ({ xp: 0, streak: 0, best: 0, last: null, log: {}, mist: {}, seen: {}, stamps: {}, pron: {}, custom: [], day: {}, badges: {}, cleared: 0, maxCombo: 0, set: { rate: 0.9, sound: true } });
+const def = () => ({ xp: 0, streak: 0, best: 0, last: null, log: {}, mist: {}, seen: {}, stamps: {}, pron: {}, custom: [], day: {}, badges: {}, cleared: 0, maxCombo: 0, set: { rate: 0.9, sound: true }, stage: 1, all: false, welcomed: false });
 let S;
 try { S = Object.assign(def(), JSON.parse(localStorage.getItem(KEY) || '{}')); S.set = Object.assign(def().set, S.set); } catch (e) { S = def(); }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
 /* ---------- content ---------- */
-let U = [], Q = {}, W = [], FACTS = [];
+let U = [], ALLU = [], Q = {}, W = [], FACTS = [];
+const STAGES = () => CONTENT.stages || [];
+const stageOf = id => STAGES().findIndex(s => s.units.includes(id)) + 1;
+const isOpen = id => S.all || !stageOf(id) || stageOf(id) <= S.stage;
 function build() {
-  U = [...CONTENT.units, ...S.custom];
-  Q = {}; W = []; FACTS = [...CONTENT.facts];
+  const order = STAGES().flatMap(s => s.units);
+  ALLU = [...CONTENT.units, ...S.custom].sort((a, b) => { const ia = order.indexOf(a.id), ib = order.indexOf(b.id); return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib); });
+  U = ALLU.filter(u => isOpen(u.id));
+  Q = {}; W = []; FACTS = CONTENT.facts.filter(f => isOpen(f.unit));
   U.forEach(u => (u.words || []).forEach(w => W.push({ ...w, unit: u.id })));
   U.forEach(u => {
     (u.facts || []).forEach(f => FACTS.push({ unit: u.id, ar: f.ar || f }));
@@ -37,12 +42,12 @@ function build() {
     ws.forEach(w => {
       const r = rng(hash(u.id + w.en));
       const pick = key => shuffle(pool.filter(x => x[key] !== w[key]), r).slice(0, 3).map(x => x[key]);
-      Q[`${u.id}:m:${w.en}`] = { id: `${u.id}:m:${w.en}`, unit: u.id, type: 'mean', q: w.en, big: 1, ipa: w.ipa, hint: w.num ? 'كم يساوي هذا الرقم؟' : 'ما معنى هذه الكلمة؟', say: w.en, c: [w.ar, ...pick('ar')], a: w.ar, why: `${w.en} = ${w.ar}` + (w.ex ? `\n${w.ex}` : '') };
+      if (w.mode !== 'l') Q[`${u.id}:m:${w.en}`] = { id: `${u.id}:m:${w.en}`, unit: u.id, type: 'mean', q: w.en, big: 1, ipa: w.ipa, hint: w.num ? 'كم يساوي هذا الرقم؟' : 'ما معنى هذه الكلمة؟', say: w.en, c: [w.ar, ...pick('ar')], a: w.ar, why: `${w.en} = ${w.ar}` + (w.ex ? `\n${w.ex}` : '') };
       Q[`${u.id}:l:${w.en}`] = { id: `${u.id}:l:${w.en}`, unit: u.id, type: 'listen', q: '🔊 اسمع واختر الكلمة', hint: 'اضغط على السماعة', say: w.en, c: [w.en, ...pick('en')], a: w.en, why: `${w.en} = ${w.ar}${w.ipa ? '\n' + w.ipa : ''}` };
     });
   });
 }
-const unitOf = id => U.find(u => u.id === id) || { title: id, icon: '📘', titleAr: id };
+const unitOf = id => ALLU.find(u => u.id === id) || { title: id, icon: '📘', titleAr: id };
 const qs = () => Object.values(Q);
 
 /* ---------- audio / fx ---------- */
@@ -184,10 +189,12 @@ function wordCard(w, mic = true) {
   return `<div class="card"><div class="row"><div class="sp"><div class="big en">${esc(w.en)}</div>${w.ipa ? `<div class="ipa en">${esc(w.ipa)}</div>` : ''}<div>${esc(w.ar)}</div>${w.ex ? `<div class="mute en" style="margin-top:4px">“${esc(w.ex)}”</div>` : ''}</div>
   <div style="display:flex;flex-direction:column;gap:8px">${spk(w.en)}${spk(w.en, 1)}${mic ? `<button class="ico" data-a="mic" data-t="${esc(w.en)}" aria-label="اختبر نطقك">🎤</button>` : ''}</div></div><div class="mute" id="mic-${hash(w.en)}"></div></div>`;
 }
+const stageLine = () => { const st = STAGES()[S.stage - 1]; return S.all ? 'كل المراحل مفتوحة' : st ? `المرحلة ${S.stage} من ${STAGES().length}: ${st.title}` : 'أهلًا بك في رحلتك'; };
 function vHome() {
   const L = level(), d = daily(), q = Q[d.q], w = W.find(x => x.en === d.w), f = FACTS[d.f], due = dueList().length, st = curStreak();
   const done = d.res != null;
-  return `<div class="card hero"><div class="row"><div class="sp"><div class="sub">أهلًا بك في رحلتك</div><h1>${L.ico} ${L.name} · مستوى ${L.l}</h1></div><span class="pill">🔥 ${st}</span></div>
+  const welcome = S.welcomed ? '' : `<div class="card" style="border-color:var(--pri)"><b>🌱 نبدأ من الصفر</b><p style="margin:6px 0">لا نفترض أنك تعرف شيئًا. نبدأ بالحروف ثم التعارف والأرقام. المحتوى مرتّب في مراحل تُفتح كلما تقدّمتم في المحاضرات، فلا يظهر لك ما لم تدرسه بعد.</p><button class="btn" data-a="welcome">ابدأ من المرحلة 1</button></div>`;
+  return welcome + `<div class="card hero"><div class="row"><div class="sp"><div class="sub">${stageLine()}</div><h1>${L.ico} ${L.name} · مستوى ${L.l}</h1></div><span class="pill">🔥 ${st}</span></div>
   <div class="bar" style="margin-top:12px"><i style="width:${L.cur * 100 / L.need}%"></i></div><div class="sub" style="margin-top:6px">${L.cur} / ${L.need} نقطة للمستوى التالي · إجمالي ${S.xp} XP</div></div>
   <h2>❓ سؤال اليوم</h2>
   <div class="card"><span class="tag">${esc(unitOf(q.unit).titleAr)}</span><div class="q en" style="display:block;direction:ltr;font-size:1.2rem">${esc(q.type === 'listen' ? 'Listen & choose' : q.q)}</div>
@@ -202,12 +209,23 @@ function weekBars() {
   const days = [...Array(7)].map((_, i) => addDays(today(), i - 6)), max = Math.max(30, ...days.map(d => S.log[d] || 0));
   return days.map(d => { const v = S.log[d] || 0; return `<div><i style="height:${Math.max(3, v * 60 / max)}px"></i>${new Date(d).toLocaleDateString('ar', { weekday: 'narrow' })}</div>`; }).join('');
 }
+function unitCard(u) {
+  const all = qs().filter(q => q.unit === u.id), seen = all.filter(q => S.seen[q.id]).length, a = accOf(u.id), stp = S.stamps[u.id];
+  return `<div class="card unit" data-a="unit" data-k="${u.id}"><div class="e">${u.icon}</div><div class="sp"><b class="en">${esc(u.title)}</b><div class="mute">${esc(u.titleAr)} · ${u.src === 'slides' ? 'من الشرائح' : u.src === 'book' ? 'من الكتاب' : 'إضافة'}</div>
+  <div class="bar" style="margin-top:6px"><i style="width:${all.length ? seen * 100 / all.length : 0}%"></i></div><div class="mute">${seen}/${all.length} سؤال${a != null ? ` · دقة ${a}%` : ''}</div></div>${stp ? `<span class="pill" style="background:var(--acc);color:#2a1100">🛂 ${stp}%</span>` : ''}</div>`;
+}
 function vPractice() {
-  return `<h2 style="margin-top:4px">🎯 اختر وحدة</h2>` + U.map(u => {
-    const all = qs().filter(q => q.unit === u.id), seen = all.filter(q => S.seen[q.id]).length, a = accOf(u.id), stp = S.stamps[u.id];
-    return `<div class="card unit" data-a="unit" data-k="${u.id}"><div class="e">${u.icon}</div><div class="sp"><b class="en">${esc(u.title)}</b><div class="mute">${esc(u.titleAr)} · ${u.src === 'slides' ? 'من الشرائح' : u.src === 'book' ? 'من الكتاب' : 'إضافة'}</div>
-    <div class="bar" style="margin-top:6px"><i style="width:${all.length ? seen * 100 / all.length : 0}%"></i></div><div class="mute">${seen}/${all.length} سؤال${a != null ? ` · دقة ${a}%` : ''}</div></div>${stp ? `<span class="pill" style="background:var(--acc);color:#2a1100">🛂 ${stp}%</span>` : ''}</div>`;
-  }).join('') + `<h2>🎲 تحديات</h2><div class="grid2"><button class="btn ghost" data-a="mix">🎲 مختلط 10</button><button class="btn ghost" data-a="ear">👂 تدريب الأذن</button></div>`;
+  const st = STAGES(), cur = st[S.stage - 1];
+  const head = `<div class="card"><b>أين وصلتم في المحاضرات؟</b><div class="mute">يُفتح لك المحتوى حتى المرحلة المختارة فقط. غيّرها متى تقدمتم.</div>
+  <div class="chips">${st.map((x, i) => `<button class="chip ${S.stage === i + 1 && !S.all ? 'on' : ''}" data-a="stage" data-k="${i + 1}">المرحلة ${i + 1}</button>`).join('')}</div>
+  ${cur ? `<div style="margin:4px 0 8px"><b>${esc(cur.title)}</b></div>` : ''}
+  ${S.stage < st.length && !S.all ? `<button class="btn ghost" data-a="nextStage">✅ أنهينا هذه المرحلة، افتح التالية</button>` : ''}</div>`;
+  const body = st.map((x, i) => {
+    const open = S.all || i + 1 <= S.stage, us = x.units.map(id => ALLU.find(u => u.id === id)).filter(Boolean);
+    return `<h2>${open ? '' : '🔒 '}المرحلة ${i + 1}: ${esc(x.title)}</h2>` + (open ? us.map(unitCard).join('') : `<div class="card mute">${us.map(u => u.icon + ' ' + esc(u.titleAr)).join(' · ')}<div style="margin-top:6px">تُفتح عندما تصلون إليها في المحاضرات.</div></div>`);
+  }).join('');
+  const extra = ALLU.filter(u => !stageOf(u.id));
+  return head + body + (extra.length ? `<h2>➕ وحدات أضفتها</h2>` + extra.map(unitCard).join('') : '') + `<h2>🎲 تحديات</h2><div class="grid2"><button class="btn ghost" data-a="mix">🎲 مختلط 10</button><button class="btn ghost" data-a="ear">👂 تدريب الأذن</button></div>`;
 }
 function wordList() {
   const s = search.trim().toLowerCase();
@@ -233,10 +251,11 @@ function vMist() {
 }
 function vMe() {
   const L = level(), b = BADGES;
-  return `<h2 style="margin-top:4px">🛂 جواز سفري</h2><div class="card"><div class="grid2" style="grid-template-columns:repeat(3,1fr)">${U.map(u => `<div class="stamp ${S.stamps[u.id] ? 'on' : ''}"><div>${u.icon}<small>${esc(u.titleAr)}</small>${S.stamps[u.id] ? `<small>${S.stamps[u.id]}%</small>` : ''}</div></div>`).join('')}</div><div class="mute" style="margin-top:10px">اختم كل وحدة بتحصيل 80%+ في جولة الوحدة.</div></div>
+  return `<h2 style="margin-top:4px">🛂 جواز سفري</h2><div class="card"><div class="grid2" style="grid-template-columns:repeat(3,1fr)">${ALLU.map(u => `<div class="stamp ${S.stamps[u.id] ? 'on' : ''}" style="${isOpen(u.id) ? '' : 'opacity:.25'}"><div>${u.icon}<small>${esc(u.titleAr)}</small>${S.stamps[u.id] ? `<small>${S.stamps[u.id]}%</small>` : ''}</div></div>`).join('')}</div><div class="mute" style="margin-top:10px">اختم كل وحدة بتحصيل 80%+ في جولة الوحدة.</div></div>
   <div class="card"><div class="row"><div class="sp"><b>${L.ico} ${L.name}</b><div class="mute">${S.xp} XP · أفضل سلسلة أيام: ${S.best} 🔥</div></div></div></div>
   <h2>🏅 الشارات</h2><div class="card">${b.map(([k, i, n]) => `<div class="badge ${S.badges[k] ? '' : 'off'}"><span style="font-size:1.5rem">${i}</span><span>${n}</span></div>`).join('')}</div>
   <h2>⚙️ الإعدادات</h2><div class="card"><label>سرعة النطق: <b id="rv">${S.set.rate}</b></label><input type="range" id="rate" min="0.5" max="1.2" step="0.1" value="${S.set.rate}">
+  <div class="row" style="margin-top:12px"><span class="sp">فتح كل المراحل (للمراجعة)</span><button class="btn sm ghost" data-a="unlockall">${S.all ? 'مفتوحة ✅' : 'مغلقة'}</button></div>
   <div class="row" style="margin-top:12px"><span class="sp">الأصوات والاهتزاز</span><button class="btn sm ghost" data-a="snd">${S.set.sound ? 'مفعّل ✅' : 'مغلق'}</button></div></div>
   <h2>➕ أضف فصلًا من الكتاب</h2><div class="card"><div class="mute">الصق وحدة جديدة بصيغة JSON (يمكنني أن أجهّزها لك من صور الكتاب).</div><textarea id="imp" placeholder='{"id":"unit1","icon":"📘","title":"Unit 1","titleAr":"الوحدة 1","words":[{"en":"hello","ar":"مرحبا"}],"questions":[{"q":"hello = ?","c":["مرحبا","وداعا"],"why":"hello = مرحبا"}]}'></textarea>
   <div class="grid2" style="margin-top:8px"><button class="btn" data-a="import">إضافة</button><button class="btn ghost" data-a="tpl">نسخ قالب</button></div></div>
@@ -289,6 +308,10 @@ function mic(word, btn) {
 
 /* ---------- actions ---------- */
 const A = {
+  welcome: () => { S.welcomed = true; save(); view = tab = 'practice'; render(); },
+  stage: d => { S.stage = +d.k; S.all = false; S.welcomed = true; save(); build(); render(); toast(`فُتحت المحتويات حتى المرحلة ${S.stage}`); },
+  nextStage: () => { S.stage = Math.min(STAGES().length, S.stage + 1); save(); build(); render(); burst(10); toast(`🎉 فُتحت المرحلة ${S.stage}`); },
+  unlockall: () => { S.all = !S.all; save(); build(); render(); },
   tab: d => { tab = d.k; view = tab; render(); },
   say: d => say(d.t, d.s),
   mic: d => mic(d.t),

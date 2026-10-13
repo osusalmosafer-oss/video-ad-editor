@@ -230,4 +230,13 @@ CONTENT.units.push(
   ]),
   facts: F(["want + اسم: I want a phone. وwant to + فعل: I want to go. مع he/she نقول wants، وفي النفي doesn't want.","للخطط المستقبلية: am/is/are + going to + فعل: I'm going to meet friends tomorrow. ونستخدم معها tomorrow / tonight / next week."]) }
 );
+const L = 'A|إيه;B|بي;C|سي;D|دي;E|إي;F|إف;G|جي;H|إتش;I|آي;J|جاي;K|كي;L|إل;M|إم;N|إن;O|أو;P|بي;Q|كيو;R|آر;S|إس;T|تي;U|يو;V|في;W|دابليو;X|إكس;Y|واي;Z|زد';
+CONTENT.units.find(u => u.id === 'alphabet').words = W(L).map(w => ({ ...w, mode: 'l', ex: '' }));
+CONTENT.stages = [
+  { title: 'من الصفر: الحروف والتعارف والمهن', units: ['alphabet', 'n20', 'b01', 'articles', 'jobs', 'days', 'months'] },
+  { title: 'الجنسيات والأرقام والأشياء من حولنا', units: ['countries', 'n100', 'b02', 'numbers', 'nouns', 'opposites', 'b03'] },
+  { title: 'المدينة والعائلة وما نفعله', units: ['b04', 'b05', 'b06', 'tourism'] },
+  { title: 'الوقت والقدرات والماضي', units: ['b07', 'b08', 'b09'] },
+  { title: 'الماضي والسفر والمستقبل', units: ['b10', 'b11', 'b12'] }
+];
 })();
