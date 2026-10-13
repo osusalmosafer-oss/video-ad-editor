@@ -59,7 +59,7 @@ function pickVoice() {
 }
 if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 function say(t, slow) {
-  if (!('speechSynthesis' in window)) return toast('متصفحك لا يدعم النطق الصوتي');
+  if (!('speechSynthesis' in window)) return toast('النطق الصوتي غير متاح هنا. افتح الرابط في متصفح Chrome على جوالك.');
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(t);
   u.lang = 'en-US'; if (voice) u.voice = voice;
