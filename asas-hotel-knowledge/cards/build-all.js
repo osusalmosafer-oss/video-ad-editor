@@ -29,5 +29,8 @@ const br=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
 const p=await br.newPage({viewport:{width:1080,height:900}});
 for(const h of idx){if(h.image)continue;
   await p.setContent(`<html dir=rtl><meta charset=utf-8><style>${css}</style><body>${body(h.txt,h.photos)}</body></html>`);
-  await p.waitForTimeout(300);await p.screenshot({path:path.join(__dirname,`card-${h.slug}.png`),fullPage:true});}
+  await p.waitForTimeout(300);await p.screenshot({path:path.join(__dirname,`card-${h.slug}.png`),fullPage:true});
+  if(h.bgphoto){const bg=`body{background:linear-gradient(rgba(31,36,73,.45),rgba(31,36,73,.88)),url(data:image/jpeg;base64,${b64(path.join(__dirname,h.bgphoto))}) center/cover no-repeat fixed #1F2449}.box{background:rgba(39,45,92,.82)}`;
+   await p.setContent(`<html dir=rtl><meta charset=utf-8><style>${css}${bg}</style><body>${body(h.txt,[])}</body></html>`);
+   await p.waitForTimeout(300);await p.screenshot({path:path.join(__dirname,`card-${h.slug}-bg.png`),fullPage:true});}}
 await br.close();})();

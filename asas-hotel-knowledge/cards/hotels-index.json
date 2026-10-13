@@ -2,7 +2,11 @@
  {
   "slug": "hilton-suites",
   "txt": "../hotels/staff-card-hilton-suites.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "hilton-front-strip.jpg"
+  ],
+  "bgphoto": "hilton-front.jpg"
  },
  {
   "slug": "voco",
