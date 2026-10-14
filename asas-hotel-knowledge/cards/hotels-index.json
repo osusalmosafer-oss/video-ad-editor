@@ -39,6 +39,10 @@
  {
   "slug": "swissotel-makkah",
   "txt": "../hotels/staff-card-سويس-أوتيل-مكة.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "swiss-strip1.jpg",
+   "swiss-strip2.jpg"
+  ]
  }
 ]
