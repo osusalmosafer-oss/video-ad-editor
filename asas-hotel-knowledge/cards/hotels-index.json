@@ -35,5 +35,10 @@
   "slug": "raffles",
   "txt": "../hotels/staff-card-رافلز-مكة-بالاس.txt",
   "image": null
+ },
+ {
+  "slug": "swissotel-makkah",
+  "txt": "../hotels/staff-card-سويس-أوتيل-مكة.txt",
+  "image": null
  }
 ]
