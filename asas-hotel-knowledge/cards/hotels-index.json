@@ -54,5 +54,110 @@
   "slug": "movenpick-hajar",
   "txt": "../hotels/staff-card-موفنبيك-برج-هاجر.txt",
   "image": null
+ },
+ {
+  "slug": "al-safwah-royale-orchid",
+  "txt": "../hotels/auto/staff-card-al-safwah-royale-orchid.txt",
+  "image": null
+ },
+ {
+  "slug": "anjum-makkah",
+  "txt": "../hotels/auto/staff-card-anjum-makkah.txt",
+  "image": null
+ },
+ {
+  "slug": "dar-al-ghufran-makkah",
+  "txt": "../hotels/auto/staff-card-dar-al-ghufran-makkah.txt",
+  "image": null
+ },
+ {
+  "slug": "dar-al-tawhid-intercontinental-makkah",
+  "txt": "../hotels/auto/staff-card-dar-al-tawhid-intercontinental-makkah.txt",
+  "image": null
+ },
+ {
+  "slug": "doubletree-by-hilton-makkah-aziziyah",
+  "txt": "../hotels/auto/staff-card-doubletree-by-hilton-makkah-aziziyah.txt",
+  "image": null
+ },
+ {
+  "slug": "hilton-makkah-convention",
+  "txt": "../hotels/auto/staff-card-hilton-makkah-convention.txt",
+  "image": null
+ },
+ {
+  "slug": "hyatt-regency-makkah-jabal-omar",
+  "txt": "../hotels/auto/staff-card-hyatt-regency-makkah-jabal-omar.txt",
+  "image": null
+ },
+ {
+  "slug": "jumeirah-jabal-omar-makkah",
+  "txt": "../hotels/auto/staff-card-jumeirah-jabal-omar-makkah.txt",
+  "image": null
+ },
+ {
+  "slug": "le-meridien-towers-makkah",
+  "txt": "../hotels/auto/staff-card-le-meridien-towers-makkah.txt",
+  "image": null
+ },
+ {
+  "slug": "m-makkah-by-millennium",
+  "txt": "../hotels/auto/staff-card-m-makkah-by-millennium.txt",
+  "image": null
+ },
+ {
+  "slug": "makarim-ajyad-makkah",
+  "txt": "../hotels/auto/staff-card-makarim-ajyad-makkah.txt",
+  "image": null
+ },
+ {
+  "slug": "makkah-al-aziziah",
+  "txt": "../hotels/auto/staff-card-makkah-al-aziziah.txt",
+  "image": null
+ },
+ {
+  "slug": "makkah-hotel",
+  "txt": "../hotels/auto/staff-card-makkah-hotel.txt",
+  "image": null
+ },
+ {
+  "slug": "makkah-marriott-jabal-omar",
+  "txt": "../hotels/auto/staff-card-makkah-marriott-jabal-omar.txt",
+  "image": null
+ },
+ {
+  "slug": "makkah-towers",
+  "txt": "../hotels/auto/staff-card-makkah-towers.txt",
+  "image": null
+ },
+ {
+  "slug": "park-inn-makkah-al-naseem",
+  "txt": "../hotels/auto/staff-card-park-inn-makkah-al-naseem.txt",
+  "image": null
+ },
+ {
+  "slug": "park-inn-makkah-aziziyah",
+  "txt": "../hotels/auto/staff-card-park-inn-makkah-aziziyah.txt",
+  "image": null
+ },
+ {
+  "slug": "rotana-jabal-omar",
+  "txt": "../hotels/auto/staff-card-rotana-jabal-omar.txt",
+  "image": null
+ },
+ {
+  "slug": "sheraton-makkah-jabal-al-kaaba",
+  "txt": "../hotels/auto/staff-card-sheraton-makkah-jabal-al-kaaba.txt",
+  "image": null
+ },
+ {
+  "slug": "tilal-jabal-al-kabah",
+  "txt": "../hotels/auto/staff-card-tilal-jabal-al-kabah.txt",
+  "image": null
+ },
+ {
+  "slug": "violet-al-aziziyah-makkah",
+  "txt": "../hotels/auto/staff-card-violet-al-aziziyah-makkah.txt",
+  "image": null
  }
 ]
