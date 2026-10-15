@@ -17,12 +17,20 @@
  {
   "slug": "address",
   "txt": "../hotels/staff-card-العنوان-جبل-عمر.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-address-1.jpg",
+   "strip-address-2.jpg"
+  ]
  },
  {
   "slug": "conrad",
   "txt": "../hotels/staff-card-كونراد-جبل-عمر.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-conrad-1.jpg",
+   "strip-conrad-2.jpg"
+  ]
  },
  {
   "slug": "fairmont",
@@ -47,7 +55,11 @@
  {
   "slug": "raffles",
   "txt": "../hotels/staff-card-رافلز-مكة-بالاس.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-raffles-1.jpg",
+   "strip-raffles-2.jpg"
+  ]
  },
  {
   "slug": "swissotel-makkah",
@@ -61,12 +73,20 @@
  {
   "slug": "marwa-rayhaan",
   "txt": "../hotels/staff-card-المروة-ريحان-روتانا.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-marwa-rayhaan-1.jpg",
+   "strip-marwa-rayhaan-2.jpg"
+  ]
  },
  {
   "slug": "movenpick-hajar",
   "txt": "../hotels/staff-card-موفنبيك-برج-هاجر.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-movenpick-hajar-1.jpg",
+   "strip-movenpick-hajar-2.jpg"
+  ]
  },
  {
   "slug": "al-safwah-royale-orchid",
@@ -76,17 +96,29 @@
  {
   "slug": "anjum-makkah",
   "txt": "../hotels/auto/staff-card-anjum-makkah.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-anjum-makkah-1.jpg",
+   "strip-anjum-makkah-2.jpg"
+  ]
  },
  {
   "slug": "dar-al-ghufran-makkah",
   "txt": "../hotels/auto/staff-card-dar-al-ghufran-makkah.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-dar-al-ghufran-makkah-1.jpg",
+   "strip-dar-al-ghufran-makkah-2.jpg"
+  ]
  },
  {
   "slug": "dar-al-tawhid-intercontinental-makkah",
   "txt": "../hotels/auto/staff-card-dar-al-tawhid-intercontinental-makkah.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-dar-al-tawhid-intercontinental-makkah-1.jpg",
+   "strip-dar-al-tawhid-intercontinental-makkah-2.jpg"
+  ]
  },
  {
   "slug": "doubletree-by-hilton-makkah-aziziyah",
@@ -96,17 +128,29 @@
  {
   "slug": "hilton-makkah-convention",
   "txt": "../hotels/auto/staff-card-hilton-makkah-convention.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-hilton-makkah-convention-1.jpg",
+   "strip-hilton-makkah-convention-2.jpg"
+  ]
  },
  {
   "slug": "hyatt-regency-makkah-jabal-omar",
   "txt": "../hotels/auto/staff-card-hyatt-regency-makkah-jabal-omar.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-hyatt-regency-makkah-jabal-omar-1.jpg",
+   "strip-hyatt-regency-makkah-jabal-omar-2.jpg"
+  ]
  },
  {
   "slug": "jumeirah-jabal-omar-makkah",
   "txt": "../hotels/auto/staff-card-jumeirah-jabal-omar-makkah.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-jumeirah-jabal-omar-makkah-1.jpg",
+   "strip-jumeirah-jabal-omar-makkah-2.jpg"
+  ]
  },
  {
   "slug": "le-meridien-towers-makkah",
@@ -136,12 +180,20 @@
  {
   "slug": "makkah-marriott-jabal-omar",
   "txt": "../hotels/auto/staff-card-makkah-marriott-jabal-omar.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-makkah-marriott-jabal-omar-1.jpg",
+   "strip-makkah-marriott-jabal-omar-2.jpg"
+  ]
  },
  {
   "slug": "makkah-towers",
   "txt": "../hotels/auto/staff-card-makkah-towers.txt",
-  "image": null
+  "image": null,
+  "photos": [
+   "strip-makkah-towers-1.jpg",
+   "strip-makkah-towers-2.jpg"
+  ]
  },
  {
   "slug": "park-inn-makkah-al-naseem",
