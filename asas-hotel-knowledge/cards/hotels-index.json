@@ -44,5 +44,15 @@
    "swiss-strip1.jpg",
    "swiss-strip2.jpg"
   ]
+ },
+ {
+  "slug": "marwa-rayhaan",
+  "txt": "../hotels/staff-card-المروة-ريحان-روتانا.txt",
+  "image": null
+ },
+ {
+  "slug": "movenpick-hajar",
+  "txt": "../hotels/staff-card-موفنبيك-برج-هاجر.txt",
+  "image": null
  }
 ]
