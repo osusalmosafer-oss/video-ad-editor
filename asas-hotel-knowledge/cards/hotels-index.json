@@ -29,7 +29,20 @@
   "txt": "../hotels/staff-card-فيرمونت-برج-الساعة.txt",
   "image": null,
   "bgphoto": "fairmont-front.jpg",
-  "useBg": true
+  "useBg": true,
+  "photos": [
+   "fairmont-strip1.jpg",
+   "fairmont-strip2.jpg"
+  ]
+ },
+ {
+  "slug": "fairmont-photos",
+  "txt": "../hotels/staff-card-فيرمونت-برج-الساعة.txt",
+  "image": null,
+  "photos": [
+   "fairmont-strip1.jpg",
+   "fairmont-strip2.jpg"
+  ]
  },
  {
   "slug": "raffles",
