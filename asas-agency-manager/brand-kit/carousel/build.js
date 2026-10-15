@@ -4,8 +4,9 @@ const { chromium } = require('playwright-core');
 const fs = require('fs'), path = require('path');
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : d; };
-const file = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--out' && args[i - 1] !== '--chrome' && !['--w', '--h', '--safe'].includes(args[i - 1])) || path.join(__dirname, 'slides.json');
+const file = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--out' && args[i - 1] !== '--chrome' && !['--w', '--h', '--safe', '--swipe'].includes(args[i - 1])) || path.join(__dirname, 'slides.json');
 const outDir = path.resolve(opt('--out', path.join(__dirname, 'out')));
+const SW = opt('--swipe', 'left') === 'right';
 const W = +opt('--w', 1080), H = +opt('--h', 1350);
 /* المنطقة الآمنة للنص (أعلى,يمين,أسفل,يسار). الخلفية تملأ الصورة كاملة والمحتوى يُصغَّر داخل المنطقة الآمنة فقط */
 const safe = (opt('--safe', '') || '').split(',').map(Number);
@@ -102,7 +103,7 @@ if (safe.length === 4 && safe.every(Number.isFinite)) {
 }
 function slide(s, i) {
   let b = '';
-  if (s.type === 'cover') b = `<div class=body style="top:250px"><h1 class=big style="font-size:${s.fs||118}px">${hl(s.title, s.hl)}</h1><div class=sub>${esc(s.sub)}</div></div>${s.nopill?'':`<div class=pill style="bottom:160px"><span class=sw>اسحب لليسار<svg width="74" height="48" viewBox="0 0 74 48" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M70 24H8"/><path d="M26 8L8 24l18 16"/></svg></span></div>`}`;
+  if (s.type === 'cover') b = `<div class=body style="top:250px"><h1 class=big style="font-size:${s.fs||118}px">${hl(s.title, s.hl)}</h1><div class=sub>${esc(s.sub)}</div></div>${s.nopill?'':`<div class=pill style="bottom:160px"><span class=sw>${SW ? 'اسحب لليمين' : 'اسحب لليسار'}<svg width="74" height="48" viewBox="0 0 74 48" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">${SW ? '<path d="M4 24H66"/><path d="M48 8l18 16-18 16"/>' : '<path d="M70 24H8"/><path d="M26 8L8 24l18 16"/>'}</svg></span></div>`}`;
   else if (s.type === 'step') b = `<div class=body><div class=kick>الأمر ${esc(s.n)}</div><h1>${hl(s.title, s.hl)}</h1><div class=card><small>${esc(s.card.label)}</small>${s.card.lines.map(l => `<b>${esc(l)}</b>`).join('')}</div>${s.foot ? `<div class=foot>${esc(s.foot)}</div>` : ''}</div>`;
   else if (s.type === 'map') b = `<div class=body style="top:200px"><h1 style="font-size:78px;line-height:1.35">${hl(s.title, s.hl)}</h1></div>
 <div style="position:absolute;right:80px;top:350px;width:470px;height:880px;border-radius:36px;overflow:hidden;border:3px solid rgba(255,255,255,.3);box-shadow:0 30px 70px rgba(0,0,0,.45);background:#eee url(data:image/png;base64,${fs.readFileSync(path.join(__dirname,'bg',s.map)).toString('base64')}) center top/cover no-repeat"></div>
