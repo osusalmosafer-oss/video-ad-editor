@@ -229,5 +229,10 @@
   "slug": "swissotel-al-maqam",
   "txt": "../hotels/staff-card-سويس-أوتيل-المقام.txt",
   "image": null
+ },
+ {
+  "slug": "pullman-zamzam",
+  "txt": "../hotels/staff-card-بولمان-زمزم.txt",
+  "image": null
  }
 ]
