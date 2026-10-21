@@ -47,6 +47,11 @@ TAG = {
     "DeUkmHFj5bt": "D",
     "DeXJWJckTKS": "A",
     "DeZqtuHiAdF": "D",
+    "DecWZJKjn1o": "A",
+    "Dee0Pu_DLwu": "E",
+    "DekEwCMCigD": "A",
+    "DempjYblLno": "D",
+    "Dervv4zgf3A": "C",
 }
 
 posts = []
@@ -66,7 +71,7 @@ for row in W.MEDIA:
         "totalWatch": m["media_reel_total_watch_time"],
     })
 posts.sort(key=lambda p: p["utc"])
-assert len(posts) == 58 and set(TAG) == {p["sc"] for p in posts}
+assert len(posts) == 63 and set(TAG) == {p["sc"] for p in posts}
 
 daily = [dict(zip(["date", "reach", "newFollowers", "views", "engaged", "interactions", "likes", "comments",
                    "saves", "shares", "reposts", "taps"], d)) for d in W.DAILY]
