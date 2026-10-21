@@ -14,7 +14,7 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from daily import DAILY, PULLED_AT
+from daily import DAILY
 
 HERE = Path(__file__).parent
 def raw(name):
@@ -63,7 +63,17 @@ for v in raw("videos"):
     })
 videos.sort(key=lambda v: v["dt"])
 
-daily = [dict(zip(["date", "views", "likes", "shares", "comments", "lost", "totalFollowers", "profileViews"], d)) for d in DAILY]
+# history from daily.py (TikTok Organic keeps only 60 days), newer days from raw/daily.json
+byday = {d[0]: dict(zip(["date", "views", "likes", "shares", "comments", "lost", "totalFollowers", "profileViews"], d)) for d in DAILY}
+for r in raw("daily"):
+    if not r["total_followers_count"]:
+        continue  # Windsor returns not-yet-processed days as zeros
+    byday[r["date"]] = {"date": r["date"], "views": r["video_views"], "likes": r["likes"], "shares": r["shares"],
+                        "comments": r["comments"], "lost": r["daily_lost_followers"],
+                        "totalFollowers": r["total_followers_count"], "profileViews": r["profile_views"]}
+daily = [byday[k] for k in sorted(byday)]
+while daily and daily[-1]["views"] == 0:
+    daily.pop()  # today's partial row
 
 # follower activity: average of the last 7 complete days (24 hourly rows each)
 act = defaultdict(dict)
@@ -76,7 +86,7 @@ hours = [round(sum(act[d][h] for d in days) / len(days)) for h in range(24)]
 
 out = {
     "account": {"name": "أسس المسافر", "isBusiness": True},
-    "pulledAt": PULLED_AT,
+    "pulledAt": json.load(open(HERE / "raw" / "meta.json"))["pulled_at"],
     "range": {"from": videos[0]["dt"][:10], "to": max(videos[-1]["dt"][:10], daily[-1]["date"])},
     "videos": videos,
     "daily": daily,

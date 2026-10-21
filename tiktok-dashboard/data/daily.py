@@ -1,4 +1,6 @@
-"""Account-level daily rows from Windsor tiktok_organic (account table).
+"""Account-level daily history from Windsor tiktok_organic (account table).
+
+build.py overlays raw/daily.json (the latest 60-day pull) on top of these rows.
 
 Fields: date, video_views, likes, shares, comments, daily_lost_followers,
 total_followers_count, profile_views.
@@ -8,8 +10,6 @@ total_followers_count, profile_views.
 2026-09-23 are omitted because Windsor still returned them as zeros.
 daily_lost_followers arrives aggregated once a week, so single days read 0.
 """
-PULLED_AT = "2026-09-25"
-
 DAILY = [
     ('2026-07-25', 1174, 57, 2, 1, 2, 17, 29),
     ('2026-07-26', 1052, 28, 2, 1, 0, 17, 20),
