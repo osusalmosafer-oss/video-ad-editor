@@ -1,0 +1,92 @@
+<!doctype html><html lang="ar" dir="ltr"><meta charset="utf-8"><style>
+@font-face{font-family:C;src:url(file:///home/user/video-ad-editor/asas-agency-manager/brand-kit/fonts/Cairo-900.ttf);font-weight:900}
+@font-face{font-family:C;src:url(file:///home/user/video-ad-editor/asas-agency-manager/brand-kit/fonts/Cairo-700.ttf);font-weight:700}
+*{margin:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;background:#1F2449;overflow:hidden;font-family:C}
+#bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 34%,#2c3574 0%,#1F2449 55%,#151934 100%)}
+.w{position:absolute;left:0;width:1080px;top:900px;text-align:center;font-weight:900;line-height:1.15;transform:translateY(-50%);opacity:0;text-shadow:0 6px 30px rgba(0,0,0,.35);color:#fff}
+.w span{display:inline-block;direction:rtl;unicode-bidi:isolate;max-width:900px;white-space:normal}
+.one span{white-space:nowrap;max-width:none}
+#svg{position:absolute;left:0;top:0}
+#haram{position:absolute;left:445px;top:545px;width:190px;height:190px;border-radius:50%;background:rgba(40,132,255,.18);border:8px solid #2884FF;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:56px;opacity:0;direction:rtl}
+.node{position:absolute;width:150px;height:150px;border-radius:50%;border:8px solid #2884FF;background:#1F2449;display:flex;align-items:center;justify-content:center;color:#FFC233;font-weight:900;font-size:80px;opacity:0;direction:rtl}
+.lab{position:absolute;width:420px;text-align:center;color:#fff;font-weight:900;font-size:46px;opacity:0;direction:rtl;text-shadow:0 4px 20px rgba(0,0,0,.4)}
+#logo{position:absolute;left:280px;top:1300px;width:520px;transform:translateY(-50%);opacity:0}
+</style><body><div id="bg"></div>
+<svg id="svg" width="1080" height="1920"></svg>
+<div id="haram">الحرم</div>
+<div id="h1" class="w one" style="font-size:150px">وين تسكن في مكة؟</div>
+<div id="h2" class="w one" style="font-size:96px;color:#FFC233">٤ مناطق حول الحرم</div>
+<div id="ct" class="w one" style="font-size:104px;color:#FFC233"></div>
+<div id="cd" class="w" style="font-size:60px;font-weight:700"></div>
+<div id="note" class="w one" style="font-size:30px;font-weight:700;color:#A9B1D6">رسم تخطيطي، ليس بالمقياس</div>
+<div id="e1" class="w" style="font-size:110px">ما تدري أي منطقة تناسبك؟</div>
+<div id="e2" class="w" style="font-size:78px;color:#FFC233">أرسل تاريخك وعدد الأشخاص</div>
+<div id="e3" class="w one" style="font-size:70px;font-weight:700">الرابط في البايو</div>
+<div id="e4" class="w one" style="font-size:120px;color:#FFC233">احفظ المنشور</div>
+<img id="logo" src="logo-horizontal-on-dark.png">
+<script>
+const AREAS=[
+ {n:'١',name:'أبراج الساعة',desc:'فنادق داخل المجمع المتصل بالمول',x:800,y:430},
+ {n:'٢',name:'جبل عمر',desc:'خلف دار التوحيد، قريب من الساحات',x:280,y:430},
+ {n:'٣',name:'جبل الكعبة',desc:'الباصات توصل مواقف جبل الكعبة، وأقرب باب ٧٩',x:800,y:850},
+ {n:'٤',name:'الساحات',desc:'على أطراف ساحات الحرم',x:280,y:850}
+];
+const HX=540,HY=640,T0=3.4,DUR=4.0;
+const cl=x=>Math.min(1,Math.max(0,x));
+const eo=t=>1-Math.pow(1-t,3), eio=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, ei=t=>t*t*t;
+const eb=t=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2)};
+const tw=(t,a,b,f,to,e=eio)=>f+(to-f)*e(cl((t-a)/(b-a)));
+const svg=document.getElementById('svg');let lines=[],nodes=[],labs=[];
+AREAS.forEach((a,i)=>{
+ const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+ l.setAttribute('x1',HX);l.setAttribute('y1',HY);l.setAttribute('x2',a.x);l.setAttribute('y2',a.y);
+ l.setAttribute('stroke','#2884FF');l.setAttribute('stroke-width','8');l.setAttribute('stroke-linecap','round');
+ const len=Math.hypot(a.x-HX,a.y-HY);l.style.strokeDasharray=len;l.style.strokeDashoffset=len;l._len=len;svg.appendChild(l);lines.push(l);
+ const nd=document.createElement('div');nd.className='node';nd.style.left=(a.x-75)+'px';nd.style.top=(a.y-75)+'px';nd.textContent=a.n;document.body.appendChild(nd);nodes.push(nd);
+ const lb=document.createElement('div');lb.className='lab';lb.style.left=(a.x-210)+'px';lb.style.top=(a.y+92)+'px';lb.textContent=a.name;document.body.appendChild(lb);labs.push(lb);
+});
+document.querySelectorAll('.w').forEach(e=>{e.innerHTML='<span>'+e.textContent+'</span>'});
+const set=(id,o)=>{const el=document.getElementById(id);el.style.opacity=o.o;el.style.top=(o.top)+'px';el.style.transform='translateY(-50%) translate('+(o.x||0)+'px,'+(o.y||0)+'px) scale('+(o.s==null?1:o.s)+')'};
+Promise.all([document.fonts.load('900 100px C'),document.fonts.load('700 100px C')]).then(()=>{document.querySelectorAll('.one').forEach(e=>{const w=e.firstChild.offsetWidth;if(w>900){e.style.fontSize=(parseFloat(e.style.fontSize)*900/w)+'px'}})});
+window.setT=function(t){
+ const out1=1-tw(t,2.2,2.6,0,1,ei);
+ set('h1',{o:tw(t,0.2,0.6,0,1,eo)*out1,top:760,y:tw(t,0.2,0.8,-120,0,eb),s:1});
+ set('h2',{o:tw(t,1.0,1.4,0,1,eo)*out1,top:960,y:tw(t,1.0,1.6,60,0,eo),s:1});
+ // haram appears 1.8
+ const hr=document.getElementById('haram');const hp=tw(t,2.7,3.4,0,1,eb);
+ hr.style.opacity=tw(t,2.7,3.0,0,1,eo)*(1-tw(t,19.4,19.8,0,1,ei));hr.style.transform='scale('+Math.max(.001,hp)+')';
+ const act=Math.floor((t-T0)/DUR);
+ AREAS.forEach((a,i)=>{
+  const s=T0+i*DUR; const on=t>=s&&t<s+DUR;
+  const lp=tw(t,s,s+0.6,0,1,eo); lines[i].style.strokeDashoffset=lines[i]._len*(1-lp);
+  const done=t>=s+0.6;
+  nodes[i].style.opacity=(t>=s?1:0)*(1-tw(t,19.4,19.8,0,1,ei));
+  const pulse=on?1+0.06*Math.sin((t-s)*6):1;
+  const sc=(t>=s?Math.max(.001,tw(t,s+0.35,s+0.9,0,1,eb)):0);
+  nodes[i].style.transform='scale('+(sc*(on?1.18:1)*pulse)+')';
+  nodes[i].style.background=on?'#2884FF':'#1F2449';
+  nodes[i].style.color=on?'#fff':'#FFC233';
+  labs[i].style.opacity=(t>=s+0.5?1:0)*(on?1:0.55)*(1-tw(t,19.4,19.8,0,1,ei));
+  lines[i].style.opacity=(1-tw(t,19.4,19.8,0,1,ei))*(on?1:0.55);
+ });
+ // card text
+ const idx=Math.min(3,Math.max(0,act)); const s0=T0+idx*DUR; const inCard=t>=T0&&t<T0+4*DUR;
+ const ct=document.getElementById('ct'),cd=document.getElementById('cd');
+ if(inCard){ct.firstChild.textContent=AREAS[idx].name;cd.firstChild.textContent=AREAS[idx].desc;}
+ const cin=tw(t,s0+0.7,s0+1.1,0,1,eo), cout=1-tw(t,s0+DUR-0.35,s0+DUR-0.05,0,1,ei);
+ const cv=inCard?cin*cout:0;
+ set('ct',{o:cv,top:1250,y:tw(t,s0+0.7,s0+1.2,40,0,eo)});
+ set('cd',{o:cv,top:1400,y:tw(t,s0+0.9,s0+1.4,40,0,eo)});
+ set('note',{o:(t>=T0&&t<19.4?0.9:0),top:1090});
+ // ending
+ const fin=1-tw(t,26.4,26.9,0,1,ei);
+ set('e1',{o:tw(t,19.9,20.3,0,1,eo)*(1-tw(t,22.0,22.4,0,1,ei)),top:860,y:tw(t,19.9,20.5,-60,0,eb)});
+ set('e2',{o:tw(t,22.6,23.0,0,1,eo)*fin,top:700,y:tw(t,22.6,23.2,40,0,eo)});
+ set('e3',{o:tw(t,23.4,23.8,0,1,eo)*fin,top:860,y:tw(t,23.4,23.9,30,0,eo)});
+ set('e4',{o:tw(t,24.0,24.3,0,1,eo)*fin,top:1060,s:Math.max(.001,tw(t,24.0,24.6,.3,1,eb))});
+ document.getElementById('logo').style.opacity=tw(t,24.7,25.2,0,1,eo)*fin;
+ document.getElementById('svg').style.opacity=1;
+};
+setT(0);
+</script></body></html>
