@@ -1,0 +1,106 @@
+<!doctype html><html lang="ar" dir="ltr"><meta charset="utf-8"><style>
+@font-face{font-family:C;src:url(file:///home/user/video-ad-editor/asas-agency-manager/brand-kit/fonts/Cairo-900.ttf);font-weight:900}
+@font-face{font-family:C;src:url(file:///home/user/video-ad-editor/asas-agency-manager/brand-kit/fonts/Cairo-700.ttf);font-weight:700}
+*{margin:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;background:#1F2449;overflow:hidden;font-family:C}
+#bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 36%,#2c3574 0%,#1F2449 55%,#151934 100%)}
+.w{position:absolute;left:0;width:1080px;top:900px;text-align:center;font-weight:900;line-height:1.2;transform:translateY(-50%);opacity:0;color:#fff;text-shadow:0 6px 30px rgba(0,0,0,.35)}
+.w span{display:inline-block;direction:rtl;unicode-bidi:isolate;max-width:900px;white-space:normal}
+.one span{white-space:nowrap;max-width:none}
+.badge{position:absolute;left:440px;top:300px;width:200px;height:200px;border-radius:50%;background:#FFC233;color:#1F2449;font-weight:900;font-size:130px;display:flex;align-items:center;justify-content:center;opacity:0;direction:rtl}
+.ico{position:absolute;left:340px;top:540px;width:400px;height:300px;opacity:0}
+.stamp{position:absolute;left:0;width:1080px;text-align:center;font-weight:900;font-size:120px;color:#FF5A5F;opacity:0;direction:rtl;text-shadow:0 6px 30px rgba(0,0,0,.4)}
+.ok{position:absolute;left:0;width:1080px;text-align:center;font-weight:900;font-size:64px;color:#2ECC71;opacity:0;direction:rtl}
+.strike{position:absolute;height:12px;background:#FF5A5F;border-radius:6px;opacity:0;transform-origin:right center}
+#logo{position:absolute;left:280px;top:1180px;width:520px;opacity:0}
+</style><body><div id="bg"></div><div id="root"></div>
+<script>
+const D={"title": "٣ أشياء يظنها الناس عن فنادق مكة وهي غلط", "scenes": [{"id": 1, "type": "hook", "d": 3.8, "voice": "٣ أشياء يظنها الناس عن فنادق مكة، وكلها غلط."}, {"id": 2, "type": "myth", "d": 6.8, "icon": "door", "n": "١", "myth": "الأقرب على الخريطة = الأقرب مشياً", "truth": "أقرب باب لك مو نفس باب غيرك", "voice": "الأول: يقولون الفندق الأقرب على الخريطة هو الأقرب مشياً. غلط. أقرب باب لك مو نفس باب غيرك."}, {"id": 3, "type": "myth", "d": 6.8, "icon": "calendar", "n": "٢", "myth": "سعر الفندق ثابت", "truth": "يتغير حسب التاريخ وعدد الأشخاص ونوع الغرفة", "voice": "الثاني: سعر الفندق ثابت. غلط. يتغير حسب تاريخ وصولك، وعدد الأشخاص، ونوع الغرفة."}, {"id": 4, "type": "myth", "d": 7.2, "icon": "bed", "n": "٣", "myth": "أي فندق قريب يناسب العائلة", "truth": "اسأل عن الغرفة: ثنائية أو ثلاثية أو رباعية", "voice": "الثالث: أي فندق قريب يناسب العائلة. غلط. اسأل عن نوع الغرفة وعدد الأشخاص فيها: ثنائية، ثلاثية، أو رباعية."}, {"id": 5, "type": "ask", "d": 4.2, "voice": "أي وحدة كنت تظنها صح؟ اكتب رقمها في التعليقات."}, {"id": 6, "type": "cta", "d": 5.6, "voice": "أسس المسافر نختصر عليك البحث. أرسل لنا تاريخ وصولك وعدد الأشخاص، الرابط في البايو. واحفظ المنشور."}]};
+const S=D.scenes; let acc=0; S.forEach(s=>{s.t0=acc;acc+=s.d}); const TOTAL=acc; window.TOTAL=TOTAL;
+const cl=x=>Math.min(1,Math.max(0,x));
+const eo=t=>1-Math.pow(1-t,3), eio=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, ei=t=>t*t*t;
+const eb=t=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2)};
+const tw=(t,a,b,f,to,e=eio)=>f+(to-f)*e(cl((t-a)/(b-a)));
+const root=document.getElementById('root');
+const ICONS={
+ door:'<svg viewBox="0 0 400 300" width="400" height="300"><rect x="120" y="20" width="160" height="260" rx="70" ry="70" fill="none" stroke="#2884FF" stroke-width="14"/><rect x="140" y="60" width="120" height="220" rx="50" fill="#2884FF" opacity=".25"/><circle cx="245" cy="170" r="12" fill="#FFC233"/><path d="M40 280H360" stroke="#A9B1D6" stroke-width="10" stroke-linecap="round"/></svg>',
+ calendar:'<svg viewBox="0 0 400 300" width="400" height="300"><rect x="100" y="40" width="200" height="220" rx="24" fill="none" stroke="#2884FF" stroke-width="14"/><rect x="100" y="40" width="200" height="60" rx="24" fill="#2884FF"/><rect x="140" y="20" width="14" height="40" rx="7" fill="#FFC233"/><rect x="246" y="20" width="14" height="40" rx="7" fill="#FFC233"/><g fill="#A9B1D6"><circle cx="150" cy="150" r="14"/><circle cx="200" cy="150" r="14"/><circle cx="250" cy="150" r="14"/><circle cx="150" cy="205" r="14"/><circle cx="200" cy="205" r="14"/></g><circle cx="250" cy="205" r="14" fill="#FFC233"/></svg>',
+ bed:'<svg viewBox="0 0 400 300" width="400" height="300"><rect x="50" y="120" width="300" height="90" rx="18" fill="#2884FF" opacity=".35" stroke="#2884FF" stroke-width="12"/><rect x="70" y="80" width="110" height="50" rx="14" fill="#FFC233"/><rect x="50" y="210" width="16" height="50" rx="6" fill="#A9B1D6"/><rect x="334" y="210" width="16" height="50" rx="6" fill="#A9B1D6"/><rect x="50" y="60" width="16" height="150" rx="6" fill="#A9B1D6"/></svg>'
+};
+const els={};
+function mk(cls,html,style,id){const e=document.createElement('div');e.className=cls;e.innerHTML=html;if(style)e.style.cssText+=style;e.id=id;root.appendChild(e);return e}
+S.forEach(s=>{
+ const k='s'+s.id; els[k]={};
+ if(s.type==='hook'){
+  els[k].a=mk('w one','<span>٣ أشياء</span>','font-size:210px;color:#FFC233',k+'a');
+  els[k].b=mk('w one','<span>يظنها الناس عن فنادق مكة</span>','font-size:82px',k+'b');
+  els[k].c=mk('w one','<span>وكلها غلط</span>','font-size:150px;color:#FF5A5F',k+'c');
+ }
+ if(s.type==='myth'){
+  els[k].badge=mk('badge',s.n,'',k+'bd');
+  els[k].ico=mk('ico',ICONS[s.icon],'',k+'ic');
+  els[k].myth=mk('w','<span>'+s.myth+'</span>','font-size:72px',k+'m');
+  els[k].strike=mk('strike','','',k+'st');
+  els[k].stamp=mk('stamp','✕ غلط','',k+'sp');
+  els[k].lab=mk('ok','✓ الحقيقة','',k+'ok');
+  els[k].truth=mk('w','<span>'+s.truth+'</span>','font-size:62px;color:#FFC233',k+'t');
+ }
+ if(s.type==='ask'){
+  els[k].a=mk('w','<span>أي وحدة كنت تظنها صح؟</span>','font-size:92px',k+'a');
+  els[k].b=mk('w','<span>اكتب رقمها في التعليقات</span>','font-size:68px;color:#FFC233',k+'b');
+  els[k].n=mk('w one','<span>١ &nbsp; ٢ &nbsp; ٣</span>','font-size:150px;color:#2884FF',k+'n');
+ }
+ if(s.type==='cta'){
+  els[k].a=mk('w','<span>أسس المسافر</span>','font-size:130px;color:#FFC233',k+'a');
+  els[k].b=mk('w','<span>نختصر عليك البحث</span>','font-size:82px',k+'b');
+  els[k].c=mk('w one','<span>أرسل تاريخك وعدد الأشخاص</span>','font-size:64px;font-weight:700',k+'c');
+  els[k].d=mk('w one','<span>الرابط في البايو</span>','font-size:64px;font-weight:700;color:#FFC233',k+'d');
+  els[k].e=mk('w one','<span>احفظ المنشور</span>','font-size:100px;color:#FFC233',k+'e');
+  els[k].logo=document.createElement('img');els[k].logo.id='logo';els[k].logo.src='logo-horizontal-on-dark.png';root.appendChild(els[k].logo);
+ }
+});
+function put(e,o,top,x,y,s,r){e.style.opacity=o;if(top!=null)e.style.top=top+'px';e.style.transform='translateY(-50%) translate('+(x||0)+'px,'+(y||0)+'px) scale('+(s==null?1:s)+') rotate('+(r||0)+'deg)'}
+function putAbs(e,o,x,y,s,r){e.style.opacity=o;e.style.transform='translate('+(x||0)+'px,'+(y||0)+'px) scale('+(s==null?1:s)+') rotate('+(r||0)+'deg)'}
+Promise.all([document.fonts.load('900 100px C'),document.fonts.load('700 100px C')]).then(()=>{
+ document.querySelectorAll('.one').forEach(e=>{const w=e.firstChild.offsetWidth;if(w>900){e.style.fontSize=(parseFloat(e.style.fontSize)*900/w)+'px'}});
+});
+window.setT=function(T){
+ S.forEach(s=>{
+  const t=T-s.t0, k='s'+s.id, E=els[k], d=s.d;
+  const show=(t>=-0.01&&t<d)?1:0; const out=1-tw(t,d-0.35,d-0.05,0,1,ei);
+  if(s.type==='hook'){
+   put(E.a,tw(t,0.1,0.4,0,1,eo)*out*show,520,0,tw(t,0.1,0.7,-120,0,eb),1);
+   put(E.b,tw(t,0.7,1.1,0,1,eo)*out*show,700,0,tw(t,0.7,1.3,50,0,eo),1);
+   put(E.c,tw(t,2.0,2.3,0,1,eo)*out*show,960,0,0,Math.max(.001,tw(t,2.0,2.6,1.5,1,eb)),tw(t,2.0,2.6,-6,0,eb));
+  }
+  if(s.type==='myth'){
+   const A=show*out;
+   putAbs(E.badge,tw(t,0.1,0.35,0,1,eo)*A,0,tw(t,0.1,0.6,-100,0,eb),1);
+   putAbs(E.ico,tw(t,0.3,0.6,0,1,eo)*A,0,tw(t,0.3,0.9,50,0,eo),1);
+   const dim=tw(t,3.0,3.4,1,0.35);
+   put(E.myth,tw(t,0.8,1.2,0,1,eo)*A*dim,930,0,tw(t,0.8,1.3,40,0,eo),1);
+   // strike
+   const sk=E.myth.firstChild; if(t>=1.9){sk.style.textDecoration='line-through';sk.style.textDecorationColor='#FF5A5F';sk.style.textDecorationThickness='9px';}else{sk.style.textDecoration='none';}
+   E.strike.style.opacity=0;
+   E.stamp.style.top=(1070)+'px';putAbs(E.stamp,tw(t,2.3,2.5,0,1,eo)*A*(1-tw(t,3.0,3.4,0,1)),0,0,Math.max(.001,tw(t,2.3,2.8,1.6,1,eb)),-5);
+   E.lab.style.top=(1090)+'px';putAbs(E.lab,tw(t,3.2,3.5,0,1,eo)*A,0,tw(t,3.2,3.6,30,0,eo),1);
+   put(E.truth,tw(t,3.5,3.9,0,1,eo)*A,1270,0,tw(t,3.5,4.1,50,0,eo),1);
+  }
+  if(s.type==='ask'){
+   put(E.a,tw(t,0.1,0.5,0,1,eo)*out*show,620,0,tw(t,0.1,0.7,-60,0,eb),1);
+   put(E.b,tw(t,0.9,1.3,0,1,eo)*out*show,900,0,tw(t,0.9,1.5,40,0,eo),1);
+   put(E.n,tw(t,1.6,1.9,0,1,eo)*out*show,1180,0,0,Math.max(.001,tw(t,1.6,2.2,.4,1,eb)));
+  }
+  if(s.type==='cta'){
+   const f=1-tw(t,d-0.5,d-0.1,0,1,ei);
+   put(E.a,tw(t,0.1,0.4,0,1,eo)*f*show,560,0,tw(t,0.1,0.6,-60,0,eb),1);
+   put(E.b,tw(t,0.7,1.1,0,1,eo)*f*show,740,0,tw(t,0.7,1.2,40,0,eo),1);
+   put(E.c,tw(t,2.0,2.4,0,1,eo)*f*show,900,0,tw(t,2.0,2.5,30,0,eo),1);
+   put(E.d,tw(t,2.8,3.2,0,1,eo)*f*show,1000,0,tw(t,2.8,3.3,30,0,eo),1);
+   put(E.e,tw(t,3.4,3.7,0,1,eo)*f*show,1130,0,0,Math.max(.001,tw(t,3.4,4.0,.3,1,eb)));
+   E.logo.style.top='1300px';E.logo.style.opacity=tw(t,4.0,4.5,0,1,eo)*f*show;
+  }
+ });
+};
+setT(0);
+</script></body></html>
