@@ -10,7 +10,7 @@
 | دعم العملاء | `customer-support` | غير مفعّلة |
 | إنتاجية | `productivity` | غير مفعّلة |
 | إدارة المنتج | `product-management` | غير مفعّلة |
-| تصميم | `design` | غير مفعّلة |
+| تصميم | `design` | مفعّلة |
 | بحث مؤسسي | `enterprise-search` | غير مفعّلة |
 | أبحاث حيوية | `bio-research` | غير مفعّلة |
 

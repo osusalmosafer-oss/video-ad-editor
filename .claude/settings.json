@@ -10,6 +10,7 @@
   "enabledPlugins": {
     "marketing@knowledge-work-plugins": true,
     "sales@knowledge-work-plugins": true,
-    "finance@knowledge-work-plugins": true
+    "finance@knowledge-work-plugins": true,
+    "design@knowledge-work-plugins": true
   }
 }
