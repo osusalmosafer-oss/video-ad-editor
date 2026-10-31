@@ -104,7 +104,7 @@ MOTION.scene({
       ctx.text(Y, 'إضافات مجانية', 540, 1150 + 40 * (1 - a1), { family: 'display', size: 170, color: P.ink, alpha: a1, maxWidth: 780 });
       ctx.drawPath(Y, [[260, 1215], [540, 1228], [820, 1212]], ease(u, 1.2, 1.8, 'cubicInOut'), { width: 14, color: P.acc });
       ctx.text(Y, 'من Anthropic', 540, 1345 + 30 * (1 - a2), { family: 'display', size: 100, color: P.mut, alpha: a2, maxWidth: 780 });
-      ctx.text(Y, 'CLAUDE CODE', 540, 1450 + 24 * (1 - a3), { family: 'num', weight: 700, size: 40, color: P.acc, alpha: a3, dir: 'ltr', letterSpacing: 8, maxWidth: 780 });
+      ctx.text(Y, 'لكل فريق عمل عندك', 540, 1455 + 24 * (1 - a3), { family: 'body', weight: 700, size: 58, color: P.acc, alpha: a3, maxWidth: 780 });
     };
 
     /* ── مشهد إضافة ── */
