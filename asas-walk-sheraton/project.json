@@ -1,17 +1,51 @@
 {
  "name": "كم يبعد فعلاً؟ — شيراتون جبل الكعبة (حلقة 1، صامتة)",
- "fps": 60, "width": 1080, "height": 1920, "bpm": 96, "beatsPerBar": 4, "beatOffset": 0,
- "palette": { "bg": "#1F2449", "ink": "#FFFFFF", "acc": "#2884FF", "clay": "#1C6FE0", "hi": "#A9B1D6", "mut": "#A9B1D6", "onAcc": "#FFFFFF" },
- "fonts": { "display": "Cairo", "body": "Cairo", "num": "Cairo" },
- "images": { "logo": "assets/logo.png" },
- "post": { "grain": 0, "vignette": 0 },
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 96,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#1F2449",
+  "ink": "#FFFFFF",
+  "acc": "#2884FF",
+  "clay": "#1C6FE0",
+  "hi": "#A9B1D6",
+  "mut": "#A9B1D6",
+  "onAcc": "#FFFFFF"
+ },
+ "fonts": {
+  "display": "Cairo",
+  "body": "Cairo",
+  "num": "Cairo"
+ },
+ "images": {
+  "logo": "assets/logo.png"
+ },
+ "post": {
+  "grain": 0,
+  "vignette": 0
+ },
  "walk": {
   "hotel": "شيراتون جبل الكعبة",
   "walkMinutes": 10,
   "door": "باب [اسم الباب]",
-  "bus": { "available": true, "stop": null, "dropoff": null },
+  "bus": {
+   "available": true,
+   "stop": null,
+   "dropoff": null
+  },
   "cta": "whatsapp",
-  "sample": true
+  "sample": true,
+  "phone": "+966566403938",
+  "destination": "ساحات الحرم"
  },
- "scenes": [ { "id": "main", "file": "scenes/main.js", "minDur": 33.1 } ]
+ "scenes": [
+  {
+   "id": "main",
+   "file": "scenes/main.js",
+   "minDur": 33.1
+  }
+ ]
 }

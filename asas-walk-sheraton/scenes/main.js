@@ -25,7 +25,8 @@ MOTION.scene({
     const bg = Y => { Y.fillStyle = P.bg; Y.fillRect(0, 0, W, H); };
 
     /* توقيت: قائمة المشاهد */
-    const segs = [{ n: 'hook', d: 3.4 }, { n: 'walk', d: 10.5 }, { n: 'result', d: 5 }];
+    const clipD = Number(cfg.clipSeconds) || 0;      // وضع الفيديو الحقيقي: مدة لقطة المشي (ثواني)
+    const segs = clipD ? [{ n: 'clip', d: clipD }, { n: 'result', d: 5 }] : [{ n: 'hook', d: 3.4 }, { n: 'walk', d: 10.5 }, { n: 'result', d: 5 }];
     if (hasBus) segs.push({ n: 'bus', d: 5 });
     segs.push({ n: 'ask', d: 4.2 }, { n: 'outro', d: 5 });
     let acc0 = 0; segs.forEach(s => { s.s = acc0; acc0 += s.d; });
@@ -64,14 +65,30 @@ MOTION.scene({
       ctx.drawPath(Y, PATH, k, { width: 14, color: P.acc, tip: { r: 20, color: P.ink } });
     };
 
+    /* ── وضع الفيديو الحقيقي: طبقة العدّاد فوق لقطة المشي (تُرسم على أسود وتُركَّب بـ ffmpeg) ── */
+    const clipScene = (Y, u) => {
+      Y.fillStyle = '#000'; Y.fillRect(0, 0, W, H);
+      ctx.text(Y, 'من ' + hotel, 540, 230, { family: 'body', weight: 700, size: 46, color: P.ink, alpha: ease(u, 0, 0.5), maxWidth: 820 });
+      timer(Y, u, 420, 190, P.ink);
+      ctx.text(Y, 'إلى ' + (cfg.destination || 'ساحات الحرم'), 540, 520, { family: 'body', weight: 700, size: 46, color: P.ink, alpha: ease(u, 0, 0.5), maxWidth: 820 });
+    };
+
     /* ── النتيجة ── */
     const result = (Y, u) => {
       bg(Y); sampleTag(Y);
       const a1 = ease(u, 0.1, 0.8), a2 = ease(u, 0.7, 1.3), a3 = ease(u, 1.2, 1.8);
+      if (clipD) {
+        const ws = Number(cfg.walkSeconds) || clipD;
+        timer(Y, ws, 760 + 40 * (1 - a1), 330, P.acc);
+        ctx.text(Y, 'مدة المشي الفعلية', 540, 960 + 30 * (1 - a2), { family: 'display', weight: 900, size: 100, color: P.ink, alpha: a2, maxWidth: 800 });
+        ctx.text(Y, 'من ' + hotel, 540, 1090 + 24 * (1 - a3), { family: 'body', weight: 700, size: 54, color: P.mut, alpha: a3, maxWidth: 800 });
+        ctx.text(Y, 'إلى ' + (cfg.destination || 'ساحات الحرم'), 540, 1170 + 24 * (1 - a3), { family: 'body', weight: 700, size: 54, color: P.ink, alpha: a3, maxWidth: 800 });
+      } else {
       ctx.text(Y, String(mins), 540, 780 + 40 * (1 - a1), { family: 'num', weight: 900, size: 460, color: P.acc, alpha: a1, dir: 'ltr' });
       ctx.text(Y, 'دقيقة مشي', 540, 960 + 30 * (1 - a2), { family: 'display', weight: 900, size: 130, color: P.ink, alpha: a2, maxWidth: 800 });
       ctx.text(Y, 'من ' + hotel, 540, 1090 + 24 * (1 - a3), { family: 'body', weight: 700, size: 54, color: P.mut, alpha: a3, maxWidth: 800 });
       ctx.text(Y, 'إلى ' + door, 540, 1170 + 24 * (1 - a3), { family: 'body', weight: 700, size: 54, color: P.ink, alpha: a3, maxWidth: 800 });
+      }
     };
 
     /* ── الباص ── */
@@ -101,18 +118,26 @@ MOTION.scene({
       const k = ease(u, 0.2, 1.0, 'cubicOut');
       if (ctx.img('logo')) { const im = ctx.img('logo'), w = 520, h = w * im.height / im.width; Y.save(); Y.globalAlpha = k; Y.drawImage(im, 540 - w / 2, 330 + 30 * (1 - k), w, h); Y.restore(); }
       const a1 = ease(u, 1.1, 1.7), a2 = ease(u, 1.7, 2.3);
-      const cta = cfg.cta === 'inbox' ? 'للحجز المؤكد: راسلنا على الخاص' : 'للحجز المؤكد: واتساب';
-      ctx.text(Y, cta, 540, 1260 + 30 * (1 - a1), { family: 'display', weight: 900, size: 62, color: P.ink, alpha: a1, maxWidth: 800 });
-      ctx.drawPath(Y, [[330, 1310], [540, 1318], [750, 1308]], ease(u, 1.5, 2.1, 'cubicInOut'), { width: 10, color: P.acc });
-      ctx.text(Y, '@osusalmosafer', 540, 1410 + 20 * (1 - a2), { family: 'body', weight: 700, size: 50, color: P.acc, alpha: a2, dir: 'ltr', maxWidth: 800 });
+      if (cfg.cta === 'inbox') {
+        ctx.text(Y, 'للحجز المؤكد: راسلنا على الخاص', 540, 1260 + 30 * (1 - a1), { family: 'display', weight: 900, size: 58, color: P.ink, alpha: a1, maxWidth: 800 });
+        ctx.drawPath(Y, [[330, 1310], [540, 1318], [750, 1308]], ease(u, 1.5, 2.1, 'cubicInOut'), { width: 10, color: P.acc });
+        ctx.text(Y, '@osusalmosafer', 540, 1410 + 20 * (1 - a2), { family: 'body', weight: 700, size: 50, color: P.acc, alpha: a2, dir: 'ltr', maxWidth: 800 });
+      } else {
+        const a3 = ease(u, 2.3, 2.9);
+        ctx.text(Y, 'الرابط في البايو', 540, 1215 + 30 * (1 - a1), { family: 'display', weight: 900, size: 76, color: P.ink, alpha: a1, maxWidth: 800 });
+        ctx.drawPath(Y, [[330, 1262], [540, 1270], [750, 1260]], ease(u, 1.5, 2.1, 'cubicInOut'), { width: 10, color: P.acc });
+        ctx.text(Y, 'أو للحجز المؤكد واتساب', 540, 1345 + 24 * (1 - a2), { family: 'body', weight: 700, size: 46, color: P.mut, alpha: a2, maxWidth: 800 });
+        ctx.text(Y, cfg.phone || '+966566403938', 540, 1430 + 20 * (1 - a3), { family: 'num', weight: 800, size: 60, color: P.acc, alpha: a3, dir: 'ltr', maxWidth: 800 });
+      }
     };
 
-    const fn = { hook, walk, result, bus: busScene, ask, outro };
-    const clock = i => segs[i].s - (i > 0 ? T_TR : 0);
+    const fn = { hook, walk, result, bus: busScene, ask, outro, clip: clipScene };
+    const trFor = i => (i > 0 && segs[i - 1].n === 'clip') ? 0 : T_TR;
+    const clock = i => segs[i].s - (i > 0 ? trFor(i) : 0);
     const drawSeg = (Y, i) => fn[segs[i].n](Y, t - clock(i));
     let idx = 0; segs.forEach((s, i) => { if (t >= s.s) idx = i; });
-    const nx = idx + 1, tr0 = nx < segs.length ? segs[nx].s - T_TR : Infinity;
-    if (t >= tr0) FX.softWipe(ctx, t, { s: tr0, dur: T_TR, band: 240, A: Y => drawSeg(Y, idx), B: Y => drawSeg(Y, nx) });
+    const nx = idx + 1, tr0 = nx < segs.length ? segs[nx].s - trFor(nx) : Infinity;
+    if (t >= tr0 && trFor(nx) > 0) FX.softWipe(ctx, t, { s: tr0, dur: T_TR, band: 240, A: Y => drawSeg(Y, idx), B: Y => drawSeg(Y, nx) });
     else drawSeg(X, idx);
     ctx.__end = T_END;
   },
