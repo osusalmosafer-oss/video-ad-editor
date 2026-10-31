@@ -3,3 +3,5 @@ node_modules/
 *.mp4
 .DS_Store
 __pycache__/
+anthropic-plugins-video/renders/frames/
+anthropic-plugins-video/renders/preview/

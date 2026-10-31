@@ -1,0 +1,13 @@
+{
+ "name": "11 إضافات مجانية من أنثروبيك — فيديو موشن صامت (الصوت يضيفه صاحب الفيديو)",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 120,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": { "bg": "#12161C", "ink": "#F5F1E8", "acc": "#F2B33D", "clay": "#C98B18", "hi": "#F7D58A", "mut": "#8B93A1", "onAcc": "#12161C" },
+ "fonts": { "display": "Lalezar", "body": "IBM Plex Sans Arabic", "num": "Inter" },
+ "post": { "grain": 0.03, "vignette": 0.18 },
+ "scenes": [ { "id": "main", "file": "scenes/main.js", "minDur": 43 } ]
+}
