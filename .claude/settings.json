@@ -8,6 +8,8 @@
     }
   },
   "enabledPlugins": {
-    "marketing@knowledge-work-plugins": true
+    "marketing@knowledge-work-plugins": true,
+    "sales@knowledge-work-plugins": true,
+    "finance@knowledge-work-plugins": true
   }
 }
