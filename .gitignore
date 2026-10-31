@@ -5,3 +5,5 @@ node_modules/
 __pycache__/
 anthropic-plugins-video/renders/frames/
 anthropic-plugins-video/renders/preview/
+asas-video/renders/frames/
+asas-video/renders/preview/
