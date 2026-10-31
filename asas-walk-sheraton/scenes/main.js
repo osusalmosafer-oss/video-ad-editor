@@ -68,9 +68,16 @@ MOTION.scene({
     /* ── وضع الفيديو الحقيقي: طبقة العدّاد فوق لقطة المشي (تُرسم على أسود وتُركَّب بـ ffmpeg) ── */
     const clipScene = (Y, u) => {
       Y.fillStyle = '#000'; Y.fillRect(0, 0, W, H);
-      ctx.text(Y, 'من ' + hotel, 540, 230, { family: 'body', weight: 700, size: 46, color: P.ink, alpha: ease(u, 0, 0.5), maxWidth: 820 });
-      timer(Y, u, 420, 190, P.ink);
-      ctx.text(Y, 'إلى ' + (cfg.destination || 'ساحات الحرم'), 540, 520, { family: 'body', weight: 700, size: 46, color: P.ink, alpha: ease(u, 0, 0.5), maxWidth: 820 });
+      // الزمن الحقيقي من قراءات ساعة اليد داخل اللقطة (clipMap = [[ثانية اللقطة، ثواني المشي الحقيقية]، …]) بالاستيفاء الخطي
+      const M = cfg.clipMap || [[0, 0], [clipD, clipD]];
+      let real = M[M.length - 1][1];
+      for (let i = 0; i < M.length - 1; i++) if (u <= M[i + 1][0]) { const [t0, r0] = M[i], [t1, r1] = M[i + 1]; real = t1 === t0 ? r1 : r0 + (r1 - r0) * Math.min(1, Math.max(0, (u - t0) / (t1 - t0))); break; }
+      ctx.text(Y, 'من ' + hotel, 540, 430, { family: 'body', weight: 700, size: 44, color: P.ink, alpha: ease(u, 0, 0.5), maxWidth: 820 });
+      timer(Y, real, 590, 170, P.ink);
+      ctx.text(Y, 'إلى ' + (cfg.destination || 'ساحات الحرم'), 540, 680, { family: 'body', weight: 700, size: 44, color: P.ink, alpha: ease(u, 0, 0.5), maxWidth: 820 });
+      const hk = ease(u, 0.15, 0.7) * (1 - ease(u, 3.0, 3.5, 'cubicIn'));
+      if (hk > 0) ctx.text(Y, 'كم يبعد فعلاً؟', 540, 900 + 30 * (1 - hk), { family: 'display', weight: 900, size: 124, color: P.ink, alpha: hk, maxWidth: 820 });
+      ctx.text(Y, 'اللقطة مُسرَّعة، والعدّاد يتبع ساعة اليد', 540, 1612, { family: 'body', weight: 700, size: 36, color: P.mut, alpha: 0.95, maxWidth: 860 });
     };
 
     /* ── النتيجة ── */
