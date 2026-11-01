@@ -43,6 +43,7 @@ function setState(i,p,tot){
   w.forEach((x,k)=>{const s=acc/sum;acc+=wt[k];const e=acc/sum;
     h+=`<span class="${p>=e?'done':p>=s?'on':''}">${x}</span> `});
   document.getElementById('t').innerHTML=h;
+  const L=S.verses[i].length;document.getElementById('v').style.fontSize=(L<70?84:L<130?76:L<170?68:62)+'px';
   document.getElementById('n').textContent=AR(i+1);
   document.getElementById('b').style.width=(tot*100)+'%';
 }
