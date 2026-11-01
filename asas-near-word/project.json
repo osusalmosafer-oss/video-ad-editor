@@ -1,0 +1,11 @@
+{
+ "name": "كلمة «قريب من الحرم» لا تكفي — أسس المسافر",
+ "fps": 60, "width": 1080, "height": 1920, "bpm": 96, "beatsPerBar": 4, "beatOffset": 0,
+ "palette": { "bg": "#1F2449", "ink": "#FFFFFF", "acc": "#2884FF", "clay": "#1C6FE0", "hi": "#A9B1D6", "mut": "#A9B1D6", "onAcc": "#FFFFFF" },
+ "fonts": { "display": "Cairo", "body": "Cairo", "num": "Cairo" },
+ "images": { "logo": "assets/logo.png" },
+ "post": { "grain": 0, "vignette": 0 },
+ "duration": 28,
+ "p": { "phone": "+966566403938" },
+ "scenes": [ { "id": "main", "file": "scenes/main.js", "minDur": 28 } ]
+}
