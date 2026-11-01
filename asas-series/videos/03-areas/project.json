@@ -1,0 +1,81 @@
+{
+ "name": "فرق المناطق: جبل عمر وأجياد والعزيزية — أسس المسافر",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 96,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#1F2449",
+  "ink": "#FFFFFF",
+  "acc": "#2884FF",
+  "clay": "#1C6FE0",
+  "hi": "#A9B1D6",
+  "mut": "#A9B1D6",
+  "onAcc": "#FFFFFF"
+ },
+ "fonts": {
+  "display": "Cairo",
+  "body": "Cairo",
+  "num": "Cairo"
+ },
+ "images": {
+  "logo": "assets/logo.png"
+ },
+ "post": {
+  "grain": 0,
+  "vignette": 0
+ },
+ "duration": 20.4,
+ "spec": {
+  "phone": "+966566403938",
+  "scenes": [
+   {
+    "type": "hook",
+    "icon": "hotel",
+    "l1": "جبل عمر وأجياد",
+    "l2": "والعزيزية؟",
+    "d": 3.6
+   },
+   {
+    "type": "tiers",
+    "title": "فرق المناطق",
+    "items": [
+     {
+      "t": "جبل عمر وأجياد",
+      "d": "الأقرب عادةً للحرم",
+      "icon": "hotel"
+     },
+     {
+      "t": "العزيزية وإبراهيم الخليل",
+      "d": "أبعد، غالبًا بباص أو سيارة",
+      "icon": "bus"
+     },
+     {
+      "t": "ولكل فندق حسابه",
+      "d": "اسأل عن مشي وباص فندقك",
+      "icon": "question"
+     }
+    ],
+    "note": "معلومات عامة وتختلف حسب الفندق",
+    "d": 7.4
+   },
+   {
+    "type": "icon",
+    "icon": "walk",
+    "l1": "الأقرب",
+    "l2": "مو دائمًا الأنسب",
+    "sub": "حسب ميزانيتك وظروفك",
+    "d": 4.4
+   }
+  ]
+ },
+ "scenes": [
+  {
+   "id": "main",
+   "file": "scenes/main.js",
+   "minDur": 20.4
+  }
+ ]
+}

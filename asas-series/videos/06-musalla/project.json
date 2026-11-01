@@ -1,0 +1,72 @@
+{
+ "name": "سؤال من الحرم: مصلى برج الساعة — أسس المسافر",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 96,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#1F2449",
+  "ink": "#FFFFFF",
+  "acc": "#2884FF",
+  "clay": "#1C6FE0",
+  "hi": "#A9B1D6",
+  "mut": "#A9B1D6",
+  "onAcc": "#FFFFFF"
+ },
+ "fonts": {
+  "display": "Cairo",
+  "body": "Cairo",
+  "num": "Cairo"
+ },
+ "images": {
+  "logo": "assets/logo.png"
+ },
+ "post": {
+  "grain": 0,
+  "vignette": 0
+ },
+ "duration": 20.3,
+ "spec": {
+  "phone": "+966566403938",
+  "scenes": [
+   {
+    "type": "hook",
+    "icon": "question",
+    "l1": "مصلى برج الساعة",
+    "l2": "للنزلاء ولا للجميع؟",
+    "d": 3.6
+   },
+   {
+    "type": "qa",
+    "tag": "سؤال من تعليقاتكم",
+    "q": [
+     "هل هو مخصص لنزلاء",
+     "الفندق أم للجميع؟"
+    ],
+    "a": [
+     "يعتمد على إدارة",
+     "الفندق ووقت الزيارة"
+    ],
+    "after": "فالأفضل تتأكد قبل ما تروح",
+    "d": 7.5
+   },
+   {
+    "type": "icon",
+    "icon": "clock",
+    "l1": "تأكد",
+    "l2": "قبل ما تروح",
+    "sub": "عشان ما تضيع وقتك",
+    "d": 4.2
+   }
+  ]
+ },
+ "scenes": [
+  {
+   "id": "main",
+   "file": "scenes/main.js",
+   "minDur": 20.3
+  }
+ ]
+}

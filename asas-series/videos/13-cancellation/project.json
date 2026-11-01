@@ -1,0 +1,69 @@
+{
+ "name": "اسأل عن الإلغاء قبل ما تدفع — أسس المسافر",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 96,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#1F2449",
+  "ink": "#FFFFFF",
+  "acc": "#2884FF",
+  "clay": "#1C6FE0",
+  "hi": "#A9B1D6",
+  "mut": "#A9B1D6",
+  "onAcc": "#FFFFFF"
+ },
+ "fonts": {
+  "display": "Cairo",
+  "body": "Cairo",
+  "num": "Cairo"
+ },
+ "images": {
+  "logo": "assets/logo.png"
+ },
+ "post": {
+  "grain": 0,
+  "vignette": 0
+ },
+ "duration": 19.4,
+ "spec": {
+  "phone": "+966566403938",
+  "scenes": [
+   {
+    "type": "hook",
+    "icon": "doc",
+    "l1": "قبل ما تدفع",
+    "l2": "اسأل عن الإلغاء",
+    "d": 3.6
+   },
+   {
+    "type": "list",
+    "title": "اسأل:",
+    "items": [
+     "هل الإلغاء مجاني؟",
+     "هل أقدر أغيّر التاريخ؟",
+     "كيف يتم الاسترداد؟"
+    ],
+    "mark": "ask",
+    "d": 6.4
+   },
+   {
+    "type": "icon",
+    "icon": "doc",
+    "l1": "اطلب الجواب",
+    "l2": "مكتوبًا",
+    "sub": "حتى تكون الشروط واضحة",
+    "d": 4.4
+   }
+  ]
+ },
+ "scenes": [
+  {
+   "id": "main",
+   "file": "scenes/main.js",
+   "minDur": 19.4
+  }
+ ]
+}

@@ -1,0 +1,93 @@
+{
+ "name": "مشي أو باص؟ اختر حسب ظروفك — أسس المسافر",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 96,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#1F2449",
+  "ink": "#FFFFFF",
+  "acc": "#2884FF",
+  "clay": "#1C6FE0",
+  "hi": "#A9B1D6",
+  "mut": "#A9B1D6",
+  "onAcc": "#FFFFFF"
+ },
+ "fonts": {
+  "display": "Cairo",
+  "body": "Cairo",
+  "num": "Cairo"
+ },
+ "images": {
+  "logo": "assets/logo.png"
+ },
+ "post": {
+  "grain": 0,
+  "vignette": 0
+ },
+ "duration": 26.0,
+ "spec": {
+  "phone": "+966566403938",
+  "scenes": [
+   {
+    "type": "hook",
+    "icon": "walk",
+    "l1": "مشي أو باص؟",
+    "l2": "اختر حسب ظروفك",
+    "d": 3.8
+   },
+   {
+    "type": "compare2",
+    "title": "لكل خيار مميزاته",
+    "cols": [
+     {
+      "icon": "walk",
+      "t": "مشي",
+      "b": [
+       "بدون انتظار",
+       "يناسب القادرين"
+      ]
+     },
+     {
+      "icon": "bus",
+      "t": "باص",
+      "b": [
+       "أريح للأبعد",
+       "اسأل عن موقفه"
+      ]
+     }
+    ],
+    "d": 7
+   },
+   {
+    "type": "list",
+    "title": "فكّر في",
+    "items": [
+     "كبار السن",
+     "الأطفال",
+     "وقت الذروة",
+     "الميزانية"
+    ],
+    "mark": "check",
+    "d": 6
+   },
+   {
+    "type": "icon",
+    "icon": "chat",
+    "l1": "اسألنا",
+    "l2": "نرشّح لك الأنسب",
+    "sub": "حسب ظروف رحلتك",
+    "d": 4.2
+   }
+  ]
+ },
+ "scenes": [
+  {
+   "id": "main",
+   "file": "scenes/main.js",
+   "minDur": 26.0
+  }
+ ]
+}

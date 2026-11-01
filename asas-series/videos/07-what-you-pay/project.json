@@ -1,0 +1,80 @@
+{
+ "name": "شنو تدفع فعلاً؟ مجاني أو بمقابل — أسس المسافر",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 96,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#1F2449",
+  "ink": "#FFFFFF",
+  "acc": "#2884FF",
+  "clay": "#1C6FE0",
+  "hi": "#A9B1D6",
+  "mut": "#A9B1D6",
+  "onAcc": "#FFFFFF"
+ },
+ "fonts": {
+  "display": "Cairo",
+  "body": "Cairo",
+  "num": "Cairo"
+ },
+ "images": {
+  "logo": "assets/logo.png"
+ },
+ "post": {
+  "grain": 0,
+  "vignette": 0
+ },
+ "duration": 21.0,
+ "spec": {
+  "phone": "+966566403938",
+  "scenes": [
+   {
+    "type": "hook",
+    "icon": "tag",
+    "l1": "شنو تدفع فعلاً",
+    "l2": "في الحرم وبرج الساعة؟",
+    "d": 3.8
+   },
+   {
+    "type": "rows",
+    "title": "مجاني أو بمقابل؟",
+    "items": [
+     {
+      "t": "حفظ الأمتعة في المسجد الحرام",
+      "c": "مجاني",
+      "tone": "free"
+     },
+     {
+      "t": "الجلوس في مقهى لحظة",
+      "c": "مجاني مع الطلب",
+      "tone": "cond"
+     },
+     {
+      "t": "منطقة الكبسولات",
+      "c": "بمقابل",
+      "tone": "paid"
+     }
+    ],
+    "note": "أسعار الطلبات في المقهى مرتفعة",
+    "d": 8
+   },
+   {
+    "type": "icon",
+    "icon": "tag",
+    "l1": "اعرف قبل ما تدخل",
+    "l2": "عشان ما تتفاجأ",
+    "d": 4.2
+   }
+  ]
+ },
+ "scenes": [
+  {
+   "id": "main",
+   "file": "scenes/main.js",
+   "minDur": 21.0
+  }
+ ]
+}

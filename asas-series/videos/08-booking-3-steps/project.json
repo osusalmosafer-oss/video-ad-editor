@@ -1,0 +1,69 @@
+{
+ "name": "كيف تحجز معنا في 3 خطوات؟ — أسس المسافر",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 96,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#1F2449",
+  "ink": "#FFFFFF",
+  "acc": "#2884FF",
+  "clay": "#1C6FE0",
+  "hi": "#A9B1D6",
+  "mut": "#A9B1D6",
+  "onAcc": "#FFFFFF"
+ },
+ "fonts": {
+  "display": "Cairo",
+  "body": "Cairo",
+  "num": "Cairo"
+ },
+ "images": {
+  "logo": "assets/logo.png"
+ },
+ "post": {
+  "grain": 0,
+  "vignette": 0
+ },
+ "duration": 17.6,
+ "spec": {
+  "phone": "+966566403938",
+  "scenes": [
+   {
+    "type": "hook",
+    "icon": "chat",
+    "l1": "احجز معنا",
+    "l2": "في 3 خطوات",
+    "d": 3.6
+   },
+   {
+    "type": "steps",
+    "title": "كيف تحجز؟",
+    "items": [
+     {
+      "t": "راسلنا",
+      "d": "من الرابط في البايو أو واتساب"
+     },
+     {
+      "t": "جاوب على أسئلة بسيطة",
+      "d": "التاريخ والأشخاص والليالي والقرب"
+     },
+     {
+      "t": "نرسل لك العروض",
+      "d": "المناسبة لطلبك"
+     }
+    ],
+    "d": 9
+   }
+  ]
+ },
+ "scenes": [
+  {
+   "id": "main",
+   "file": "scenes/main.js",
+   "minDur": 17.6
+  }
+ ]
+}
