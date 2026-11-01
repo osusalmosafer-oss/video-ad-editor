@@ -21,9 +21,9 @@ const ICONS = {
     ['M90 -30 C90 -75 150 -75 150 -30 C150 5 120 25 120 45 C120 25 90 5 90 -30', 'a', 2]],
 };
 const QS = [
-  { icon: 'walk', l1: 'كم دقيقة مشي', l2: 'وإلى أي اتجاه من الحرم؟', hint: 'واسأل: إلى أي باب؟', short: 'المشي والاتجاه' },
+  { icon: 'walk', l1: 'كم دقيقة مشي', l2: 'أو إلى أي باب؟', hint: null, short: 'المشي والاتجاه' },
   { icon: 'bus', l1: 'هل في باص؟', l2: 'ووين ينزل؟', hint: 'واسأل عن موقف الباص ومحطة النزول', short: 'الباص والنزول' },
-  { icon: 'breakfast', l1: 'هل الغرفة', l2: 'شامل الإفطار؟', hint: 'واسأل عن نوع الوجبة', short: 'الإفطار' },
+  { icon: 'breakfast', l1: 'هل الغرفة', l2: 'شامل الإفطار؟', hint: null, short: 'الإفطار' },
   { icon: 'kids', l1: 'هل إقامة الأطفال', l2: 'مجانية؟', hint: 'واسأل عن عمر الطفل المسموح', short: 'إقامة الأطفال' },
 ];
 
@@ -62,7 +62,7 @@ MOTION.scene({
       const k1 = ease(u, 0.6, 1.2), k2 = ease(u, 0.85, 1.45), k3 = ease(u, 1.3, 1.9);
       ctx.text(Y, q.l1, 540, 1140 + 36 * (1 - k1), { family: 'display', weight: 900, size: 84, color: P.ink, alpha: k1, maxWidth: 780 });
       ctx.text(Y, q.l2, 540, 1255 + 36 * (1 - k2), { family: 'display', weight: 900, size: 84, color: P.acc, alpha: k2, maxWidth: 780 });
-      ctx.text(Y, q.hint, 540, 1380 + 24 * (1 - k3), { family: 'body', weight: 700, size: 44, color: P.mut, alpha: k3, maxWidth: 780 });
+      if (q.hint) ctx.text(Y, q.hint, 540, 1380 + 24 * (1 - k3), { family: 'body', weight: 700, size: 44, color: P.mut, alpha: k3, maxWidth: 780 });
     };
 
     /* تلخيص: قائمة بصح */
@@ -84,16 +84,9 @@ MOTION.scene({
       const k = ease(u, 0.2, 1.0, 'cubicOut');
       if (ctx.img('logo')) { const im = ctx.img('logo'), w = 520, h = w * im.height / im.width; Y.save(); Y.globalAlpha = k; Y.drawImage(im, 540 - w / 2, 300 + 30 * (1 - k), w, h); Y.restore(); }
       const a1 = ease(u, 1.1, 1.7), a2 = ease(u, 1.7, 2.3), a3 = ease(u, 2.3, 2.9);
-      if (cfg.cta === 'inbox') {
-        ctx.text(Y, 'للحجز المؤكد: راسلنا على الخاص', 540, 1260 + 30 * (1 - a1), { family: 'display', weight: 900, size: 58, color: P.ink, alpha: a1, maxWidth: 800 });
-        ctx.drawPath(Y, [[330, 1310], [540, 1318], [750, 1308]], ease(u, 1.5, 2.1, 'cubicInOut'), { width: 10, color: P.acc });
-        ctx.text(Y, '@osusalmosafer', 540, 1410 + 20 * (1 - a2), { family: 'body', weight: 700, size: 50, color: P.acc, alpha: a2, dir: 'ltr', maxWidth: 800 });
-      } else {
-        ctx.text(Y, 'الرابط في البايو', 540, 1215 + 30 * (1 - a1), { family: 'display', weight: 900, size: 76, color: P.ink, alpha: a1, maxWidth: 800 });
-        ctx.drawPath(Y, [[330, 1262], [540, 1270], [750, 1260]], ease(u, 1.5, 2.1, 'cubicInOut'), { width: 10, color: P.acc });
-        ctx.text(Y, 'أو للحجز المؤكد واتساب', 540, 1345 + 24 * (1 - a2), { family: 'body', weight: 700, size: 46, color: P.mut, alpha: a2, maxWidth: 800 });
-        ctx.text(Y, cfg.phone || '+966566403938', 540, 1430 + 20 * (1 - a3), { family: 'num', weight: 800, size: 60, color: P.acc, alpha: a3, dir: 'ltr', maxWidth: 800 });
-      }
+      ctx.text(Y, 'الرابط في البايو', 540, 1230 + 30 * (1 - a1), { family: 'display', weight: 900, size: 80, color: P.ink, alpha: a1, maxWidth: 800 });
+      ctx.drawPath(Y, [[330, 1280], [540, 1288], [750, 1278]], ease(u, 1.5, 2.1, 'cubicInOut'), { width: 10, color: P.acc });
+      ctx.text(Y, cfg.phone || '+966566403938', 540, 1400 + 20 * (1 - a2), { family: 'num', weight: 800, size: 68, color: P.acc, alpha: a2, dir: 'ltr', maxWidth: 800 });
     };
 
     const T_TR = 0.8, N = 7;
