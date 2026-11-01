@@ -4,10 +4,9 @@
 @font-face{font-family:T;src:url(fonts/amiri-arabic-700-normal.woff2);font-weight:700}
 :root{--bg1:#05261f;--bg2:#0b4a3b;--gold:#d9b45a;--gold2:#f3dc9a;--ink:#f6f1e1}
 *{margin:0;box-sizing:border-box}
-body{width:1080px;height:1920px;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,var(--bg2),var(--bg1) 72%);font-family:T;color:var(--ink);position:relative}
-.pat{position:absolute;inset:0;opacity:.09;background:
- repeating-linear-gradient(45deg,var(--gold) 0 1px,transparent 1px 60px),
- repeating-linear-gradient(-45deg,var(--gold) 0 1px,transparent 1px 60px)}
+body{width:1080px;height:1920px;overflow:hidden;background:var(--bg1);font-family:T;color:var(--ink);position:relative}
+#bg{position:absolute;inset:0}
+.scrim{position:absolute;inset:0;background:radial-gradient(ellipse 90% 30% at 50% 40%,rgba(2,22,18,.78),rgba(2,22,18,0) 100%),linear-gradient(rgba(2,22,18,.45),rgba(2,22,18,0) 30%)}
 .frame{position:absolute;left:60px;right:60px;top:170px;bottom:300px;border:3px solid var(--gold);border-radius:36px}
 .frame:after{content:"";position:absolute;inset:14px;border:1px solid var(--gold);border-radius:26px;opacity:.6}
 .title{position:absolute;top:215px;width:100%;text-align:center}
@@ -15,8 +14,8 @@ body{width:1080px;height:1920px;overflow:hidden;background:radial-gradient(ellip
 .title i{display:block;font-style:normal;font-size:46px;color:var(--gold);margin-top:6px}
 .rule{position:absolute;top:470px;left:50%;width:420px;margin-left:-210px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
 #v{position:absolute;left:130px;right:130px;top:540px;height:640px;display:flex;align-items:center;justify-content:center;text-align:center;font-family:Q;font-size:84px;line-height:1.95;word-spacing:6px}
-#v span{opacity:.38;transition:none}
-#v span.on{opacity:1;color:var(--gold2)}
+#v span{opacity:.62;text-shadow:0 2px 16px #000,0 0 6px #000}
+#v span.on{opacity:1;color:var(--gold2);text-shadow:0 0 0 #000,0 2px 14px #000}
 #v span.done{opacity:1}
 .num{position:absolute;top:1190px;left:50%;width:120px;height:120px;margin-left:-60px;border:3px solid var(--gold);transform:rotate(45deg);display:flex;align-items:center;justify-content:center}
 .num em{transform:rotate(-45deg);font-style:normal;font-size:54px;color:var(--gold2)}
@@ -25,27 +24,72 @@ body{width:1080px;height:1920px;overflow:hidden;background:radial-gradient(ellip
 .bar{position:absolute;left:150px;right:150px;bottom:340px;height:6px;background:#ffffff22;border-radius:3px;direction:ltr}
 .bar div{height:100%;width:0;background:var(--gold);border-radius:3px}
 </style>
-<div class="pat"></div><div class="frame"></div>
+<canvas id="bg" width="1080" height="1920"></canvas><div class="scrim"></div><div class="frame"></div>
 <div class="title"><b>سورة البيّنة</b><i>مدنية — عدد آياتها ٨</i></div><div class="rule"></div>
 <div id="v"><p id="t"></p></div>
 <div class="num"><em id="n"></em></div>
 <div class="rec"><small>بصوت القارئ</small>محمد اللحيدان</div>
 <div class="bar"><div id="b"></div></div>
 <script>
-let S;
+let S,V;
 const AR=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
-async function init(){S=await (await fetch('surah98.json')).json();await document.fonts.ready;window.ready=true}
-// ayah index, progress 0..1 inside ayah, total progress 0..1
-function setState(i,p,tot){
-  const w=S.verses[i].split(' ');
-  const wt=w.map(x=>x.replace(/[ً-ٰٟۖ-ۭ]/g,'').length+1);
-  const sum=wt.reduce((a,b)=>a+b,0);let acc=0,h='';
-  w.forEach((x,k)=>{const s=acc/sum;acc+=wt[k];const e=acc/sum;
-    h+=`<span class="${p>=e?'done':p>=s?'on':''}">${x}</span> `});
-  document.getElementById('t').innerHTML=h;
-  const L=S.verses[i].length;document.getElementById('v').style.fontSize=(L<70?84:L<130?76:L<170?68:62)+'px';
-  document.getElementById('n').textContent=AR(i+1);
+async function init(){S=await (await fetch('surah98.json')).json();const b=await (await fetch('basmala.json')).json();
+  V=[b.text,...S.verses];await document.fonts.ready;window.ready=true}
+// i: 0=البسملة، 1..8 الآيات · w: رقم الكلمة الجارية (-1 قبل أول كلمة، 99 بعد آخر كلمة)
+let last=-1;
+function setState(i,w,tot,t){
+  if(i!==last){last=i;const L=V[i].length;
+    document.getElementById('v').style.fontSize=(i===0?84:L<70?84:L<130?76:L<170?68:62)+'px';
+    document.getElementById('t').innerHTML=V[i].split(' ').map(x=>`<span>${x}</span>`).join(' ');
+    document.getElementById('n').textContent=i===0?'۞':AR(i)}
+  document.querySelectorAll('#t span').forEach((el,k)=>{el.className=k===w?'on':k<w?'done':''});
   document.getElementById('b').style.width=(tot*100)+'%';
-}
+  drawBG(t)}
+function R(n){let x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+function drawBG(t){
+  const c=document.getElementById('bg').getContext('2d'),W=1080,Hh=1920;
+  let g=c.createLinearGradient(0,0,0,1400);g.addColorStop(0,'#04202b');g.addColorStop(.45,'#0c5159');g.addColorStop(.8,'#5c9a86');g.addColorStop(1,'#e8c880');
+  c.fillStyle=g;c.fillRect(0,0,W,Hh);
+  // شمس بتوهج يتنفس
+  const sx=720,sy=1230,pr=1+.04*Math.sin(t*.8);
+  g=c.createRadialGradient(sx,sy,0,sx,sy,620*pr);g.addColorStop(0,'rgba(255,240,190,.95)');g.addColorStop(.12,'rgba(255,224,150,.55)');g.addColorStop(1,'rgba(255,200,120,0)');c.fillStyle=g;c.fillRect(0,500,W,1200);
+  // أشعة
+  c.save();c.globalCompositeOperation='lighter';
+  for(let k=0;k<7;k++){const a=-2.2+k*.28+.06*Math.sin(t*.25+k);c.fillStyle=`rgba(255,226,160,${.05+.025*Math.sin(t*.5+k*2)})`;
+    c.beginPath();c.moveTo(sx,sy);c.lineTo(sx+Math.cos(a-.05)*2400,sy+Math.sin(a-.05)*2400);c.lineTo(sx+Math.cos(a+.05)*2400,sy+Math.sin(a+.05)*2400);c.fill()}
+  c.restore();
+  // غيوم
+  for(let k=0;k<8;k++){const sp=8+R(k)*14,x0=R(k+9)*(W+900),cx=((x0+t*sp)%(W+900))-450,cy=180+R(k+3)*620,sc=.7+R(k+5)*1.1;
+    for(let m=0;m<5;m++){const ox=(m-2)*90*sc,oy=Math.sin(m*1.7+k)*26*sc,r=(110+R(k*7+m)*70)*sc;
+      const gg=c.createRadialGradient(cx+ox,cy+oy,0,cx+ox,cy+oy,r);gg.addColorStop(0,`rgba(255,240,215,${.2+.1*R(k)})`);gg.addColorStop(1,'rgba(255,240,215,0)');c.fillStyle=gg;c.fillRect(cx+ox-r,cy+oy-r,2*r,2*r)}}
+  // طيور
+  c.strokeStyle='rgba(10,30,32,.75)';c.lineWidth=3;c.lineCap='round';
+  for(let k=0;k<6;k++){const bx=((R(k+40)*1400+t*(55+R(k)*25))%1500)-200,by=300+R(k+60)*420+Math.sin(t*.9+k)*30,fl=Math.sin(t*7+k*2)*14,sz=.8+R(k+2)*.7;
+    c.beginPath();c.moveTo(bx-30*sz,by-fl*sz);c.quadraticCurveTo(bx-12*sz,by-8*sz,bx,by);c.quadraticCurveTo(bx+12*sz,by-8*sz,bx+30*sz,by-fl*sz);c.stroke()}
+  // جبال بثلاث طبقات + ضباب
+  const lay=[[1330,170,'#2d6b6a',.0035,.18],[1420,210,'#1b4f50',.0045,.30],[1500,230,'#0e3a3a',.0030,.5]];
+  lay.forEach(([y0,amp,col,f,mist],li)=>{
+    c.fillStyle=col;c.beginPath();c.moveTo(0,1920);
+    for(let x=0;x<=W;x+=12){const h=amp*(.5*Math.sin(x*f*2+li*3)+.3*Math.sin(x*f*5+li)+.2*Math.sin(x*f*11+li*2));c.lineTo(x,y0-h)}
+    c.lineTo(W,1920);c.fill();
+    const mg=c.createLinearGradient(0,y0-60,0,y0+90);mg.addColorStop(0,'rgba(220,235,225,0)');mg.addColorStop(.5,`rgba(220,235,225,${mist*.45})`);mg.addColorStop(1,'rgba(220,235,225,0)');
+    c.fillStyle=mg;const dx=(t*(6+li*4))%W;c.fillRect(0,y0-60,W,150)});
+  // بحيرة
+  const ly=1560;g=c.createLinearGradient(0,ly,0,1920);g.addColorStop(0,'#2a6d6a');g.addColorStop(1,'#04201f');c.fillStyle=g;c.fillRect(0,ly,W,Hh-ly);
+  for(let k=0;k<120;k++){const y=ly+6+Math.pow(R(k+100),1.6)*(Hh-ly-10),amp=.3+.7*(y-ly)/(Hh-ly),
+      x=(R(k+200)*W+Math.sin(t*.6+k)*30)%W,wd=(30+R(k+300)*110)*amp,near=Math.max(0,1-Math.abs(x-sx)/260);
+    c.fillStyle=`rgba(255,${225-near*20|0},${170},${(.06+.35*near)*(.5+.5*Math.sin(t*2.2+k*1.3))*amp+.03})`;c.fillRect(x-wd/2,y,wd,2.5+amp*2)}
+  // أشجار صنوبر على الجانبين تتمايل
+  function pine(x,y,h,ph){const sw=Math.sin(t*.9+ph)*h*.018;c.fillStyle='#041a17';
+    for(let l=0;l<6;l++){const ly2=y-h*(l/6),wd=h*.30*(1-l/7),off=sw*(l/6)*3;
+      c.beginPath();c.moveTo(x+off-wd,ly2);c.lineTo(x+off+sw*(l+1)/2,ly2-h/5.2);c.lineTo(x+off+wd,ly2);c.fill()}
+    c.fillRect(x-h*.015,y,h*.03,h*.07)}
+  [[40,1700,620,0],[170,1760,480,1.3],[-30,1830,760,2.1],[1040,1700,640,3.2],[920,1770,470,4.1],[1100,1840,780,5.3]].forEach(a=>pine(...a));
+  // يراعات / لقاح
+  for(let k=0;k<70;k++){const px=(R(k+500)*W+Math.sin(t*.35+k*3)*60+t*(2+R(k)*5))%W,py=700+R(k+600)*1100+Math.cos(t*.3+k*2)*40-((t*(5+R(k+1)*8))%200),
+      a=.25+.55*Math.max(0,Math.sin(t*1.4+k*2.1)),r=2+R(k+700)*3;
+    const gg=c.createRadialGradient(px,py,0,px,py,r*5);gg.addColorStop(0,`rgba(255,235,160,${a})`);gg.addColorStop(1,'rgba(255,235,160,0)');c.fillStyle=gg;c.fillRect(px-r*5,py-r*5,r*10,r*10)}
+  // تعتيم خفيف للأطراف
+  g=c.createRadialGradient(540,960,600,540,960,1300);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,10,8,.45)');c.fillStyle=g;c.fillRect(0,0,W,Hh)}
 init();
 </script></html>
