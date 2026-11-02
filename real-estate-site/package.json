@@ -1,0 +1,10 @@
+{
+  "name": "real-estate-offers-site",
+  "version": "1.0.0",
+  "description": "موقع عروض عقارية: تخزين العروض والفيديو وإرسالها للعملاء",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=22.5" },
+  "license": "MIT",
+  "dependencies": { "express": "^4.21.2", "multer": "^1.4.5-lts.1" }
+}
