@@ -26,6 +26,8 @@ services:
         value: أوج
       - key: BRAND_TAGLINE
         value: للتسويق العقاري
+      - key: STAFF_KEY
+        generateValue: true   # مفتاح رابط الموظف السري (تجده في Environment بعد النشر)
       - key: SESSION_SECRET
         generateValue: true
       - key: BASE_URL

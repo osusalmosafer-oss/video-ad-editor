@@ -18,6 +18,7 @@ const BRAND = process.env.BRAND_NAME || 'أوج';
 const TAGLINE = process.env.BRAND_TAGLINE || 'للتسويق العقاري';
 const WHATSAPP = (process.env.WHATSAPP || '966500000000').replace(/\D/g, ''); // رقم المنشأة بصيغة دولية
 const FAL_LICENSE = process.env.FAL_LICENSE || ''; // رقم ترخيص الهيئة العامة للعقار
+const STAFF_KEY = process.env.STAFF_KEY || ''; // مفتاح رابط الموظف السري (يعطّل البوابة إن تُرك فارغًا)
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const SECRET = process.env.SESSION_SECRET || crypto.createHash('sha256').update('s:' + ADMIN_PASSWORD).digest('hex');
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -96,17 +97,17 @@ const upload = multer({
 });
 
 // ---------- القوالب ----------
-const layout = (title, body, { admin = false, desc = '' } = {}) => `<!doctype html>
+const layout = (title, body, { admin = false, staff = false, desc = '' } = {}) => `<!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc || `${BRAND} ${TAGLINE}`)}">
 <meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="icon" href="/brand/favicon.png"><link rel="stylesheet" href="/style.css"></head><body class="${admin ? 'admin' : ''}">
+<link rel="icon" href="/brand/favicon.png"><link rel="stylesheet" href="/style.css"></head><body class="${admin || staff ? 'admin' : ''}">
 <header class="top"><div class="wrap bar">
-<a class="brand" href="${admin ? '/admin' : '/'}"><img class="mark" src="/brand/symbol.png" alt=""><b>${esc(BRAND)}</b><small>${esc(TAGLINE)}</small></a>
-<nav>${admin
+<a class="brand" href="${admin ? '/admin' : staff ? '/staff' : '/'}"><img class="mark" src="/brand/symbol.png" alt=""><b>${esc(BRAND)}</b><small>${esc(TAGLINE)}</small></a>
+<nav>${staff ? `<span class="tag">بوابة الموظفين</span><a href="/staff">العروض</a>` : admin
     ? `<a href="/admin">العروض</a><a href="/admin/leads">العملاء</a><a href="/admin/listing/new" class="btn sm">+ عرض جديد</a><a href="/" target="_blank">الموقع</a><form method="post" action="/admin/logout" class="inline"><button class="link">خروج</button></form>`
     : `<a href="/">العروض</a><a href="https://wa.me/${WHATSAPP}" class="btn sm">تواصل واتساب</a>`}</nav></div></header>
 <main class="wrap">${body}</main>
@@ -204,7 +205,7 @@ ${sent ? '<p class="ok">✓ وصلنا طلبك وسنتواصل معك قريب
 ${l.description ? `<h3>الوصف</h3><p class="desc">${esc(l.description).replace(/\n/g, '<br>')}</p>` : ''}
 ${l.features ? `<h3>المميزات</h3><ul class="feat">${l.features.split('\n').filter(Boolean).map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
 ${emb ? `<h3>الموقع</h3><iframe class="map" loading="lazy" src="${emb}"></iframe>` : ''}
-</section>`, { desc: `${num(l.area)} م² · ${num(l.price)} ريال · ${[l.city, l.district].filter(Boolean).join(' - ')}` }));
+<p class="note">لا يتم أي دفع عبر الموقع. التعامل المالي والتملّك يتمان بعد المعاينة وعبر الإجراءات النظامية مع مندوبنا.</p></section>`, { desc: `${num(l.area)} م² · ${num(l.price)} ريال · ${[l.city, l.district].filter(Boolean).join(' - ')}` }));
 });
 
 app.post('/o/:token/inquire', (req, res) => {
@@ -234,7 +235,7 @@ ${images[0] ? `<img class="sh-cover" src="/uploads/${images[0].filename}">` : ''
 ${l.description ? `<h3>الوصف</h3><p class="desc">${esc(l.description).replace(/\n/g, '<br>')}</p>` : ''}
 ${l.features ? `<h3>المميزات</h3><ul class="feat">${l.features.split('\n').filter(Boolean).map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
 ${images.length > 1 ? `<div class="sh-gal">${images.slice(1, 7).map((i) => `<img src="/uploads/${i.filename}">`).join('')}</div>` : ''}
-<div class="sh-foot"><div>للاطلاع على الفيديو والصور كاملة:<br><b dir="ltr">${esc(url)}</b></div>
+<p class="muted" style="font-size:12px">لا يتم أي دفع عبر الموقع؛ التعامل المالي بعد المعاينة وعبر الإجراءات النظامية.</p><div class="sh-foot"><div>للاطلاع على الفيديو والصور كاملة:<br><b dir="ltr">${esc(url)}</b></div>
 <div>واتساب: <b dir="ltr">+${WHATSAPP}</b>${l.ad_license ? `<br>رقم ترخيص الإعلان: ${esc(l.ad_license)}` : ''}${FAL_LICENSE ? `<br>ترخيص الهيئة العامة للعقار: ${esc(FAL_LICENSE)}` : ''}</div></div></div></body></html>`);
 });
 
@@ -381,6 +382,58 @@ app.get('/admin/leads.csv', requireAdmin, (_req, res) => {
   const c = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
   res.setHeader('Content-Type', 'text/csv; charset=utf-8'); res.setHeader('Content-Disposition', 'attachment; filename=leads.csv');
   res.send('﻿' + ['الاسم,الجوال,العرض,الرسالة,الحالة,ملاحظة,التاريخ', ...rows.map((r) => [r.name, r.phone, r.title, r.message, LEAD_STATUS[r.status], r.note, r.created_at].map(c).join(','))].join('\n'));
+});
+
+
+// ================= بوابة الموظفين (رابط سري، بلا تعديل ولا حذف) =================
+const staffSign = (exp) => sign('staff:' + exp);
+const makeStaff = () => { const exp = Date.now() + 30 * 864e5; return `${exp}.${staffSign(exp)}`; };
+const validStaff = (c) => { if (!c) return false; const [exp, sig] = c.split('.'); return !!sig && Number(exp) > Date.now() && sig.length === 64 && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(staffSign(exp))); };
+const requireStaff = (req, res, next) => {
+  try { const c = cookies(req); if (validStaff(c.stf) || validSession(c.sid)) return next(); } catch { /* */ }
+  res.status(404).send(layout('غير موجود', '<p class="empty">الصفحة غير موجودة.</p>'));
+};
+const keyOk = (k) => STAFF_KEY.length >= 8 && String(k).length === STAFF_KEY.length && crypto.timingSafeEqual(Buffer.from(String(k)), Buffer.from(STAFF_KEY));
+app.get('/s/:key', (req, res) => {
+  if (!keyOk(req.params.key)) return res.status(404).send(layout('غير موجود', '<p class="empty">الصفحة غير موجودة.</p>'));
+  res.setHeader('Set-Cookie', `stf=${makeStaff()}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${30 * 86400}${req.secure ? '; Secure' : ''}`);
+  res.redirect('/staff');
+});
+app.get('/staff', requireStaff, (req, res) => {
+  const s = (req.query.s || '').trim();
+  const rows = s ? q.all("SELECT * FROM listings WHERE title LIKE ? OR city LIKE ? OR district LIKE ? ORDER BY (status='available') DESC, id DESC", `%${s}%`, `%${s}%`, `%${s}%`)
+    : q.all("SELECT * FROM listings ORDER BY (status='available') DESC, id DESC");
+  res.send(layout('العروض | الموظفين', `
+<form class="filters" method="get"><input name="s" placeholder="ابحث بالعرض أو المدينة أو الحي" value="${esc(s)}"><button class="btn">بحث</button></form>
+<div class="grid">${rows.map((l) => `<div class="card"><div class="thumb" ${coverOf(l.id) ? `style="background-image:url('${coverOf(l.id)}')"` : ''}><em class="st ${l.status}">${STATUS[l.status]}</em></div>
+<div class="info"><h3>${esc(l.title)}</h3><p class="muted">📍 ${esc([l.city, l.district].filter(Boolean).join(' - ') || '—')}</p>
+<div class="facts"><span>${num(l.area)} م²</span><span>${esc(l.type || '')}</span></div><div class="price">${num(l.price)} <small>ريال</small></div>
+<div class="row" style="margin-top:10px"><a class="btn sm" href="/staff/send/${l.id}">إرسال لعميل</a><a class="btn ghost sm" target="_blank" href="/o/${l.token}">معاينة</a></div></div></div>`).join('') || '<p class="empty">لا توجد عروض.</p>'}</div>`, { staff: true }));
+});
+app.get('/staff/send/:id', requireStaff, (req, res) => {
+  const l = q.get('SELECT * FROM listings WHERE id=?', req.params.id);
+  if (!l) return res.sendStatus(404);
+  const url = `${baseUrl(req)}/o/${l.token}`;
+  res.send(layout('إرسال عرض', `
+<form class="send" method="post"><h2>إرسال: ${esc(l.title)}</h2>
+<div class="cols"><label>اسم العميل<input name="cname" required></label><label>جوال العميل<input name="phone" inputmode="tel" placeholder="05xxxxxxxx" required></label></div>
+<label>اسمك (الموظف)<input name="staff" id="stf" required></label>
+<label>نص الرسالة (يمكن تعديله)<textarea name="message" rows="9">${esc(offerMessage(l, url, ''))}</textarea></label>
+<div class="row"><button class="btn">إرسال عبر واتساب</button><a class="btn ghost" href="/staff">رجوع</a></div>
+<p class="muted">يفتح واتساب برسالة جاهزة برابط العرض الكامل (الصور والفيديو والخريطة)، ويُسجَّل العميل في النظام تلقائيًا.</p></form>
+<script>const i=document.getElementById('stf');try{i.value=localStorage.getItem('stfname')||'';document.querySelector('form').addEventListener('submit',()=>localStorage.setItem('stfname',i.value))}catch(e){}</script>`, { staff: true }));
+});
+app.post('/staff/send/:id', requireStaff, (req, res) => {
+  const l = q.get('SELECT * FROM listings WHERE id=?', req.params.id);
+  if (!l) return res.sendStatus(404);
+  const phone = normPhone(req.body.phone);
+  if (phone.length < 11) return res.status(400).send(layout('خطأ', '<p class="err">رقم الجوال غير صحيح.</p><a class="btn" href="javascript:history.back()">رجوع</a>', { staff: true }));
+  const cname = (req.body.cname || '').trim().slice(0, 100), staff = (req.body.staff || '').trim().slice(0, 60);
+  const url = `${baseUrl(req)}/o/${l.token}`;
+  let msg = (req.body.message || '').trim().slice(0, 3000) || offerMessage(l, url, cname);
+  if (!msg.includes(url)) msg += `\n${url}`;
+  q.run('INSERT INTO leads(listing_id,name,phone,message,status,note) VALUES(?,?,?,?,?,?)', l.id, cname, phone, 'أُرسل العرض', 'contacted', `أرسله: ${staff}`);
+  res.redirect(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`);
 });
 
 // أخطاء الرفع وغيرها
