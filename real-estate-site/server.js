@@ -125,6 +125,8 @@ const card = (l, href) => `<a class="card" href="${href}">
 // ---------- التطبيق ----------
 const app = express();
 app.disable('x-powered-by');
+app.set('trust proxy', 1); // خلف وكيل Render (للبروتوكول https وعنوان العميل)
+app.get('/healthz', (_req, res) => res.type('text').send('ok'));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR, { maxAge: '7d', index: false }));
 app.use(express.static(path.join(__dirname, 'public')));

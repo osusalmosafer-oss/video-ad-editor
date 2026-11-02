@@ -1,0 +1,36 @@
+# Render Blueprint — موقع العروض العقارية
+# الاستخدام: Render Dashboard → New → Blueprint → اختر المستودع والفرع
+services:
+  - type: web
+    name: awj-real-estate
+    runtime: node
+    rootDir: real-estate-site
+    plan: starter            # القرص الدائم يتطلب خطة مدفوعة (starter فما فوق)
+    region: frankfurt        # الأقرب للسعودية بين مناطق Render
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
+      - key: DATA_DIR
+        value: /var/data      # مسار القرص الدائم (قاعدة البيانات + الصور + الفيديو)
+      - key: ADMIN_PASSWORD
+        sync: false           # يُطلب منك إدخاله عند إنشاء الخدمة
+      - key: WHATSAPP
+        sync: false           # مثال: 9665XXXXXXXX
+      - key: FAL_LICENSE
+        sync: false
+      - key: BRAND_NAME
+        value: أوج
+      - key: BRAND_TAGLINE
+        value: للتسويق العقاري
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: BASE_URL
+        sync: false           # بعد ربط الدومين، مثال: https://awj.sa
+    disk:
+      name: awj-data
+      mountPath: /var/data
+      sizeGB: 10
