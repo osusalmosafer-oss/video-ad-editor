@@ -249,5 +249,10 @@
   "slug": "al-shohada",
   "txt": "../hotels/staff-card-الشهداء.txt",
   "image": null
+ },
+ {
+  "slug": "novotel-thakher",
+  "txt": "../hotels/staff-card-نوفوتيل-ذاخر.txt",
+  "image": null
  }
 ]
