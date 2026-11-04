@@ -26,9 +26,44 @@ import json
 import re
 import sys
 
-WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
-SENT_RE = re.compile(r"[^.!?]+[.!?]*")
-CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+# --- Arabic support -------------------------------------------------------
+# Letters, harakat and Arabic-Indic digits count as word characters. fold()
+# makes spellings comparable: it drops harakat and tatweel, unifies alef and
+# ya/ta-marbuta variants and strips the definite article. English is only
+# lower-cased, so English behaviour is unchanged.
+AR_CHARS = "\u0621-\u064A\u064B-\u065F\u0660-\u0669\u066E-\u06D3"
+_AR_MARKS = re.compile("[\u064B-\u065F\u0640]")
+_AR_LETTER = re.compile("[" + AR_CHARS + "]")
+_LATIN_LETTER = re.compile("[A-Za-z]")
+
+
+def is_arabic(text):
+    return len(_AR_LETTER.findall(text)) > len(_LATIN_LETTER.findall(text))
+
+
+def fold(token):
+    t = token.lower().strip("'\u2019")
+    if not _AR_LETTER.search(t):
+        return t
+    t = _AR_MARKS.sub("", t)
+    for a, b in (("\u0623", "\u0627"), ("\u0625", "\u0627"), ("\u0622", "\u0627"),
+                 ("\u0671", "\u0627"), ("\u0649", "\u064A"), ("\u0629", "\u0647")):
+        t = t.replace(a, b)
+    for pre in ("\u0648\u0627\u0644", "\u0627\u0644"):
+        if t.startswith(pre) and len(t) - len(pre) >= 3:
+            return t[len(pre):]
+    return t
+
+
+def fold_set(text):
+    return {fold(w) for w in text.split()}
+
+
+WORD_RE = re.compile(r"[A-Za-z0-9$%'’" + AR_CHARS + r"-]+")
+SENT_RE = re.compile(r"[^.!?؟]+[.!?؟]*")
+CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b"
+                         r"|(?<!\w)(?:اثنين|اثنان|ثلاث|ثلاثة|اربع|أربع|اربعة|أربعة|خمس|خمسة|ستة|سبع|سبعة|ثمان|ثمانية|تسع|تسعة|عشرة|عشرين|ثلاثين|اربعين|أربعين|خمسين|مية|مئة|مائة|الف|ألف|مليون|ريال|دولار)(?!\w)",
+                         re.MULTILINE)
 STOPWORDS = {
     "the", "a", "an", "and", "or", "but", "if", "of", "to", "in", "on", "for",
     "with", "that", "this", "it", "is", "are", "was", "were", "be", "been",
@@ -36,6 +71,7 @@ STOPWORDS = {
     "so", "just", "not", "no", "do", "did", "does", "have", "has", "had",
     "will", "can", "at", "as", "by", "from", "out", "up", "off", "one", "all",
 }
+STOPWORDS |= fold_set("في من على الى إلى عن هذا هذي هذه هالـ ذلك و ما لا انا انت هو هي هم كل بس مع اللي الي يا الحين هنا وهذا وهذي")
 
 HOOK_WINDOW = 3.0        # seconds. Past this, the thumb has already decided.
 MAX_BEAT = 4.0           # seconds on one idea with no change on screen.
@@ -82,7 +118,9 @@ def split_beats(raw, wps):
     return beats
 
 
-def analyse(raw, wpm=165, target=None):
+def analyse(raw, wpm=None, target=None):
+    if wpm is None:
+        wpm = 130 if is_arabic(raw) else 165
     wps = wpm / 60.0
     beats = split_beats(raw, wps)
     if not beats:
@@ -146,8 +184,8 @@ def analyse(raw, wpm=165, target=None):
             run, start = 0, None
 
     # Does the last line hand you back to the first one?
-    first = {w.lower() for w in words(rows[0]["text"]) if w.lower() not in STOPWORDS}
-    last = {w.lower() for w in words(rows[-1]["text"]) if w.lower() not in STOPWORDS}
+    first = {fold(w) for w in words(rows[0]["text"]) if fold(w) not in STOPWORDS}
+    last = {fold(w) for w in words(rows[-1]["text"]) if fold(w) not in STOPWORDS}
     loop = sorted(pretty(w) for w in first & last)
     if loop:
         notes.append(f"Loops: the last beat repeats \"{', '.join(loop[:3])}\" from the hook. "
@@ -194,7 +232,8 @@ def render(a, out=sys.stdout):
 def main():
     ap = argparse.ArgumentParser(description="Time a Reel script into a beat sheet.")
     ap.add_argument("input", nargs="?", default="-", help="script file, or - for stdin")
-    ap.add_argument("--wpm", type=float, default=165, help="speaking rate (default 165)")
+    ap.add_argument("--wpm", type=float, default=None,
+                    help="speaking rate (default 165, or 130 for Arabic text)")
     ap.add_argument("--target", type=float, help="target length in seconds")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
