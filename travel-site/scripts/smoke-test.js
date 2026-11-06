@@ -79,9 +79,8 @@ const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x
       ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2027-03-01&out=2027-03-03&rooms=1&guests=2')).text()).includes('الأسعار غير متوفرة'), 'خارج فترات الأسعار لا يُباع');
       // أسعار وسط/نهاية الأسبوع: الأربعاء 25 نوفمبر 2026 والخميس 26 (1080/1200 ← 1210/1344)
       const wk = 'in=2026-11-25&out=2026-11-27&rooms=1&guests=2';
-      ok((await (await f('/hotels/conrad-makkah-jabal-omar?' + wk)).text()).includes('2,688'), 'قبل تحديد أيام النهاية: الأعلى لكل الليالي (2×1344)');
-      { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, weekend_days: '4' })); }
-      ok((await (await f('/hotels/conrad-makkah-jabal-omar?' + wk)).text()).includes('2,554'), 'الأربعاء 1210 + الخميس (نهاية أسبوع) 1344 = 2,554');
+      ok((await (await f('/hotels/conrad-makkah-jabal-omar?' + wk)).text()).includes('2,554'), 'افتراضيًا الخميس والجمعة نهاية أسبوع: الأربعاء 1210 + الخميس 1344 = 2,554');
+      ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2026-11-27&out=2026-11-29&rooms=1&guests=2')).text()).includes('1,344') && (await (await f('/hotels/conrad-makkah-jabal-omar?in=2026-11-27&out=2026-11-29&rooms=1&guests=2')).text()).includes('2,554'), 'الجمعة 1344 + السبت 1210 = 2,554');
       { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, vat_registered: '1', weekend_days: '4' })); }
       ok((await (await f('/')).text()).includes('شاملة الضريبة'), 'عند تفعيل التسجيل الضريبي تظهر الضريبة');
       { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, weekend_days: '4' })); }
