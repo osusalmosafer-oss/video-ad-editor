@@ -74,10 +74,10 @@ const DEFAULTS = {
   tourism_license: '73106939', // رقم ترخيص وزارة السياحة
   cr_number: '7050251656',  // السجل التجاري
   vat_number: '',           // الرقم الضريبي
-  sbc_cert_no: '',          // رقم/معرّف توثيق المركز السعودي للأعمال
-  sbc_cert_url: '',         // رابط صفحة التوثيق في المركز السعودي للأعمال
+  sbc_cert_no: '0000267645',          // رقم/معرّف توثيق المركز السعودي للأعمال
+  sbc_cert_url: 'https://eauthenticate.saudibusiness.gov.sa/certificate-details/0000267645',         // رابط صفحة التوثيق في المركز السعودي للأعمال
   address: 'مكة المكرمة، المملكة العربية السعودية',
-  phone: '', whatsapp: '', email: '',
+  phone: '+966566403938', whatsapp: '966566403938', email: 'info@osusalmosafer.com.sa',
   vat_rate: '15',
   hold_minutes: '30',       // مدة حجز الغرفة بانتظار الدفع الإلكتروني
   transfer_hold_hours: '24',// مدة حجز الغرفة بانتظار الحوالة
