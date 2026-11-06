@@ -14,11 +14,13 @@ const hijri = (s) => new Intl.DateTimeFormat(I.isEn() ? 'en-u-ca-islamic-umalqur
 const stars = (n) => '★'.repeat(Math.max(0, Math.min(5, n || 0)));
 const baseUrl = () => (process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || '').replace(/\/$/, '');
 const L = I.L;
+const vatOn = () => setting('vat_registered') === '1';
 const sx = (s, k) => (I.isEn() && s[k + '_en'] ? s[k + '_en'] : s[k]);
 const waLink = (msg) => { const n = setting('whatsapp'); return n ? `https://wa.me/${n}?text=${encodeURIComponent(msg || '')}` : ''; };
 const fill = (t, s) => String(t)
   .replace(/\{agency\}/g, sx(s, 'agency_name')).replace(/\{license\}/g, s.tourism_license || '—')
-  .replace(/\{cr\}/g, s.cr_number || '—').replace(/\{hours\}/g, s.cancel_free_hours);
+  .replace(/\{cr\}/g, s.cr_number || '—').replace(/\{hours\}/g, s.cancel_free_hours)
+  .replace(/\{vat\}/g, s.vat_registered === '1' ? (I.isEn() ? ' and include ' + s.vat_rate + '% VAT' : ' وشاملة ضريبة القيمة المضافة ' + s.vat_rate + '%') : '');
 const policyText = (key, s) => {
   const k = key === 'about' ? 'about_text' : 'policy_' + key;
   if (I.isEn()) return fill(s[k + '_en'] || POLICIES.EN[key], s);
@@ -78,7 +80,7 @@ function footer(s) {
   <div><h4>بيانات المنشأة</h4><ul class="lic">${rows || '<li class="muted">لم تُضف بعد</li>'}</ul><div class="govs">${govLogos()}</div></div>
   <div><h4>روابط</h4><ul class="lic"><li><a href="/terms">الشروط والأحكام</a></li><li><a href="/cancellation">سياسة الإلغاء والاسترداد</a></li><li><a href="/privacy">سياسة الخصوصية</a></li><li><a href="/booking-lookup">تتبّع الحجز</a></li></ul>
     <div class="pay">${payBadges()}</div></div>
-</div><div class="copy">© ${new Date().getFullYear()} ${esc(sx(s, 'agency_name'))} — جميع الأسعار بالريال السعودي وشاملة ضريبة القيمة المضافة</div></footer>`;
+</div><div class="copy">© ${new Date().getFullYear()} ${esc(sx(s, 'agency_name'))} — جميع الأسعار بالريال السعودي${vatOn() ? ' وشاملة ضريبة القيمة المضافة' : ''}</div></footer>`;
 }
 
 // ---------- مكوّنات ----------
@@ -106,9 +108,9 @@ const pages = {
       title: '', desc: 'احجز فندقك في مكة المكرمة بأسعار واضحة شاملة الضريبة، قريب من الحرم المكي، ودفع آمن عبر مدى وبطاقات الائتمان.', canonical: baseUrl() + '/',
       jsonld: { '@context': 'https://schema.org', '@type': 'TravelAgency', name: setting('agency_name'), url: baseUrl() || undefined, telephone: setting('phone') || undefined, address: setting('address') },
       body: `<section class="hero"><div class="wrap"><h1>فندقك في مكة المكرمة، قريب من الحرم</h1>
-      <p>أسعار واضحة شاملة الضريبة · تأكيد فوري · دفع آمن · دعم عبر الواتساب</p>${searchForm(v, today)}</div></section>
+      <p>${vatOn() ? 'أسعار واضحة شاملة الضريبة' : 'أسعار واضحة وشاملة'} · تأكيد فوري · دفع آمن · دعم عبر الواتساب</p>${searchForm(v, today)}</div></section>
       <section class="wrap"><h2 class="sec">فنادق مختارة</h2>${hotels.length ? `<div class="grid">${hotels.map((h) => hotelCard(h)).join('')}</div>` : '<p class="muted">لا توجد فنادق معروضة حاليًا.</p>'}</section>
-      <section class="wrap feats"><div><b>أسعار شاملة</b><span>السعر النهائي شامل ضريبة القيمة المضافة 15%</span></div><div><b>دفع آمن</b><span>مدى وفيزا عبر بوابات دفع مرخّصة</span></div><div><b>قسيمة فورية</b><span>رقم حجز وقسيمة تأكيد بمجرد السداد</span></div><div><b>جهة مرخّصة</b><span>وكالة مرخّصة من وزارة السياحة</span></div></section>`,
+      <section class="wrap feats"><div><b>أسعار شاملة</b><span>${vatOn() ? 'السعر النهائي شامل ضريبة القيمة المضافة 15%' : 'السعر المعروض هو السعر النهائي بالريال السعودي'}</span></div><div><b>دفع آمن</b><span>مدى وفيزا عبر بوابات دفع مرخّصة</span></div><div><b>قسيمة فورية</b><span>رقم حجز وقسيمة تأكيد بمجرد السداد</span></div><div><b>جهة مرخّصة</b><span>وكالة مرخّصة من وزارة السياحة</span></div></section>`,
     });
   },
   hotels({ hotels, today, v, searched }) {
@@ -123,7 +125,7 @@ const pages = {
     const amen = (L(h, 'amenities') || '').split(/[،,\n]/).map((x) => x.trim()).filter(Boolean);
     const g = images.length ? `<div class="gallery">${images.map((i) => `<img src="/uploads/${esc(i.filename)}" alt="${esc(L(h, 'name'))}" loading="lazy">`).join('')}</div>` : '';
     return layout({
-      title: L(h, 'name'), desc: `${L(h, 'name')} — ${L(h, 'district') || 'مكة المكرمة'}${h.distance_m != null ? '، ' + h.distance_m + ' م عن الحرم' : ''}. احجز الآن بسعر شامل الضريبة.`, canonical: baseUrl() + '/hotels/' + h.slug,
+      title: L(h, 'name'), desc: `${L(h, 'name')} — ${L(h, 'district') || 'مكة المكرمة'}${h.distance_m != null ? '، ' + h.distance_m + ' م عن الحرم' : ''}. احجز الآن بسعر ${vatOn() ? 'شامل الضريبة' : 'نهائي'}.`, canonical: baseUrl() + '/hotels/' + h.slug,
       jsonld: { '@context': 'https://schema.org', '@type': 'Hotel', name: L(h, 'name'), starRating: h.stars ? { '@type': 'Rating', ratingValue: h.stars } : undefined, address: L(h, 'address') || 'مكة المكرمة', description: L(h, 'description') || undefined, image: images[0] ? `${baseUrl()}/uploads/${images[0].filename}` : undefined },
       body: `<section class="wrap"><p><a href="/hotels">← كل الفنادق</a></p>
       <div class="stars">${stars(h.stars)}</div><h1>${esc(L(h, 'name'))}</h1>
@@ -170,7 +172,7 @@ const pages = {
   payLink({ l, methods, csrf, s, err }) {
     const paid = l.status === 'paid';
     return layout({ title: 'رابط دفع', robots: 'noindex', body: `<section class="wrap narrow"><div class="box center-box"><small class="muted">رابط دفع رقم ${esc(l.code)}</small><h1>${esc(l.description)}</h1>
-      ${l.customer_name ? `<p>العميل: ${esc(l.customer_name)}</p>` : ''}<p class="bigprice">${sar(l.amount)}</p><p class="muted">شامل ضريبة القيمة المضافة</p>
+      ${l.customer_name ? `<p>العميل: ${esc(l.customer_name)}</p>` : ''}<p class="bigprice">${sar(l.amount)}</p>${vatOn() ? '<p class="muted">شامل ضريبة القيمة المضافة</p>' : ''}
       ${paid ? '<p class="alert info">تم السداد بنجاح — شكرًا لك</p>' : `${err ? `<p class="alert">${esc(err)}</p>` : ''}
         ${methods.map((m) => `<form method="post" action="/pay/l/${esc(l.token)}" class="paybtn">${csrf}<input type="hidden" name="method" value="${m.id}"><button class="btn lg block">ادفع الآن — ${esc(m.label)}</button></form>`).join('') || '<p class="alert">الدفع الإلكتروني غير مفعّل حاليًا، تواصل معنا.</p>'}
         <p>${payBadges()}</p><p class="muted">🔒 تتم معالجة بيانات البطاقة لدى بوابة الدفع مباشرة.</p>`}
@@ -216,18 +218,19 @@ function extrasBlock(h) {
   let list; try { list = JSON.parse(h.extras || '[]'); } catch { list = []; }
   if (!list.length) return '';
   const m = Number(setting('markup_percent')) || 0;
-  return `<div class="box extras"><h3>إضافات اختيارية</h3><ul>${list.map((x) => `<li>${esc(I.isEn() && x.en ? x.en : x.ar)}: <b>${sar(Math.ceil((x.cost * (100 + m)) / 100 - 1e-9))}</b></li>`).join('')}</ul><p class="muted">تُضاف إلى الإجمالي عند تأكيد الحجز، شاملة الضريبة.</p></div>`;
+  return `<div class="box extras"><h3>إضافات اختيارية</h3><ul>${list.map((x) => `<li>${esc(I.isEn() && x.en ? x.en : x.ar)}: <b>${sar(Math.ceil((x.cost * (100 + m)) / 100 - 1e-9))}</b></li>`).join('')}</ul><p class="muted">تُضاف إلى الإجمالي عند تأكيد الحجز${vatOn() ? '، شاملة الضريبة' : ''}.</p></div>`;
 }
 function roomRow(r, v, searched) {
   const meta = `${r.capacity} نزلاء كحدٍّ أقصى${r.breakfast ? ' · شامل الإفطار' : r.on_request ? ' · بدون وجبات' : ''}`;
   let action;
   if (!searched) action = '<span class="muted">اختر التواريخ لعرض السعر والتوفر</span>';
   else if (r.err) action = `<span class="soldout">${esc(r.err)}</span>`;
-  else action = `<div class="priceb"><b>${sar(r.quote.total)}</b><small>الإجمالي لـ ${r.quote.nights} ليلة × ${v.rooms} غرفة · شامل الضريبة</small>
+  else action = `<div class="priceb"><b>${sar(r.quote.total)}</b><small>الإجمالي لـ ${r.quote.nights} ليلة × ${v.rooms} غرفة · ${vatOn() ? 'شامل الضريبة' : 'السعر النهائي'}</small>
     <form method="get" action="/book">${hid(v)}<input type="hidden" name="room" value="${r.id}"><button class="btn">${r.on_request ? 'اطلب الحجز' : 'احجز'}</button></form>${r.on_request ? '<small class="warn">التأكيد بعد التحقق من التوفر</small>' : ''}${r.avail <= 3 ? `<small class="warn">متبقي ${r.avail} فقط</small>` : ''}</div>`;
   return `<div class="room"><div><h3>${esc(L(r, 'name'))}</h3><p class="muted">${meta}</p>${L(r, 'description') ? `<p>${esc(L(r, 'description'))}</p>` : ''}<p class="muted">السعر يبدأ من ${sar(r.base_price)} / الليلة</p></div>${action}</div>`;
 }
 function summaryMoney(b) {
+  if (!vatOn()) return `<table class="money"><tr class="tot"><td>الإجمالي</td><td>${sar(b.total)}</td></tr></table>`;
   return `<table class="money"><tr><td>الصافي قبل الضريبة</td><td>${sar(b.total - b.vat)}</td></tr><tr><td>ضريبة القيمة المضافة ${esc(setting('vat_rate'))}%</td><td>${sar(b.vat)}</td></tr><tr class="tot"><td>الإجمالي</td><td>${sar(b.total)}</td></tr></table>`;
 }
 function summary(b) {

@@ -57,8 +57,8 @@ CREATE INDEX IF NOT EXISTS idx_book_room ON bookings(room_type_id, check_in, che
   } }
 
 // أعمدة اللغة الإنجليزية (ترحيل آمن للقواعد القديمة)
-for (const [t, c] of [['hotels', 'name_en'], ['hotels', 'district_en'], ['hotels', 'address_en'], ['hotels', 'description_en'], ['hotels', 'amenities_en'], ['room_types', 'name_en'], ['room_types', 'description_en'], ['bookings', 'hotel_name_en'], ['bookings', 'room_name_en'], ['hotels', 'extras'], ['hotels', 'transfer'], ['room_types', 'rates_only'], ['room_types', 'on_request'], ['room_types', 'base_cost'], ['room_types', 'src'], ['rates', 'cost']]) {
-  if (!db.prepare(`PRAGMA table_info(${t})`).all().some((x) => x.name === c)) db.exec(`ALTER TABLE ${t} ADD COLUMN ${c} ${/^(transfer|rates_only|on_request|base_cost|cost)$/.test(c) ? 'INTEGER DEFAULT 0' : 'TEXT'}`);
+for (const [t, c] of [['hotels', 'name_en'], ['hotels', 'district_en'], ['hotels', 'address_en'], ['hotels', 'description_en'], ['hotels', 'amenities_en'], ['room_types', 'name_en'], ['room_types', 'description_en'], ['bookings', 'hotel_name_en'], ['bookings', 'room_name_en'], ['hotels', 'extras'], ['hotels', 'transfer'], ['room_types', 'rates_only'], ['room_types', 'on_request'], ['room_types', 'base_cost'], ['room_types', 'src'], ['rates', 'cost'], ['rates', 'cost_we'], ['rates', 'price_we']]) {
+  if (!db.prepare(`PRAGMA table_info(${t})`).all().some((x) => x.name === c)) db.exec(`ALTER TABLE ${t} ADD COLUMN ${c} ${/^(transfer|rates_only|on_request|base_cost|cost|cost_we|price_we)$/.test(c) ? 'INTEGER DEFAULT 0' : 'TEXT'}`);
 }
 
 const q = {
@@ -78,7 +78,9 @@ const DEFAULTS = {
   sbc_cert_url: 'https://eauthenticate.saudibusiness.gov.sa/certificate-details/0000267645',         // رابط صفحة التوثيق في المركز السعودي للأعمال
   address: 'مكة المكرمة، المملكة العربية السعودية',
   phone: '+966566403938', whatsapp: '966566403938', email: 'info@osusalmosafer.com.sa',
+  vat_registered: '0',      // هل الوكالة مسجّلة في ضريبة القيمة المضافة؟ (0 = لا: لا تُعرض ولا تُحتسب ضريبة)
   vat_rate: '15',
+  weekend_days: '',         // ليالي «نهاية الأسبوع» (0=الأحد … 6=السبت) مثل 4,5؛ فارغ = لم تُحدَّد بعد
   hold_minutes: '30',       // مدة حجز الغرفة بانتظار الدفع الإلكتروني
   transfer_hold_hours: '24',// مدة حجز الغرفة بانتظار الحوالة
   cancel_free_hours: '48',  // الإلغاء المجاني قبل الوصول بـ (ساعة)
@@ -105,8 +107,13 @@ const nightList = (a, b) => { const out = []; for (let t = toMs(a); t < toMs(b);
 
 // ---------- الأسعار (الأسعار بالريال شاملة الضريبة) ----------
 function nightPrice(roomTypeId, base, night) {
-  const r = q.get('SELECT price FROM rates WHERE room_type_id=? AND from_date<=? AND to_date>=? ORDER BY id DESC LIMIT 1', roomTypeId, night, night);
-  return r ? r.price : null;
+  const r = q.get('SELECT price, price_we FROM rates WHERE room_type_id=? AND from_date<=? AND to_date>=? ORDER BY id DESC LIMIT 1', roomTypeId, night, night);
+  if (!r) return null;
+  if (r.price_we == null) return r.price;
+  // سعران: وسط الأسبوع / نهاية الأسبوع. إن لم تُحدَّد أيام النهاية بعد نستعمل الأعلى لكل الليالي (حتى لا نبيع بأقل من المقصود)
+  const days = setting('weekend_days').split(',').filter((x) => x !== '').map(Number);
+  if (!days.length) return Math.max(r.price, r.price_we);
+  return days.includes(new Date(night + 'T00:00:00Z').getUTCDay()) ? r.price_we : r.price;
 }
 function quote(room, checkIn, checkOut, rooms) {
   const nights = nightList(checkIn, checkOut);
@@ -114,7 +121,7 @@ function quote(room, checkIn, checkOut, rooms) {
   const uncovered = room.rates_only ? raw.filter((x) => x == null).length : 0;
   const perNight = raw.map((x) => (x == null ? room.base_price : x));
   const total = perNight.reduce((a, b) => a + b, 0) * rooms;           // ريال صحيح، شامل الضريبة
-  const rate = Number(setting('vat_rate')) || 0;
+  const rate = setting('vat_registered') === '1' ? Number(setting('vat_rate')) || 0 : 0;
   const vat = Math.round((total * rate) / (100 + rate));
   return { uncovered, nights: nights.length, perNight, total, vat, net: total - vat, avg: Math.round(perNight.reduce((a, b) => a + b, 0) / (nights.length || 1)) };
 }

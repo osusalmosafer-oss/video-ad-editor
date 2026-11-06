@@ -42,8 +42,7 @@ try {
     report.hotels++;
     for (const r of h.rooms) {
       const ps = r.periods.map(([a, b, p]) => {
-        if (Array.isArray(p)) report.amb.push(`${h.ar} — ${r.ar} (${a}→${b}): ${p.join(' / ')}`);
-        return { a, b, cost: Array.isArray(p) ? Math.max(...p) : p };
+        return { a, b, cost: Array.isArray(p) ? p[0] : p, costWe: Array.isArray(p) ? p[1] : null };
       });
       if (r.check) report.checks.push(`${h.ar} — ${r.ar}: ${r.check}`);
       const minCost = Math.min(...ps.map((x) => x.cost));
@@ -54,7 +53,7 @@ try {
         const from = iso(p.a);
         const sharedBoundary = ps.some((o) => o !== p && o.a === p.b);
         const to = sharedBoundary ? addDays(iso(p.b), -1) : iso(p.b);
-        q.run('INSERT INTO rates(room_type_id,from_date,to_date,price,cost,label) VALUES(?,?,?,?,?,?)', rid, from, to, sell(p.cost), p.cost, 'قائمة 2026-11-03');
+        q.run('INSERT INTO rates(room_type_id,from_date,to_date,price,cost,price_we,cost_we,label) VALUES(?,?,?,?,?,?,?,?)', rid, from, to, sell(p.cost), p.cost, p.costWe == null ? null : sell(p.costWe), p.costWe, 'قائمة 2026-11-03');
         report.rates++;
       }
     }
@@ -62,7 +61,6 @@ try {
   db.exec('COMMIT');
 } catch (e) { db.exec('ROLLBACK'); throw e; }
 console.log(`الهامش: ${markup}% | فنادق: ${report.hotels} (جديد ${report.created.length}، محدَّث ${report.updated.length}) | غرف: ${report.rooms} | فترات أسعار: ${report.rates}`);
-console.log(`\nأسعار «س1 / س2» (اعتُمد الأعلى مؤقتًا): ${report.amb.length}`); report.amb.slice(0, 5).forEach((x) => console.log('  ' + x));
 console.log(`\nنقاط للمراجعة: ${report.checks.length}`); report.checks.forEach((x) => console.log('  ' + x));
   setSetting('imported:' + SRC, '1');
   return report;

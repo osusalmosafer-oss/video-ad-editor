@@ -24,7 +24,7 @@ const TITLES = { request: 'طلب حجز جديد بانتظار تأكيد ال
 
 function lines(b) {
   return [`رقم الحجز: ${b.ref}`, `الحالة: ${STATUS_AR[b.status] || b.status}`, `الفندق: ${b.hotel_name} — ${b.room_name} × ${b.rooms}`,
-    `الوصول: ${fmtD(b.check_in)} | المغادرة: ${fmtD(b.check_out)} (${b.nights} ليلة)`, `النزلاء: ${b.guests}`, `الإجمالي: ${sarText(b.total)} (شامل الضريبة)`,
+    `الوصول: ${fmtD(b.check_in)} | المغادرة: ${fmtD(b.check_out)} (${b.nights} ليلة)`, `النزلاء: ${b.guests}`, `الإجمالي: ${sarText(b.total)}`,
     `النزيل: ${b.guest_name} — ${b.phone}${b.email ? ' — ' + b.email : ''}`, b.notes ? `ملاحظات: ${b.notes}` : ''].filter(Boolean);
 }
 

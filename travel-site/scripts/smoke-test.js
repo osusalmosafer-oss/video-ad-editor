@@ -36,7 +36,7 @@ const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x
     const start = await f(`/booking/${ref}/pay`, form({ _csrf: t2, method: 'mock' })); const sh = await start.text(); ok(sh.includes('http-equiv="refresh"'), 'تحويل لبوابة الدفع');
     const ret = await f(`/pay/return/${ref}?mock=1`); ok(ret.status === 303, 'عودة من البوابة');
     const v = await (await f(`/booking/${ref}`)).text(); ok(v.includes('مؤكد') && v.includes(ref), 'الحجز مؤكد بعد الدفع');
-    ok(v.includes('45') || v.includes('39'), 'ضريبة 15% ظاهرة (300 → 39)');
+    ok(!v.includes('ضريبة القيمة المضافة'), 'الوكالة غير مسجّلة بالضريبة: لا تُعرض ضريبة');
     // التوفر: غرفة رباعية 3 فقط — احجز 3 ثم الرابع يفشل
     const j2 = {}; let rr = await (await f(`/book?in=${today}&out=${out}&rooms=4&guests=8&room=2`)).text(); ok(!rr.includes('بيانات النزيل'), 'لا حجز أكثر من المتاح');
     // لا وصول لحجز بلا كوكي
@@ -77,6 +77,14 @@ const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x
       ok(hp2.includes('اطلب الحجز') && hp2.includes('السرير الإضافي'), 'زر طلب الحجز وإضافات الفندق');
       ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2026-12-20&out=2026-12-23&rooms=1&guests=2')).text()).includes('1,949') === false, 'لا خطأ في فترة أخرى');
       ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2027-03-01&out=2027-03-03&rooms=1&guests=2')).text()).includes('الأسعار غير متوفرة'), 'خارج فترات الأسعار لا يُباع');
+      // أسعار وسط/نهاية الأسبوع: الأربعاء 25 نوفمبر 2026 والخميس 26 (1080/1200 ← 1210/1344)
+      const wk = 'in=2026-11-25&out=2026-11-27&rooms=1&guests=2';
+      ok((await (await f('/hotels/conrad-makkah-jabal-omar?' + wk)).text()).includes('2,688'), 'قبل تحديد أيام النهاية: الأعلى لكل الليالي (2×1344)');
+      { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, weekend_days: '4' })); }
+      ok((await (await f('/hotels/conrad-makkah-jabal-omar?' + wk)).text()).includes('2,554'), 'الأربعاء 1210 + الخميس (نهاية أسبوع) 1344 = 2,554');
+      { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, vat_registered: '1', weekend_days: '4' })); }
+      ok((await (await f('/')).text()).includes('شاملة الضريبة'), 'عند تفعيل التسجيل الضريبي تظهر الضريبة');
+      { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, weekend_days: '4' })); }
       const rid = /name="room" value="(\d+)"/.exec(hp2)[1];
       const bk = await (await f(`/book?${sk}&room=${rid}`)).text(); ok(bk.includes('إرسال طلب الحجز'), 'صفحة طلب الحجز');
       const rq = await f('/book', form({ _csrf: csrf(bk), room: rid, in: '2026-11-20', out: '2026-11-23', rooms: 1, guests: 2, name: 'طالب حجز', phone: '0555000111', agree: '1' }));

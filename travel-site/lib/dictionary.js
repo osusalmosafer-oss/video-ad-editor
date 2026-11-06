@@ -18,6 +18,8 @@ const EXACT = {
   'قسيمة فورية': 'Instant voucher', 'رقم حجز وقسيمة تأكيد بمجرد السداد': 'Booking number and confirmation voucher as soon as you pay',
   'جهة مرخّصة': 'Licensed agency', 'وكالة مرخّصة من وزارة السياحة': 'Agency licensed by the Ministry of Tourism',
   'احجز فندقك في مكة المكرمة بأسعار واضحة شاملة الضريبة، قريب من الحرم المكي، ودفع آمن عبر مدى وبطاقات الائتمان.': 'Book your hotel in Makkah at clear VAT-inclusive prices, close to the Holy Mosque, with secure payment by mada and credit cards.',
+  'أسعار واضحة وشاملة': 'Clear all-inclusive prices', 'السعر المعروض هو السعر النهائي بالريال السعودي': 'The displayed price is the final price in Saudi Riyals', 'السعر النهائي': 'Final price',
+  'تُضاف إلى الإجمالي عند تأكيد الحجز.': 'Added to the total when the booking is confirmed.',
   // البحث والفنادق
   'الوصول': 'Check-in', 'المغادرة': 'Check-out', 'عدد الغرف': 'Rooms', 'عدد النزلاء': 'Guests', 'ابحث عن غرفة': 'Search rooms',
   'فنادق مكة المكرمة': 'Makkah hotels', 'مكة المكرمة': 'Makkah', '← كل الفنادق': '← All hotels', 'إطلالة على الكعبة': 'Kaaba view',
@@ -63,7 +65,7 @@ const EXACT = {
   'الدفع الإلكتروني غير مفعّل حاليًا، تواصل معنا.': 'Online payment is not available right now, please contact us.',
 };
 const P = [
-  [/^(.*?)(?:، ([\d,]+) م عن الحرم)?\. احجز الآن بسعر شامل الضريبة\.$/, (a, d) => `${a}${d ? `, ${d} m from the Haram` : ''}. Book now at a VAT-inclusive price.`],
+  [/^(.*?)(?:، ([\d,]+) م عن الحرم)?\. احجز الآن بسعر (?:شامل الضريبة|نهائي)\.$/, (a, d) => `${a}${d ? `, ${d} m from the Haram` : ''}. Book now at the final price.`],
   [/^([\d,]+) م عن الحرم$/, (d) => `${d} m from the Haram`],
   [/^السعر يبدأ من ([\d,]+)$/, (n) => `Price from ${n}`],
   [/^(\d+) نزلاء كحدٍّ أقصى$/, (n) => `Up to ${n} guests`],
@@ -75,7 +77,7 @@ const P = [
   [/^سعة الغرفة (\d+) نزلاء — زد عدد الغرف$/, (n) => `Room capacity is ${n} guests — add more rooms`],
   [/^متاح (\d+) غرفة فقط$/, (n) => `Only ${s(n, 'room', 'rooms')} available`],
   [/^ترخيص المنشأة الفندقية: (.*)$/, (a) => `Hotel license: ${a}`],
-  [/^© (\d+) (.*) — جميع الأسعار بالريال السعودي وشاملة ضريبة القيمة المضافة$/, (y, n) => `© ${y} ${n} — All prices are in Saudi Riyals and include VAT`],
+  [/^© (\d+) (.*) — جميع الأسعار بالريال السعودي( وشاملة ضريبة القيمة المضافة)?$/, (y, n, v) => `© ${y} ${n} — All prices are in Saudi Riyals${v ? ' and include VAT' : ''}`],
   [/^ادفع ([\d,]+) ر\.س — (.*)$/, (a, l) => `Pay ${a} SAR — ${l}`],
   [/^ادفع الآن — (.*)$/, (l) => `Pay now — ${l}`],
   [/^رابط دفع رقم (.*)$/, (c) => `Payment link no. ${c}`], [/^العميل: (.*)$/, (c) => `Customer: ${c}`],

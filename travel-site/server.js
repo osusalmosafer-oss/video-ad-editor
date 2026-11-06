@@ -350,6 +350,7 @@ app.post('/admin/bookings/:id', (req, res) => {
 app.post('/admin/reprice', (req, res) => {
   const m = Math.max(0, Math.min(200, int(setting('markup_percent'), 12)));
   q.run('UPDATE rates SET price=CAST((cost*(100+?)+99)/100 AS INTEGER) WHERE cost>0', m);
+  q.run('UPDATE rates SET price_we=CAST((cost_we*(100+?)+99)/100 AS INTEGER) WHERE cost_we>0', m);
   q.run('UPDATE room_types SET base_price=CAST((base_cost*(100+?)+99)/100 AS INTEGER) WHERE base_cost>0', m);
   res.redirect(303, '/admin/settings?ok=1');
 });
@@ -443,8 +444,10 @@ app.post('/admin/links/:id/delete', (req, res) => { q.run("DELETE FROM pay_links
 
 app.get('/admin/settings', (req, res) => res.send(AV.settings({ s: allSettings(), csrf: res.locals.csrf, saved: req.query.ok === '1', methods: pay.gatewayList(), notif: notify.status() })));
 app.post('/admin/settings', (req, res) => {
-  const b = req.body; const checks = ['enable_bank_transfer', 'enable_pay_later'];
+  const b = req.body; const checks = ['enable_bank_transfer', 'enable_pay_later', 'vat_registered'];
+  setSetting('weekend_days', [].concat(b.weekend_days || []).map(String).filter((d) => /^[0-6]$/.test(d)).sort().join(','));
   for (const k of Object.keys(D.DEFAULTS)) {
+    if (k === 'weekend_days') continue;
     if (checks.includes(k)) { setSetting(k, b[k] ? '1' : '0'); continue; }
     if (b[k] === undefined) continue;
     let v = clean(b[k], /^(policy_|about_text)/.test(k) ? 8000 : 200);
@@ -460,7 +463,8 @@ app.get('/admin/compliance', (req, res) => {
   const items = [
     { ok: !!s.tourism_license, label: 'رقم ترخيص وزارة السياحة ظاهر في الموقع', hint: 'الإعدادات ← رقم ترخيص وزارة السياحة' },
     { ok: !!s.cr_number, label: 'رقم السجل التجاري ظاهر', hint: 'من المركز السعودي للأعمال' },
-    { ok: !!s.vat_number, label: 'الرقم الضريبي ظاهر (السعر شامل 15%)', hint: 'من هيئة الزكاة والضريبة والجمارك' },
+    { ok: s.vat_registered !== '1' || !!s.vat_number, label: s.vat_registered === '1' ? 'الرقم الضريبي ظاهر' : 'الوكالة غير مسجّلة في الضريبة: لا تُعرض ضريبة (فعّل الخيار في الإعدادات عند التسجيل)', hint: 'التسجيل عبر هيئة الزكاة والضريبة والجمارك' },
+    { ok: (s.weekend_days || '') !== '', label: 'حُدِّدت ليالي نهاية الأسبوع (للأسعار المزدوجة)', hint: 'الإعدادات ← الأسعار والحجز' },
     { ok: !!(s.sbc_cert_no && s.sbc_cert_url), label: 'توثيق المتجر في المركز السعودي للأعمال مربوط (رقم + رابط)', hint: 'أضف رقم التوثيق ورابطه ليظهر في التذييل' },
     { ok: !!(s.phone || s.whatsapp) && !!s.address, label: 'وسيلة تواصل وعنوان واضحان' },
     { ok: !!(s.policy_terms && s.policy_cancel && s.policy_privacy), label: 'الشروط والإلغاء والخصوصية مراجَعة ومعتمدة منك (النصوص الافتراضية نموذجية فقط)', hint: 'الإعدادات ← النصوص النظامية' },

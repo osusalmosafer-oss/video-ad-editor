@@ -87,7 +87,12 @@ module.exports = {
     ${I('sbc_cert_no', 'رقم/معرّف توثيق المركز السعودي للأعمال')}${I('sbc_cert_url', 'رابط صفحة التوثيق (https://…)', 'dir="ltr"')}
     ${I('agency_name_en', 'Agency name (EN)', 'dir="ltr"')}${I('agency_tagline_en', 'Tagline (EN)', 'dir="ltr"')}${I('address_en', 'Address (EN)', 'dir="ltr"')}
     ${I('address', 'العنوان')}${I('phone', 'الهاتف', 'dir="ltr"')}${I('whatsapp', 'واتساب بصيغة دولية 9665xxxxxxxx', 'dir="ltr"')}${I('email', 'البريد', 'dir="ltr"')}</fieldset>
-    <fieldset class="box"><legend>الأسعار والحجز</legend>${I('vat_rate', 'نسبة ضريبة القيمة المضافة %', 'type="number" min="0" max="30"')}${I('hold_minutes', 'مدة حجز الغرفة أثناء الدفع الإلكتروني (دقيقة)', 'type="number" min="10" max="240"')}${I('cancel_free_hours', 'الإلغاء المجاني قبل الوصول بـ (ساعة)', 'type="number" min="0"')}
+    <fieldset class="box"><legend>الأسعار والحجز</legend>
+    <label class="check"><input type="checkbox" name="vat_registered" value="1" ${s.vat_registered === '1' ? 'checked' : ''}> الوكالة مسجّلة في ضريبة القيمة المضافة (عند التفعيل تُعرض الضريبة وتُحتسب)</label>
+    ${I('vat_rate', 'نسبة ضريبة القيمة المضافة %', 'type="number" min="0" max="30"')}
+    <p><b>ليالي «نهاية الأسبوع»</b> (للأسعار المزدوجة: وسط الأسبوع / نهاية الأسبوع). الليلة تُنسب ليوم الدخول:</p>
+    <div class="row">${[['0', 'الأحد'], ['1', 'الإثنين'], ['2', 'الثلاثاء'], ['3', 'الأربعاء'], ['4', 'الخميس'], ['5', 'الجمعة'], ['6', 'السبت']].map(([v, l]) => `<label class="check"><input type="checkbox" name="weekend_days" value="${v}" ${(s.weekend_days || '').split(',').includes(v) ? 'checked' : ''}> ${l}</label>`).join('')}</div>
+    <p class="muted">${(s.weekend_days || '') === '' ? 'لم تُحدَّد بعد: حاليًا تُحتسب كل الليالي بسعر نهاية الأسبوع (الأعلى).' : 'الليالي غير المحددة تُحتسب بسعر وسط الأسبوع.'}</p>${I('hold_minutes', 'مدة حجز الغرفة أثناء الدفع الإلكتروني (دقيقة)', 'type="number" min="10" max="240"')}${I('cancel_free_hours', 'الإلغاء المجاني قبل الوصول بـ (ساعة)', 'type="number" min="0"')}
     ${I('markup_percent', 'هامش الربح % على أسعار الموردين (للتسعير من التكلفة)', 'type="number" min="0" max="200"')}<p class="muted">بعد تغيير الهامش واحفظ الإعدادات، اضغط «إعادة التسعير» أدناه لتحديث أسعار كل الغرف المستوردة.</p></fieldset>
     <fieldset class="box"><legend>طرق الدفع</legend>
     <p>البوابات الإلكترونية المفعّلة (تُفعَّل بإضافة المفاتيح في متغيرات البيئة على الخادم، راجع README): <b>${methods.length ? methods.map((m) => esc(m.label)).join('، ') : 'لا شيء بعد'}</b></p>

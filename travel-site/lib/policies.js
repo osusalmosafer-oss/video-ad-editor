@@ -3,7 +3,7 @@
 const EN = {
   terms: `1. Definitions: "the Agency" is {agency}, Ministry of Tourism license no. {license}, Commercial Registration no. {cr}.
 2. Service: the Agency is an intermediary for hotel bookings in Makkah. Hotel services are provided by the booked hotel.
-3. Prices: all prices are in Saudi Riyals (SAR) and include 15% VAT. The final total is shown before you confirm.
+3. Prices: all prices are in Saudi Riyals (SAR){vat}. The final total is shown before you confirm.
 4. Confirmation: a booking is confirmed once full payment (or the bank transfer) is received and a booking number and voucher are issued.
 5. Guest details: the guest must provide accurate information and present a valid ID (national ID / iqama / passport) at check-in.
 6. Check-in and check-out: according to the hotel's policy, as stated on the booking voucher.
@@ -31,7 +31,7 @@ module.exports.EN = EN;
 module.exports = Object.assign(module.exports, {
   terms: `1. التعريف: «الوكالة» هي {agency}، ترخيص وزارة السياحة رقم {license}، سجل تجاري رقم {cr}.
 2. الخدمة: الوكالة وسيط حجوزات فندقية في مكة المكرمة، وتتم الخدمة الفندقية من قِبل الفندق المحجوز.
-3. الأسعار: جميع الأسعار المعروضة بالريال السعودي وشاملة ضريبة القيمة المضافة، ويظهر الإجمالي النهائي قبل تأكيد الحجز.
+3. الأسعار: جميع الأسعار المعروضة بالريال السعودي{vat}، ويظهر الإجمالي النهائي قبل تأكيد الحجز.
 4. تأكيد الحجز: يُعدّ الحجز مؤكدًا بعد سداد المبلغ كاملًا (أو اعتماد الحوالة البنكية) وصدور رقم الحجز وقسيمة التأكيد.
 5. بيانات النزيل: على العميل إدخال بيانات صحيحة، وتقديم هوية سارية (هوية وطنية/إقامة/جواز سفر) عند تسجيل الدخول للفندق.
 6. تسجيل الدخول والمغادرة: وفق نظام الفندق المحجوز، ويُحدَّد الوقت في قسيمة الحجز.
