@@ -56,6 +56,11 @@ CREATE INDEX IF NOT EXISTS idx_book_room ON bookings(room_type_id, check_in, che
       INSERT INTO payments(id,booking_id,provider,provider_ref,amount,status,created_at) SELECT id,booking_id,provider,provider_ref,amount,status,created_at FROM payments_old; DROP TABLE payments_old;`);
   } }
 
+// أعمدة اللغة الإنجليزية (ترحيل آمن للقواعد القديمة)
+for (const [t, c] of [['hotels', 'name_en'], ['hotels', 'district_en'], ['hotels', 'address_en'], ['hotels', 'description_en'], ['hotels', 'amenities_en'], ['room_types', 'name_en'], ['room_types', 'description_en'], ['bookings', 'hotel_name_en'], ['bookings', 'room_name_en']]) {
+  if (!db.prepare(`PRAGMA table_info(${t})`).all().some((x) => x.name === c)) db.exec(`ALTER TABLE ${t} ADD COLUMN ${c} TEXT`);
+}
+
 const q = {
   all: (sql, ...a) => db.prepare(sql).all(...a),
   get: (sql, ...a) => db.prepare(sql).get(...a),
@@ -80,6 +85,8 @@ const DEFAULTS = {
   enable_bank_transfer: '0', bank_name: '', bank_iban: '', bank_holder: '',
   enable_pay_later: '0',
   policy_terms: '', policy_privacy: '', policy_cancel: '', about_text: '',
+  agency_name_en: 'Osus Almosafer', agency_tagline_en: 'Makkah hotel bookings for Umrah pilgrims', address_en: 'Makkah, Saudi Arabia',
+  policy_terms_en: '', policy_privacy_en: '', policy_cancel_en: '', about_text_en: '',
 };
 const setting = (k) => { const r = q.get('SELECT value FROM settings WHERE key=?', k); return r ? r.value : (DEFAULTS[k] ?? ''); };
 const allSettings = () => { const o = { ...DEFAULTS }; for (const r of q.all('SELECT key,value FROM settings')) o[r.key] = r.value; return o; };

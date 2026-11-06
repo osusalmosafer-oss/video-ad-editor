@@ -47,8 +47,24 @@ npm test            # اختبار شامل للرحلة والأمان
 **إضافة بوابة جديدة** (مثل HyperPay): أضف كائنًا في `PROVIDERS` داخل `lib/payments.js` بثلاث دوال `enabled/create/verify` (انظر الأمثلة).
 > ⚠️ تكاملات البوابات مكتوبة حسب توثيقها العام ولم تُجرَّب مع حساباتك؛ جرّب كل بوابة في وضع الـ sandbox بمفاتيح تجريبية ودفعة صغيرة قبل الإطلاق.
 
+## اللغتان (عربي / English)
+العربية هي الافتراضية، والإنجليزية تحت `/en` (مثل `/en/hotels`) مع زر تبديل في الأعلى وروابط `hreflang` وsitemap لكلتا اللغتين. صفحات الزوار والقسيمة وروابط الدفع تُترجَم كاملة؛ **الإدارة بالعربية فقط**.
+- محتوى فنادقك: في نموذج الفندق والغرفة حقول English (الاسم، الحي، العنوان، الوصف، المرافق). إن تُركت فارغة تظهر العربية في النسخة الإنجليزية.
+- الشروط والإلغاء والخصوصية ومن نحن: نصوص إنجليزية افتراضية جاهزة، وتُعدَّل من الإعدادات (حقول EN).
+- إضافة نص عربي جديد للواجهة؟ أضف ترجمته في `lib/dictionary.js`؛ و`npm test` يفشل ويعرض أي نص عربي لم يُترجم في صفحات English.
+- غير مشمول: إيميلات الإشعار للنزيل تُرسل بالعربية.
+
 ## النشر على دومين
-**Render:** الخدمة `asas-almusafer` مضافة في `render.yaml` بجذر المستودع (New → Blueprint). عبّئ `ADMIN_PASSWORD` و`WHATSAPP` و`BASE_URL`، ثم من Settings → Custom Domains أضف دومينك وأنشئ سجلات DNS التي يعطيك إياها (شهادة HTTPS تلقائية).
+**Render (الخطوات):**
+1. أنشئ حسابًا على render.com واربطه بـ GitHub وامنحه الوصول للمستودع.
+2. **New → Web Service** → اختر المستودع والفرع → اضبط: Root Directory = `travel-site`، Build = `npm ci --omit=dev`، Start = `npm start`، Health Check Path = `/healthz`، Region = Frankfurt، **Plan = Starter** (القرص الدائم لا يعمل في المجاني؛ بدونه تضيع الحجوزات عند كل إعادة تشغيل).
+3. Advanced → **Add Disk**: Mount Path = `/var/data`، الحجم 5GB.
+4. Environment: `NODE_ENV=production`، `NODE_VERSION=22.12.0`، `DATA_DIR=/var/data`، `ADMIN_PASSWORD` (12 حرفًا فأكثر)، `SESSION_SECRET` (نص عشوائي طويل)، `WHATSAPP`، ومفاتيح البوابة/SMTP من `.env.example`.
+   (بديل: New → Blueprint يقرأ `render.yaml`، لكنه ينشئ أيضًا خدمة موقع العقارات `awj-real-estate` الموجودة فيه؛ احذفها من الملف أولًا إن لم ترِدها.)
+5. بعد أول نشر افتح `https://<اسم-الخدمة>.onrender.com/healthz` (يجب أن يظهر ok) ثم `/admin`.
+6. **ربط الدومين:** Settings → Custom Domains → Add → `www.دومينك` و`دومينك`. عند مسجّل الدومين أضف: `CNAME www → <اسم-الخدمة>.onrender.com`، وللدومين الأساسي سجل `A` بالعنوان الذي تعرضه Render (أو ALIAS/ANAME إن دعمه المسجّل). انتظر التحقق (دقائق إلى ساعات) فتصدر شهادة HTTPS تلقائيًا.
+7. اضبط `BASE_URL=https://دومينك` وأعد النشر (يفعّل HSTS وإعادة التوجيه لـ HTTPS وروابط sitemap الصحيحة).
+8. افتح الإدارة ← «الامتثال» وراجع القائمة.
 **VPS/أي استضافة Docker:** `docker build -t asas . && docker run -d -p 3000:3000 -v asas-data:/data --env-file .env asas` خلف Caddy/Nginx لـ HTTPS.
 نسخ احتياطي: انسخ مجلد `DATA_DIR` (قاعدة `asas.db` + `uploads/`).
 

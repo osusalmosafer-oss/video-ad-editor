@@ -13,7 +13,10 @@ const HOTELS = [
   ['copthorne-makkah-al-naseem', 'كوبثورن مكة النسيم', 4, 'النسيم', 'طريق الطائف، حي النسيم، مكة المكرمة', [21.38074, 39.872503], 'مطعم، مركز لياقة، مواقف مجانية، واي فاي مجاني، غرف عائلية، استقبال 24 ساعة، خدمة غرف'],
   ['four-points-sheraton-makkah-al-naseem', 'فور بوينتس باي شيراتون مكة النسيم', 4, 'النسيم', 'الدائري الثالث، خلف جامع الراجحي، مكة المكرمة', [21.38081, 39.874312], 'مطعم، مركز لياقة، مواقف مجانية، واي فاي مجاني، غرف عائلية، استقبال 24 ساعة، ميني ماركت'],
 ];
+const EN = { 'novotel-makkah-thakher-city': ['Novotel Makkah Thakher City', 'Al Andalus', 'Al Andalus District, Makkah'], 'doubletree-hilton-makkah-aziziyah': ['DoubleTree by Hilton Makkah Aziziyah', 'Al Aziziyah', 'King Khalid Road, Makkah'], 'violet-hotel-aziziyah': ['Violet Hotel Aziziyah', 'Al Aziziyah', 'Riyadh–Taif Road, Al Aziziyah, Makkah'], 'voco-makkah-ihg': ['voco Makkah by IHG', 'Al Misfalah', 'Ibrahim Al Khalil Street, Al Misfalah, Makkah'], 'millennium-makkah-al-naseem': ['Millennium Makkah Al Naseem', 'Al Naseem', 'Taif Road, Al Naseem, Makkah'], 'copthorne-makkah-al-naseem': ['Copthorne Makkah Al Naseem', 'Al Naseem', 'Taif Road, Al Naseem, Makkah'], 'four-points-sheraton-makkah-al-naseem': ['Four Points by Sheraton Makkah Al Naseem', 'Al Naseem', 'Third Ring Road, behind Al Rajhi Mosque, Makkah'] };
+function backfillEn() { for (const [slug, [n, d, a]] of Object.entries(EN)) q.run('UPDATE hotels SET name_en=?,district_en=?,address_en=? WHERE slug=? AND name_en IS NULL', n, d, a, slug); }
 function run() {
+  backfillEn();
   if (q.get("SELECT 1 FROM settings WHERE key='seed_hotels_v2'")) return; // مرة واحدة فقط حتى لا تعود فنادق حذفتها
   const fresh = !q.get('SELECT 1 FROM hotels LIMIT 1');
   q.run("INSERT INTO settings(key,value) VALUES('seed_hotels_v2','1')");
@@ -23,6 +26,7 @@ function run() {
     q.run('INSERT INTO hotels(slug,name,stars,district,address,distance_m,description,amenities,lat,lng,is_active) VALUES(?,?,?,?,?,?,?,?,?,?,0)', slug, name, stars, district, address, distM(HARAM, ll),
       'مسودة: أكمل الوصف والصور وأنواع الغرف والأسعار ثم فعّل الفندق. (المسافة تقريبية بخط مستقيم عن الحرم)', amenities, ll[0], ll[1]);
   }
+  backfillEn();
   console.log('✓ أُضيفت الفنادق كمسودات مخفية');
 }
 module.exports = { run };

@@ -80,6 +80,12 @@ body.admin{background:#eef1f8}
 .badges{display:inline-flex;gap:8px;align-items:center}
 .bd{font-style:normal;font-weight:900;border-radius:6px;padding:1px 12px;background:#fff;border:1.5px solid var(--line);font-size:.9rem;letter-spacing:.5px}
 .bd.mada{color:#0a7a3e;border-color:#0a7a3e}.bd.visa{color:#1a1f71;border-color:#1a1f71;font-family:Arial,sans-serif;font-style:italic}
-.govs{display:flex;gap:14px;align-items:center;margin-top:12px;flex-wrap:wrap}.govs .gov{height:46px;width:auto;background:#fff;border-radius:8px;padding:4px 8px}
+.govs{display:flex;gap:14px;align-items:center;margin-top:12px;flex-wrap:wrap}.govs .gov{height:54px;width:auto;background:#fff;border-radius:8px;padding:4px 8px}
 .center-box{text-align:center}.bigprice{font-size:2.2rem;font-weight:900;margin:.2em 0;color:var(--blue2)}
 td input[readonly]{min-width:230px;font-size:.8rem}
+/* الإنجليزية (LTR) */
+.langsw{color:#fff;border:1.5px solid rgba(255,255,255,.5);border-radius:20px;padding:0 14px;font-weight:700;font-size:.9rem}
+.langsw:hover{background:rgba(255,255,255,.12);text-decoration:none}
+html[dir=ltr] .tag{right:auto;left:10px}
+html[dir=ltr] .t th,html[dir=ltr] .t td{text-align:left}
+html[dir=ltr] .money td:last-child{text-align:right}

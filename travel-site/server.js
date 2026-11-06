@@ -18,6 +18,7 @@ const { esc, pages, policyText, baseUrl } = V;
 const AV = require('./lib/admin-views');
 const pay = require('./lib/payments');
 const notify = require('./lib/notify');
+const I = require('./lib/i18n');
 
 const PROD = process.env.NODE_ENV === 'production';
 const PORT = Number(process.env.PORT || 3000);
@@ -25,7 +26,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const SECRET = process.env.SESSION_SECRET || (PROD ? '' : 'dev-secret-change-me');
 if (PROD && (!ADMIN_PASSWORD || ADMIN_PASSWORD.length < 10 || !SECRET)) { console.error('✗ في الإنتاج يجب ضبط ADMIN_PASSWORD (10 أحرف فأكثر) و SESSION_SECRET'); process.exit(1); }
 if (!ADMIN_PASSWORD) console.warn('⚠️  ADMIN_PASSWORD غير مضبوط — لوحة الإدارة معطّلة');
-const HTTPS = /^https:/.test(process.env.BASE_URL || '');
+const HTTPS = /^https:/.test(process.env.BASE_URL || process.env.RENDER_EXTERNAL_URL || '');
 
 const app = express();
 app.disable('x-powered-by');
@@ -47,6 +48,32 @@ const sign = (v) => crypto.createHmac('sha256', SECRET).update(v).digest('base64
 const parseCookies = (req) => Object.fromEntries((req.headers.cookie || '').split(/;\s*/).filter(Boolean).map((c) => { const i = c.indexOf('='); return [c.slice(0, i), decodeURIComponent(c.slice(i + 1))]; }));
 const setCookie = (res, name, value, maxAge) => res.append('Set-Cookie', `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${HTTPS ? '; Secure' : ''}`);
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
+
+// ---------- اللغة: العربية افتراضيًا، والإنجليزية تحت /en ----------
+app.use((req, res, next) => {
+  const isAdmin = /^\/admin(\/|$)/.test(req.path);
+  let en = false;
+  if (/^\/en(\/|\?|$)/.test(req.url)) { en = true; req.url = req.url.replace(/^\/en/, '') || '/'; if (req.url[0] === '?') req.url = '/' + req.url; }
+  else if (/^\/pay(\/|$)/.test(req.path) && (req.headers.cookie || '').includes('lang=en')) en = true; // عودة بوابة الدفع
+  if (isAdmin) en = false;
+  const url = req.url;
+  if (!isAdmin && req.method === 'GET' && !/^\/(pay|booking|healthz|robots|sitemap)/.test(req.path)) setCookie(res, 'lang', en ? 'en' : 'ar', 86400 * 180);
+  if (en) {
+    const redir = res.redirect.bind(res);
+    res.redirect = (a, b) => { let st = 302, u = a; if (typeof a === 'number') { st = a; u = b; } if (typeof u === 'string' && u[0] === '/' && !/^\/(en|admin|uploads|brand|fonts)(\/|$|\?)/.test(u)) u = '/en' + (u === '/' ? '' : u); return redir(st, u); };
+  }
+  const send = res.send.bind(res);
+  res.send = (b) => {
+    if (typeof b === 'string' && !isAdmin && b.startsWith('<!doctype html')) {
+      if (en) {
+        b = I.translateHtml(b).replace('<html lang="ar" dir="rtl">', '<html lang="en" dir="ltr">').replace('content="ar_SA"', 'content="en_US"')
+          .replace(/(href|action)="\/(?!\/|en(?:\/|")|admin|uploads|brand|fonts|style\.css|app\.js|robots|sitemap)([^"]*)"/g, '$1="/en/$2"').replace(/(href|action)="\/"/g, '$1="/en"');
+      }
+    }
+    return send(b);
+  };
+  I.als.run({ lang: en ? 'en' : 'ar', url }, next);
+});
 
 app.use((req, res, next) => {
   const c = parseCookies(req);
@@ -170,6 +197,7 @@ app.post('/book', writeLimiter, (req, res) => {
   const exp = new Date(Date.now() + Number(setting('hold_minutes') || 30) * 60000).toISOString();
   q.run(`INSERT INTO bookings(ref,hotel_id,room_type_id,hotel_name,room_name,check_in,check_out,nights,rooms,guests,total,vat,guest_name,phone,email,nationality,notes,status,expires_at)
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending',?)`, ref, c.h.id, c.r.id, c.h.name, c.r.name, c.s.v.in, c.s.v.out, c.qt.nights, c.s.v.rooms, c.s.v.guests, c.qt.total, c.qt.vat, form.name, form.phone, form.email, form.nationality, form.notes, exp);
+  q.run('UPDATE bookings SET hotel_name_en=?, room_name_en=? WHERE ref=?', c.h.name_en || null, c.r.name_en || null, ref);
   notify.bookingEvent(q.get('SELECT * FROM bookings WHERE ref=?', ref), 'new');
   setCookie(res, 'b_' + ref, sign('b:' + ref), 86400 * 30); // يسمح لصاحب المتصفح بفتح حجزه
   res.redirect(303, `/booking/${ref}/pay`);
@@ -269,10 +297,11 @@ app.get('/terms', (req, res) => res.send(pages.text('الشروط والأحكا
 app.get('/privacy', (req, res) => res.send(pages.text('سياسة الخصوصية', policyText('privacy', S()), 'privacy')));
 app.get('/cancellation', (req, res) => res.send(pages.text('سياسة الإلغاء والاسترداد', policyText('cancel', S()), 'cancellation')));
 app.get('/about', (req, res) => res.send(pages.text('من نحن', policyText('about', S()), 'about')));
-app.get('/robots.txt', (req, res) => res.type('text').send(`User-agent: *\nDisallow: /admin\nDisallow: /booking\nDisallow: /pay\nSitemap: ${baseUrl() || `${req.protocol}://${req.headers.host}`}/sitemap.xml\n`));
+app.get('/robots.txt', (req, res) => res.type('text').send(`User-agent: *\nDisallow: /admin\nDisallow: /booking\nDisallow: /pay\nDisallow: /en/booking\nDisallow: /en/pay\nDisallow: /en/booking-lookup\nSitemap: ${baseUrl() || `${req.protocol}://${req.headers.host}`}/sitemap.xml\n`));
 app.get('/sitemap.xml', (req, res) => {
   const b = baseUrl() || `${req.protocol}://${req.headers.host}`;
-  const urls = ['/', '/hotels', '/about', '/terms', '/privacy', '/cancellation', ...q.all('SELECT slug FROM hotels WHERE is_active=1').map((h) => '/hotels/' + encodeURIComponent(h.slug))];
+  const ar = ['/', '/hotels', '/about', '/terms', '/privacy', '/cancellation', ...q.all('SELECT slug FROM hotels WHERE is_active=1').map((h) => '/hotels/' + encodeURIComponent(h.slug))];
+  const urls = [...ar, ...ar.map((u) => '/en' + (u === '/' ? '' : u))];
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map((u) => `<url><loc>${esc(b + u)}</loc></url>`).join('')}</urlset>`);
 });
 
@@ -339,12 +368,14 @@ function saveHotel(req, res) {
   const b = req.body; const id = int(req.params.id);
   const name = clean(b.name, 120); if (!name) return hotelPage(req, res, id, 'اسم الفندق مطلوب');
   const f = { stars: Math.min(5, Math.max(1, int(b.stars, 4))), district: clean(b.district, 60), address: clean(b.address, 200), distance_m: b.distance_m === '' ? null : Math.max(0, int(b.distance_m)), description: clean(b.description, 2000), amenities: clean(b.amenities, 500), license_no: clean(b.license_no, 60), kaaba_view: b.kaaba_view ? 1 : 0, is_active: b.is_active ? 1 : 0 };
+  const en = [clean(b.name_en, 120), clean(b.district_en, 60), clean(b.address_en, 200), clean(b.description_en, 2000), clean(b.amenities_en, 500)];
   let hid = id;
   if (id) q.run('UPDATE hotels SET name=?,stars=?,district=?,address=?,distance_m=?,description=?,amenities=?,license_no=?,kaaba_view=?,is_active=? WHERE id=?', name, f.stars, f.district, f.address, f.distance_m, f.description, f.amenities, f.license_no, f.kaaba_view, f.is_active, id);
   else {
     let slug = slugify(name); if (q.get('SELECT 1 FROM hotels WHERE slug=?', slug)) slug += '-' + crypto.randomBytes(2).toString('hex');
     hid = Number(q.run('INSERT INTO hotels(slug,name,stars,district,address,distance_m,description,amenities,license_no,kaaba_view,is_active) VALUES(?,?,?,?,?,?,?,?,?,?,?)', slug, name, f.stars, f.district, f.address, f.distance_m, f.description, f.amenities, f.license_no, f.kaaba_view, f.is_active).lastInsertRowid);
   }
+  q.run('UPDATE hotels SET name_en=?,district_en=?,address_en=?,description_en=?,amenities_en=? WHERE id=?', ...en, hid);
   const hasCover = q.get('SELECT 1 FROM hotel_images WHERE hotel_id=?', hid);
   const sniff = (file) => { try { const h = fs.readFileSync(file.path).subarray(0, 12); return (h[0] === 0xff && h[1] === 0xd8) || h.subarray(0, 4).toString('latin1') === '\x89PNG' || (h.subarray(0, 4).toString('latin1') === 'RIFF' && h.subarray(8, 12).toString('latin1') === 'WEBP'); } catch { return false; } };
   const goodFiles = (req.files || []).filter((file) => sniff(file) || (fs.rmSync(file.path, { force: true }), false));
@@ -366,8 +397,11 @@ function saveRoom(req, res) {
   if (!q.get('SELECT 1 FROM hotels WHERE id=?', hid)) return res.status(404).end();
   const f = [clean(b.name, 80), Math.min(20, Math.max(1, int(b.capacity, 2))), Math.max(1, int(b.base_price)), Math.max(0, int(b.total_rooms, 1)), b.breakfast ? 1 : 0, clean(b.description, 300), b.is_active ? 1 : 0];
   if (!f[0]) return res.redirect(303, '/admin/hotels/' + hid);
+  const enr = [clean(b.name_en, 80), clean(b.description_en, 300)];
   if (id) q.run('UPDATE room_types SET name=?,capacity=?,base_price=?,total_rooms=?,breakfast=?,description=?,is_active=? WHERE id=? AND hotel_id=?', ...f, id, hid);
   else q.run('INSERT INTO room_types(name,capacity,base_price,total_rooms,breakfast,description,is_active,hotel_id) VALUES(?,?,?,?,?,?,?,?)', ...f, hid);
+  const rid = id || Number(q.get('SELECT last_insert_rowid() r').r);
+  q.run('UPDATE room_types SET name_en=?,description_en=? WHERE id=?', ...enr, rid);
   res.redirect(303, '/admin/hotels/' + hid);
 }
 app.post('/admin/hotels/:hid/rooms', saveRoom);
@@ -404,7 +438,7 @@ app.post('/admin/settings', (req, res) => {
   for (const k of Object.keys(D.DEFAULTS)) {
     if (checks.includes(k)) { setSetting(k, b[k] ? '1' : '0'); continue; }
     if (b[k] === undefined) continue;
-    let v = clean(b[k], k.startsWith('policy_') || k === 'about_text' ? 8000 : 200);
+    let v = clean(b[k], /^(policy_|about_text)/.test(k) ? 8000 : 200);
     if (k === 'sbc_cert_url' && v && !/^https:\/\/[^\s]+$/.test(v)) v = '';
     if (k === 'whatsapp') v = v.replace(/\D/g, '');
     if (['vat_rate', 'hold_minutes', 'cancel_free_hours', 'transfer_hold_hours'].includes(k)) v = String(Math.max(0, int(v, Number(D.DEFAULTS[k]))));

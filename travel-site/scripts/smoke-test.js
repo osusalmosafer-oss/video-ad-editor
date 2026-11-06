@@ -6,9 +6,10 @@ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'asas-'));
 const PORT = 3999; const base = `http://127.0.0.1:${PORT}`;
 const env = { ...process.env, PORT, DATA_DIR: dir, ADMIN_PASSWORD: 'test-password-123', SESSION_SECRET: 'x'.repeat(32), MOCK_PAYMENTS: '1', NODE_ENV: 'test', BASE_URL: '' };
 let fail = 0; const ok = (c, m) => { console.log((c ? '✓ ' : '✗ ') + m); if (!c) fail++; };
-const jar = {};
+const jar = {}; const enHtml = new Map();
 const f = async (url, o = {}) => {
   const r = await fetch(base + url, { redirect: 'manual', ...o, headers: { cookie: Object.entries(jar).map(([k, v]) => `${k}=${v}`).join('; '), ...(o.headers || {}) } });
+  if (/^\/en(\/|\?|$)/.test(url) && (r.headers.get('content-type') || '').includes('html') && (!o.method || o.method === 'GET')) { const t = await r.clone().text(); enHtml.set(url, t); }
   for (const c of r.headers.getSetCookie()) { const [kv] = c.split(';'); const i = kv.indexOf('='); jar[kv.slice(0, i)] = kv.slice(i + 1); }
   return r;
 };
@@ -64,6 +65,28 @@ const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x
     ok((await (await f('/robots.txt')).text()).includes('Disallow: /admin'), 'robots');
     ok((await (await f('/sitemap.xml')).text()).includes('demo-hotel-1'), 'sitemap');
     const xss = await (await f('/hotels/demo-hotel-1?in=%22%3E%3Cscript%3E&out=x')).text(); ok(!xss.includes('<script>alert') && !/value=""><script/.test(xss), 'لا XSS في معاملات البحث');
+    // ---------- النسخة الإنجليزية ----------
+    const e0 = await f('/en'); const eh = await e0.text(); ok(eh.includes('<html lang="en" dir="ltr">') && eh.includes('hreflang="ar"'), 'الصفحة الإنجليزية LTR مع hreflang');
+    ok(eh.includes('href="/en/hotels"') && !eh.includes('href="/hotels"'), 'روابط /en مسبوقة بالبادئة');
+    await f('/en/hotels/demo-hotel-1?' + qs); await f('/en/hotels'); await f('/en/terms'); await f('/en/privacy'); await f('/en/cancellation'); await f('/en/about'); await f('/en/booking-lookup'); await f('/en/nope');
+    await f('/en/hotels/demo-hotel-1?in=2020-01-01&out=2020-01-03'); await f('/en/hotels/demo-hotel-1?in=' + today + '&out=' + today);
+    const ebf = await (await f(`/en/book?${qs}&room=1`)).text(); ok(ebf.includes('Guest details') || ebf.includes('Guest'), 'صفحة الحجز بالإنجليزية');
+    const eb = await f('/en/book', form({ _csrf: csrf(ebf), room: 1, in: today, out, rooms: 1, guests: 2, name: 'x', phone: '1', agree: '1' })); const ebt = await eb.text(); enHtml.set('/en/book#err', ebt);
+    const eb2 = await f('/en/book', form({ _csrf: csrf(ebf), room: 1, in: today, out, rooms: 1, guests: 2, name: 'John Smith', phone: '0501234568', agree: '1' }));
+    ok(eb2.status === 303 && eb2.headers.get('location').startsWith('/en/booking/'), 'إعادة التوجيه تحافظ على /en');
+    const eref = eb2.headers.get('location'); const epay = await (await f(eref)).text(); await f(eref.replace('/pay', ''));
+    await f('/en/booking-lookup', form({ _csrf: csrf(await (await f('/en/booking-lookup')).text()), ref: 'AS-NOPE', phone: '1' }));
+    await f(eref, form({ _csrf: csrf(epay), method: 'mock' })); // مسار الدفع
+    const estart = await f(eref.replace('/en', '/en') , form({ _csrf: csrf(epay), method: 'mock' })); enHtml.set('/en/pay#start', await estart.text());
+    await f('/pay/return/' + eref.split('/')[3]); // العودة تُبقي الإنجليزية عبر الكوكي
+    const ev = await f('/en/booking/' + eref.split('/')[3]); enHtml.set('/en/voucher', await ev.text());
+    ok((await f('/pay/return/' + eref.split('/')[3])).headers.get('location')?.startsWith('/en/booking/'), 'عودة البوابة تحافظ على الإنجليزية');
+    ok(/Confirmed/.test(enHtml.get('/en/voucher')), 'القسيمة بالإنجليزية مؤكدة');
+    const left = new Map();
+    for (const [u, h] of enHtml) { const t = h.replace(/<script[\s\S]*?<\/script>/g, ''); for (const m of t.matchAll(/>([^<>]*[\u0600-\u06FF][^<>]*)(?=<)/g)) left.set(m[1].replace(/\s+/g, ' ').trim(), u); for (const m of t.matchAll(/(?:content|placeholder|alt|title)="([^"]*[\u0600-\u06FF][^"]*)"/g)) left.set(m[1], u + ' (attr)'); }
+    const untr = [...left].filter(([k]) => !/^العربية$/.test(k));
+    if (untr.length) { console.log('نصوص عربية غير مترجمة في النسخة الإنجليزية:'); for (const [k, u] of untr) console.log('  ' + JSON.stringify(k) + '   @ ' + u); }
+    ok(untr.length === 0, 'لا نصوص عربية متبقية في صفحات English');
   } catch (e) { console.error(e); fail++; }
   srv.kill(); fs.rmSync(dir, { recursive: true, force: true });
   console.log(fail ? `\n${fail} فشل` : '\nنجحت كل الفحوص'); process.exit(fail ? 1 : 0);

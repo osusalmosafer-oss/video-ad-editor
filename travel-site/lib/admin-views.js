@@ -57,6 +57,11 @@ module.exports = {
     <label>الحي<input name="district" maxlength="60" value="${val(f, 'district')}"></label>
     <label>البعد عن الحرم (متر)<input name="distance_m" type="number" min="0" value="${val(f, 'distance_m')}"></label></div>
     <label>العنوان<input name="address" maxlength="200" value="${val(f, 'address')}"></label>
+    <fieldset class="box"><legend>النسخة الإنجليزية (تظهر لمن يختار English)</legend>
+    <div class="row"><label>Name<input name="name_en" dir="ltr" maxlength="120" value="${val(f, 'name_en')}"></label><label>District<input name="district_en" dir="ltr" maxlength="60" value="${val(f, 'district_en')}"></label></div>
+    <label>Address<input name="address_en" dir="ltr" maxlength="200" value="${val(f, 'address_en')}"></label>
+    <label>Description<textarea name="description_en" dir="ltr" rows="3" maxlength="2000">${val(f, 'description_en')}</textarea></label>
+    <label>Amenities (comma-separated)<input name="amenities_en" dir="ltr" maxlength="500" value="${val(f, 'amenities_en')}" placeholder="Free Wi-Fi, Prayer room, Parking"></label></fieldset>
     <label>الوصف<textarea name="description" rows="4" maxlength="2000">${val(f, 'description')}</textarea></label>
     <label>المرافق (افصل بفاصلة)<input name="amenities" maxlength="500" value="${val(f, 'amenities')}" placeholder="واي فاي، مصلى، مواقف، مطعم"></label>
     <label>رقم ترخيص المنشأة الفندقية (وزارة السياحة)<input name="license_no" maxlength="60" value="${val(f, 'license_no')}"></label>
@@ -80,6 +85,7 @@ module.exports = {
     <fieldset class="box"><legend>بيانات الوكالة والتراخيص (تظهر في تذييل الموقع وعلى القسيمة)</legend>
     ${I('agency_name', 'اسم الوكالة')}${I('agency_tagline', 'وصف مختصر')}${I('tourism_license', 'رقم ترخيص وزارة السياحة')}${I('cr_number', 'رقم السجل التجاري')}${I('vat_number', 'الرقم الضريبي')}
     ${I('sbc_cert_no', 'رقم/معرّف توثيق المركز السعودي للأعمال')}${I('sbc_cert_url', 'رابط صفحة التوثيق (https://…)', 'dir="ltr"')}
+    ${I('agency_name_en', 'Agency name (EN)', 'dir="ltr"')}${I('agency_tagline_en', 'Tagline (EN)', 'dir="ltr"')}${I('address_en', 'Address (EN)', 'dir="ltr"')}
     ${I('address', 'العنوان')}${I('phone', 'الهاتف', 'dir="ltr"')}${I('whatsapp', 'واتساب بصيغة دولية 9665xxxxxxxx', 'dir="ltr"')}${I('email', 'البريد', 'dir="ltr"')}</fieldset>
     <fieldset class="box"><legend>الأسعار والحجز</legend>${I('vat_rate', 'نسبة ضريبة القيمة المضافة %', 'type="number" min="0" max="30"')}${I('hold_minutes', 'مدة حجز الغرفة أثناء الدفع الإلكتروني (دقيقة)', 'type="number" min="10" max="240"')}${I('cancel_free_hours', 'الإلغاء المجاني قبل الوصول بـ (ساعة)', 'type="number" min="0"')}</fieldset>
     <fieldset class="box"><legend>طرق الدفع</legend>
@@ -90,6 +96,7 @@ module.exports = {
     ${I('bank_name', 'اسم البنك')}${I('bank_holder', 'اسم المستفيد')}${I('bank_iban', 'الآيبان', 'dir="ltr"')}${I('transfer_hold_hours', 'مدة حجز الغرفة بانتظار الحوالة (ساعة)', 'type="number" min="1" max="168"')}
     <label class="check"><input type="checkbox" name="enable_pay_later" value="1" ${s.enable_pay_later === '1' ? 'checked' : ''}> السماح بـ«احجز وادفع لاحقًا» (تأكيد يدوي)</label></fieldset>
     <fieldset class="box"><legend>النصوص النظامية (اتركها فارغة لاستخدام النص الافتراضي)</legend>${T('policy_terms', 'الشروط والأحكام', 'النص الافتراضي')}${T('policy_cancel', 'سياسة الإلغاء والاسترداد', 'النص الافتراضي')}${T('policy_privacy', 'سياسة الخصوصية', 'النص الافتراضي')}${T('about_text', 'من نحن', 'النص الافتراضي')}</fieldset>
+    <fieldset class="box"><legend>النصوص بالإنجليزية (اتركها فارغة لاستخدام النص الإنجليزي الافتراضي)</legend>${T('policy_terms_en', 'Terms (EN)', 'Default')}${T('policy_cancel_en', 'Cancellation (EN)', 'Default')}${T('policy_privacy_en', 'Privacy (EN)', 'Default')}${T('about_text_en', 'About (EN)', 'Default')}</fieldset>
     <button class="btn lg">حفظ الإعدادات</button></form>
     <div class="box"><h3>كلمة المرور</h3><p class="muted">كلمة مرور الإدارة تأتي من متغير البيئة ADMIN_PASSWORD؛ لتغييرها عدّله على الخادم وأعد التشغيل.</p></div>`);
   },
@@ -107,6 +114,7 @@ function roomForm(r, hid, csrf, rates) {
   <label>عدد الغرف المتاحة للبيع<input name="total_rooms" type="number" min="0" max="500" value="${val(f, 'total_rooms')}"></label>
   <label>السعر الأساسي / الليلة (ر.س شامل الضريبة)<input name="base_price" type="number" min="1" required value="${val(f, 'base_price')}"></label></div>
   <label>وصف<input name="description" maxlength="300" value="${val(f, 'description')}"></label>
+  <div class="row"><label>Room name (EN)<input name="name_en" dir="ltr" maxlength="80" value="${val(f, 'name_en')}" placeholder="Double room"></label><label>Description (EN)<input name="description_en" dir="ltr" maxlength="300" value="${val(f, 'description_en')}"></label></div>
   <label class="check"><input type="checkbox" name="breakfast" value="1" ${chk(f, 'breakfast')}> شامل الإفطار</label>
   <label class="check"><input type="checkbox" name="is_active" value="1" ${chk(f, 'is_active')}> معروض</label>
   <button class="btn sm">${r ? 'حفظ' : 'إضافة'}</button></form>
