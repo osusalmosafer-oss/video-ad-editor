@@ -130,7 +130,7 @@ const pages = {
       body: `<section class="wrap"><p><a href="/hotels">← كل الفنادق</a></p>
       <div class="stars">${stars(h.stars)}</div><h1>${esc(L(h, 'name'))}</h1>
       <p class="muted">${esc(L(h, 'address') || L(h, 'district') || 'مكة المكرمة')}${h.distance_m != null ? ` · ${Number(h.distance_m).toLocaleString('en-US')} م عن الحرم` : ''}${h.kaaba_view ? ' · إطلالة على الكعبة' : ''}</p>${g}
-      ${L(h, 'description') ? `<p class="desc">${esc(L(h, 'description')).replace(/\n/g, '<br>')}</p>` : ''}
+      ${L(h, 'description') && !/^(مسودة|Draft)/.test(L(h, 'description')) ? `<p class="desc">${esc(L(h, 'description')).replace(/\n/g, '<br>')}</p>` : ''}
       ${amen.length ? `<ul class="chips">${amen.map((a) => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
       ${h.license_no ? `<p class="muted">ترخيص المنشأة الفندقية: ${esc(h.license_no)}</p>` : ''}
       <h2 class="sec" id="rooms">الغرف والأسعار</h2>${searchForm(v, today, `/hotels/${esc(h.slug)}#rooms`)}
