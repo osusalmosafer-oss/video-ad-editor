@@ -26,6 +26,13 @@ const EXACT = {
   'تاريخ غير صحيح': 'Invalid date', 'تاريخ الوصول يجب ألا يكون في الماضي': 'Check-in date cannot be in the past', 'تاريخ المغادرة يجب أن يكون بعد الوصول': 'Check-out must be after check-in',
   'أقصى مدة للحجز عبر الموقع 30 ليلة، تواصل معنا للمدد الأطول': 'The maximum online stay is 30 nights; contact us for longer stays',
   'غير متاح': 'Unavailable',
+  // طلبات الحجز والأسعار المستوردة
+  'توصيل للحرم': 'Shuttle to the Haram', 'اطلب الحجز': 'Request booking', 'إرسال طلب الحجز': 'Send booking request', 'التأكيد بعد التحقق من التوفر': 'Confirmed after availability check',
+  'بدون وجبات': 'No meals', 'إضافات اختيارية': 'Optional extras', 'تُضاف إلى الإجمالي عند تأكيد الحجز، شاملة الضريبة.': 'Added to the total when the booking is confirmed, VAT included.',
+  'بانتظار تأكيد التوفر': 'Awaiting availability confirmation', 'تم استلام طلب الحجز': 'Booking request received',
+  'سنتحقق من توفر الغرف مع الفندق ونرسل لك رابط الدفع عبر الواتساب. يتأكد الحجز بعد السداد. لا يُسحب أي مبلغ قبل ذلك.': 'We will check room availability with the hotel and send you a payment link via WhatsApp. The booking is confirmed after payment. Nothing is charged before then.',
+  'هذا طلب حجز: نتحقق من توفر الغرف مع الفندق ثم نرسل لك رابط الدفع عبر الواتساب. لا يُسحب أي مبلغ الآن.': 'This is a booking request: we check availability with the hotel, then send you a payment link via WhatsApp. Nothing is charged now.',
+  'الأسعار غير متوفرة لهذه التواريخ — تواصل معنا': 'Prices are not available for these dates — please contact us',
   // الحجز
   'بيانات النزيل': 'Guest details', 'الاسم الكامل (كما في الهوية)': 'Full name (as on ID)', 'رقم الجوال (واتساب)': 'Mobile number (WhatsApp)', 'البريد الإلكتروني (اختياري)': 'Email (optional)',
   'الجنسية': 'Nationality', 'ملاحظات (اختياري)': 'Notes (optional)', 'أوافق على': 'I agree to the', 'و': ' and ', 'متابعة إلى الدفع': 'Continue to payment', 'ملخص الحجز': 'Booking summary',

@@ -130,6 +130,7 @@ function parseSearch(qs) {
 }
 function evalRoom(r, s) { // يحسب السعر والتوفر والملاءمة لغرفة
   if (Math.ceil(s.v.guests / s.v.rooms) > r.capacity) return { ...r, err: `سعة الغرفة ${r.capacity} نزلاء — زد عدد الغرف` };
+  if (r.rates_only && quote(r, s.v.in, s.v.out, 1).uncovered) return { ...r, err: 'الأسعار غير متوفرة لهذه التواريخ — تواصل معنا' };
   const avail = availableRooms(r, s.v.in, s.v.out);
   if (avail < s.v.rooms) return { ...r, err: avail ? `متاح ${avail} غرفة فقط` : 'غير متاح في هذه التواريخ' };
   return { ...r, avail, quote: quote(r, s.v.in, s.v.out, s.v.rooms) };
@@ -198,9 +199,10 @@ app.post('/book', writeLimiter, (req, res) => {
   q.run(`INSERT INTO bookings(ref,hotel_id,room_type_id,hotel_name,room_name,check_in,check_out,nights,rooms,guests,total,vat,guest_name,phone,email,nationality,notes,status,expires_at)
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending',?)`, ref, c.h.id, c.r.id, c.h.name, c.r.name, c.s.v.in, c.s.v.out, c.qt.nights, c.s.v.rooms, c.s.v.guests, c.qt.total, c.qt.vat, form.name, form.phone, form.email, form.nationality, form.notes, exp);
   q.run('UPDATE bookings SET hotel_name_en=?, room_name_en=? WHERE ref=?', c.h.name_en || null, c.r.name_en || null, ref);
-  notify.bookingEvent(q.get('SELECT * FROM bookings WHERE ref=?', ref), 'new');
+  if (c.r.on_request) q.run("UPDATE bookings SET status='request', expires_at=NULL WHERE ref=?", ref);
+  notify.bookingEvent(q.get('SELECT * FROM bookings WHERE ref=?', ref), c.r.on_request ? 'request' : 'new');
   setCookie(res, 'b_' + ref, sign('b:' + ref), 86400 * 30); // يسمح لصاحب المتصفح بفتح حجزه
-  res.redirect(303, `/booking/${ref}/pay`);
+  res.redirect(303, c.r.on_request ? `/booking/${ref}` : `/booking/${ref}/pay`);
 });
 
 // الوصول للحجز: بكوكي الحجز (نفس المتصفح) أو بعد التحقق برقم الجوال
@@ -321,12 +323,12 @@ app.use('/admin', adminOnly);
 
 app.get('/admin', (req, res) => {
   const filter = clean(req.query.status, 20);
-  const where = ['pending', 'confirmed', 'awaiting_transfer', 'pay_later', 'cancelled'].includes(filter) ? 'WHERE status=?' : '';
+  const where = ['request', 'pending', 'confirmed', 'awaiting_transfer', 'pay_later', 'cancelled'].includes(filter) ? 'WHERE status=?' : '';
   const rows = q.all(`SELECT * FROM bookings ${where} ORDER BY id DESC LIMIT 300`, ...(where ? [filter] : []));
   const stats = {
     confirmed: q.get("SELECT COUNT(*) c FROM bookings WHERE status='confirmed'").c,
     revenue: q.get("SELECT COALESCE(SUM(total),0) t FROM bookings WHERE status='confirmed'").t,
-    open: q.get("SELECT COUNT(*) c FROM bookings WHERE status IN ('awaiting_transfer','pay_later')").c,
+    open: q.get("SELECT COUNT(*) c FROM bookings WHERE status IN ('request','awaiting_transfer','pay_later')").c,
   };
   res.send(AV.bookings({ rows, stats, filter: where ? filter : '' }));
 });
@@ -337,7 +339,7 @@ app.get('/admin/bookings/:id', (req, res) => {
 });
 app.post('/admin/bookings/:id', (req, res) => {
   const st = clean(req.body.status, 20);
-  if (!['pending', 'awaiting_transfer', 'pay_later', 'confirmed', 'cancelled'].includes(st)) return res.status(400).end();
+  if (!['request', 'pending', 'awaiting_transfer', 'pay_later', 'confirmed', 'cancelled'].includes(st)) return res.status(400).end();
   const b = q.get('SELECT * FROM bookings WHERE id=?', int(req.params.id)); if (!b) return res.status(404).end();
   const paidAt = st === 'confirmed' && !b.paid_at ? new Date().toISOString() : b.paid_at;
   q.run('UPDATE bookings SET status=?, admin_note=?, paid_at=?, expires_at=? WHERE id=?', st, clean(req.body.admin_note, 2000), paidAt, st === 'confirmed' || st === 'cancelled' ? null : (b.expires_at || new Date(Date.now() + 86400000).toISOString()), b.id);
@@ -345,6 +347,13 @@ app.post('/admin/bookings/:id', (req, res) => {
   res.redirect(303, '/admin/bookings/' + b.id);
 });
 
+app.post('/admin/reprice', (req, res) => {
+  const m = Math.max(0, Math.min(200, int(setting('markup_percent'), 12)));
+  q.run('UPDATE rates SET price=CAST((cost*(100+?)+99)/100 AS INTEGER) WHERE cost>0', m);
+  q.run('UPDATE room_types SET base_price=CAST((base_cost*(100+?)+99)/100 AS INTEGER) WHERE base_cost>0', m);
+  res.redirect(303, '/admin/settings?ok=1');
+});
+app.post('/admin/hotels-activate', (req, res) => { q.run('UPDATE hotels SET is_active=1 WHERE id IN (SELECT DISTINCT hotel_id FROM room_types WHERE is_active=1)'); res.redirect(303, '/admin/hotels'); });
 app.get('/admin/hotels', (req, res) => res.send(AV.hotels({ rows: q.all('SELECT h.*, (SELECT COUNT(*) FROM room_types WHERE hotel_id=h.id) rooms FROM hotels h ORDER BY sort, id'), csrf: res.locals.csrf })));
 const hotelPage = (req, res, id, err) => {
   const h = id ? q.get('SELECT * FROM hotels WHERE id=?', id) : null;
@@ -441,7 +450,7 @@ app.post('/admin/settings', (req, res) => {
     let v = clean(b[k], /^(policy_|about_text)/.test(k) ? 8000 : 200);
     if (k === 'sbc_cert_url' && v && !/^https:\/\/[^\s]+$/.test(v)) v = '';
     if (k === 'whatsapp') v = v.replace(/\D/g, '');
-    if (['vat_rate', 'hold_minutes', 'cancel_free_hours', 'transfer_hold_hours'].includes(k)) v = String(Math.max(0, int(v, Number(D.DEFAULTS[k]))));
+    if (['vat_rate', 'hold_minutes', 'cancel_free_hours', 'transfer_hold_hours', 'markup_percent'].includes(k)) v = String(Math.max(0, int(v, Number(D.DEFAULTS[k]))));
     setSetting(k, v);
   }
   res.redirect(303, '/admin/settings?ok=1');

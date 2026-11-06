@@ -13,7 +13,7 @@ module.exports = {
     <form method="post" action="/admin/login" class="form">${csrf}<label>كلمة المرور<input type="password" name="password" required autocomplete="current-password"></label><button class="btn lg">دخول</button></form></section>` }).replace('__CSRF__', '');
   },
   bookings({ rows, stats, filter }) {
-    const tabs = [['', 'الكل'], ['confirmed', 'مؤكدة'], ['pending', 'بانتظار الدفع'], ['awaiting_transfer', 'بانتظار الحوالة'], ['pay_later', 'دفع لاحقًا'], ['cancelled', 'ملغاة']];
+    const tabs = [['', 'الكل'], ['request', 'بانتظار تأكيد التوفر'], ['confirmed', 'مؤكدة'], ['pending', 'بانتظار الدفع'], ['awaiting_transfer', 'بانتظار الحوالة'], ['pay_later', 'دفع لاحقًا'], ['cancelled', 'ملغاة']];
     return A('الحجوزات', `<h1>الحجوزات</h1>
     <div class="stats"><div><b>${stats.confirmed}</b><span>حجوزات مؤكدة</span></div><div><b>${sar(stats.revenue)}</b><span>إيراد المؤكد</span></div><div><b>${stats.open}</b><span>بانتظار إجراء</span></div></div>
     <p class="tabs">${tabs.map(([k, l]) => `<a class="${filter === k ? 'on' : ''}" href="/admin?status=${k}">${l}</a>`).join('')}</p>
@@ -44,7 +44,7 @@ module.exports = {
     <td>${l.status !== 'paid' ? `<form method="post" action="/admin/links/${l.id}/delete" data-confirm="حذف الرابط؟">${csrf}<button class="linkbtn">حذف</button></form>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">لا توجد روابط</td></tr>'}</table></div>`);
   },
   hotels({ rows, csrf }) {
-    return A('الفنادق', `<h1>الفنادق</h1><p><a class="btn" href="/admin/hotels/new">+ فندق جديد</a></p><div class="tablewrap"><table class="t"><tr><th>الفندق</th><th>النجوم</th><th>البعد عن الحرم</th><th>الغرف</th><th>الحالة</th><th></th></tr>
+    return A('الفنادق', `<h1>الفنادق</h1><p><a class="btn" href="/admin/hotels/new">+ فندق جديد</a> <form method="post" action="/admin/hotels-activate" class="inline" data-confirm="تفعيل كل الفنادق التي لها غرف وإظهارها للزوار؟">${csrf}<button class="btn ghost">تفعيل كل الفنادق المسعّرة</button></form></p><div class="tablewrap"><table class="t"><tr><th>الفندق</th><th>النجوم</th><th>البعد عن الحرم</th><th>الغرف</th><th>الحالة</th><th></th></tr>
     ${rows.map((h) => `<tr><td>${esc(h.name)}</td><td>${h.stars}</td><td>${h.distance_m ?? '—'} م</td><td>${h.rooms}</td><td>${h.is_active ? 'معروض' : 'مخفي'}</td><td><a href="/admin/hotels/${h.id}">تعديل</a></td></tr>`).join('') || '<tr><td colspan="6" class="muted">أضف أول فندق</td></tr>'}</table></div>`);
   },
   hotelForm({ h, images, rooms, rates, csrf, err }) {
@@ -87,7 +87,8 @@ module.exports = {
     ${I('sbc_cert_no', 'رقم/معرّف توثيق المركز السعودي للأعمال')}${I('sbc_cert_url', 'رابط صفحة التوثيق (https://…)', 'dir="ltr"')}
     ${I('agency_name_en', 'Agency name (EN)', 'dir="ltr"')}${I('agency_tagline_en', 'Tagline (EN)', 'dir="ltr"')}${I('address_en', 'Address (EN)', 'dir="ltr"')}
     ${I('address', 'العنوان')}${I('phone', 'الهاتف', 'dir="ltr"')}${I('whatsapp', 'واتساب بصيغة دولية 9665xxxxxxxx', 'dir="ltr"')}${I('email', 'البريد', 'dir="ltr"')}</fieldset>
-    <fieldset class="box"><legend>الأسعار والحجز</legend>${I('vat_rate', 'نسبة ضريبة القيمة المضافة %', 'type="number" min="0" max="30"')}${I('hold_minutes', 'مدة حجز الغرفة أثناء الدفع الإلكتروني (دقيقة)', 'type="number" min="10" max="240"')}${I('cancel_free_hours', 'الإلغاء المجاني قبل الوصول بـ (ساعة)', 'type="number" min="0"')}</fieldset>
+    <fieldset class="box"><legend>الأسعار والحجز</legend>${I('vat_rate', 'نسبة ضريبة القيمة المضافة %', 'type="number" min="0" max="30"')}${I('hold_minutes', 'مدة حجز الغرفة أثناء الدفع الإلكتروني (دقيقة)', 'type="number" min="10" max="240"')}${I('cancel_free_hours', 'الإلغاء المجاني قبل الوصول بـ (ساعة)', 'type="number" min="0"')}
+    ${I('markup_percent', 'هامش الربح % على أسعار الموردين (للتسعير من التكلفة)', 'type="number" min="0" max="200"')}<p class="muted">بعد تغيير الهامش واحفظ الإعدادات، اضغط «إعادة التسعير» أدناه لتحديث أسعار كل الغرف المستوردة.</p></fieldset>
     <fieldset class="box"><legend>طرق الدفع</legend>
     <p>البوابات الإلكترونية المفعّلة (تُفعَّل بإضافة المفاتيح في متغيرات البيئة على الخادم، راجع README): <b>${methods.length ? methods.map((m) => esc(m.label)).join('، ') : 'لا شيء بعد'}</b></p>
     <p>مدى وفيزا: يظهر خيار البطاقات من البوابة المفعّلة. لحصر الوسائل على مدى وفيزا فقط عطّل غيرها من لوحة البوابة نفسها.</p>
@@ -98,6 +99,7 @@ module.exports = {
     <fieldset class="box"><legend>النصوص النظامية (اتركها فارغة لاستخدام النص الافتراضي)</legend>${T('policy_terms', 'الشروط والأحكام', 'النص الافتراضي')}${T('policy_cancel', 'سياسة الإلغاء والاسترداد', 'النص الافتراضي')}${T('policy_privacy', 'سياسة الخصوصية', 'النص الافتراضي')}${T('about_text', 'من نحن', 'النص الافتراضي')}</fieldset>
     <fieldset class="box"><legend>النصوص بالإنجليزية (اتركها فارغة لاستخدام النص الإنجليزي الافتراضي)</legend>${T('policy_terms_en', 'Terms (EN)', 'Default')}${T('policy_cancel_en', 'Cancellation (EN)', 'Default')}${T('policy_privacy_en', 'Privacy (EN)', 'Default')}${T('about_text_en', 'About (EN)', 'Default')}</fieldset>
     <button class="btn lg">حفظ الإعدادات</button></form>
+    <form method="post" action="/admin/reprice" class="box" data-confirm="إعادة حساب أسعار البيع لكل الغرف المستوردة من التكلفة بالهامش الحالي؟">${csrf}<h3>إعادة التسعير</h3><button class="btn ghost">إعادة التسعير من التكلفة</button></form>
     <div class="box"><h3>كلمة المرور</h3><p class="muted">كلمة مرور الإدارة تأتي من متغير البيئة ADMIN_PASSWORD؛ لتغييرها عدّله على الخادم وأعد التشغيل.</p></div>`);
   },
   compliance({ items }) {

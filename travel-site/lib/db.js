@@ -57,8 +57,8 @@ CREATE INDEX IF NOT EXISTS idx_book_room ON bookings(room_type_id, check_in, che
   } }
 
 // أعمدة اللغة الإنجليزية (ترحيل آمن للقواعد القديمة)
-for (const [t, c] of [['hotels', 'name_en'], ['hotels', 'district_en'], ['hotels', 'address_en'], ['hotels', 'description_en'], ['hotels', 'amenities_en'], ['room_types', 'name_en'], ['room_types', 'description_en'], ['bookings', 'hotel_name_en'], ['bookings', 'room_name_en']]) {
-  if (!db.prepare(`PRAGMA table_info(${t})`).all().some((x) => x.name === c)) db.exec(`ALTER TABLE ${t} ADD COLUMN ${c} TEXT`);
+for (const [t, c] of [['hotels', 'name_en'], ['hotels', 'district_en'], ['hotels', 'address_en'], ['hotels', 'description_en'], ['hotels', 'amenities_en'], ['room_types', 'name_en'], ['room_types', 'description_en'], ['bookings', 'hotel_name_en'], ['bookings', 'room_name_en'], ['hotels', 'extras'], ['hotels', 'transfer'], ['room_types', 'rates_only'], ['room_types', 'on_request'], ['room_types', 'base_cost'], ['room_types', 'src'], ['rates', 'cost']]) {
+  if (!db.prepare(`PRAGMA table_info(${t})`).all().some((x) => x.name === c)) db.exec(`ALTER TABLE ${t} ADD COLUMN ${c} ${/^(transfer|rates_only|on_request|base_cost|cost)$/.test(c) ? 'INTEGER DEFAULT 0' : 'TEXT'}`);
 }
 
 const q = {
@@ -84,6 +84,7 @@ const DEFAULTS = {
   cancel_free_hours: '48',  // الإلغاء المجاني قبل الوصول بـ (ساعة)
   enable_bank_transfer: '0', bank_name: '', bank_iban: '', bank_holder: '',
   enable_pay_later: '0',
+  markup_percent: '12',     // هامش الربح على أسعار الموردين (للتسعير من التكلفة)
   policy_terms: '', policy_privacy: '', policy_cancel: '', about_text: '',
   agency_name_en: 'Osus Almosafer', agency_tagline_en: 'Makkah hotel bookings for Umrah pilgrims', address_en: 'Makkah, Saudi Arabia',
   policy_terms_en: '', policy_privacy_en: '', policy_cancel_en: '', about_text_en: '',
@@ -105,20 +106,23 @@ const nightList = (a, b) => { const out = []; for (let t = toMs(a); t < toMs(b);
 // ---------- الأسعار (الأسعار بالريال شاملة الضريبة) ----------
 function nightPrice(roomTypeId, base, night) {
   const r = q.get('SELECT price FROM rates WHERE room_type_id=? AND from_date<=? AND to_date>=? ORDER BY id DESC LIMIT 1', roomTypeId, night, night);
-  return r ? r.price : base;
+  return r ? r.price : null;
 }
 function quote(room, checkIn, checkOut, rooms) {
   const nights = nightList(checkIn, checkOut);
-  const perNight = nights.map((n) => nightPrice(room.id, room.base_price, n));
+  const raw = nights.map((n) => nightPrice(room.id, room.base_price, n));
+  const uncovered = room.rates_only ? raw.filter((x) => x == null).length : 0;
+  const perNight = raw.map((x) => (x == null ? room.base_price : x));
   const total = perNight.reduce((a, b) => a + b, 0) * rooms;           // ريال صحيح، شامل الضريبة
   const rate = Number(setting('vat_rate')) || 0;
   const vat = Math.round((total * rate) / (100 + rate));
-  return { nights: nights.length, perNight, total, vat, net: total - vat, avg: Math.round(perNight.reduce((a, b) => a + b, 0) / (nights.length || 1)) };
+  return { uncovered, nights: nights.length, perNight, total, vat, net: total - vat, avg: Math.round(perNight.reduce((a, b) => a + b, 0) / (nights.length || 1)) };
 }
 
 // ---------- التوفر ----------
 const ACTIVE_SQL = "(status='confirmed' OR (status IN ('pending','awaiting_transfer','pay_later') AND expires_at > ?))";
 function availableRooms(room, checkIn, checkOut) {
+  if (room.on_request) return 999; // مخزون المورد لا نتتبعه؛ التأكيد يدويًا
   const nowIso = new Date().toISOString();
   const rows = q.all(`SELECT check_in, check_out, rooms FROM bookings WHERE room_type_id=? AND check_in<? AND check_out>? AND ${ACTIVE_SQL}`, room.id, checkOut, checkIn, nowIso);
   let max = 0;

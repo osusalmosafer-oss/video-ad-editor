@@ -17,6 +17,7 @@ const csrf = (html) => /name="_csrf" value="([^"]+)"/.exec(html)[1];
 const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(o).toString() });
 (async () => {
   const seed = spawn('node', ['scripts/seed-demo.js'], { env, stdio: 'inherit' }); await new Promise((r) => seed.on('exit', r));
+  const imp = spawn('node', ['scripts/import-rates.js'], { env, stdio: 'ignore' }); await new Promise((r) => imp.on('exit', r));
   const srv = spawn('node', ['server.js'], { env, stdio: 'inherit' });
   await new Promise((r) => setTimeout(r, 1500));
   try {
@@ -65,12 +66,37 @@ const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x
     ok((await (await f('/robots.txt')).text()).includes('Disallow: /admin'), 'robots');
     ok((await (await f('/sitemap.xml')).text()).includes('demo-hotel-1'), 'sitemap');
     const xss = await (await f('/hotels/demo-hotel-1?in=%22%3E%3Cscript%3E&out=x')).text(); ok(!xss.includes('<script>alert') && !/value=""><script/.test(xss), 'لا XSS في معاملات البحث');
+    // ---------- أسعار الموردين: طلب حجز ثم رابط دفع ----------
+    if (new Date().toISOString().slice(0, 10) <= '2026-11-18') {
+      { const lp9 = await (await f('/admin/login')).text(); await f('/admin/login', form({ _csrf: csrf(lp9), password: env.ADMIN_PASSWORD })); }
+      const adm = csrf(await (await f('/admin/hotels')).text());
+      ok((await f('/admin/hotels-activate', form({ _csrf: adm }))).status === 303, 'تفعيل الفنادق المسعّرة');
+      const sk = 'in=2026-11-20&out=2026-11-23&rooms=1&guests=2';
+      const hp2 = await (await f('/hotels/conrad-makkah-jabal-omar?' + sk)).text();
+      ok(hp2.includes('4,032'), 'سعر كونراد = 3 ليالٍ × 1344 (1200 + 12%)');
+      ok(hp2.includes('اطلب الحجز') && hp2.includes('السرير الإضافي'), 'زر طلب الحجز وإضافات الفندق');
+      ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2026-12-20&out=2026-12-23&rooms=1&guests=2')).text()).includes('1,949') === false, 'لا خطأ في فترة أخرى');
+      ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2027-03-01&out=2027-03-03&rooms=1&guests=2')).text()).includes('الأسعار غير متوفرة'), 'خارج فترات الأسعار لا يُباع');
+      const rid = /name="room" value="(\d+)"/.exec(hp2)[1];
+      const bk = await (await f(`/book?${sk}&room=${rid}`)).text(); ok(bk.includes('إرسال طلب الحجز'), 'صفحة طلب الحجز');
+      const rq = await f('/book', form({ _csrf: csrf(bk), room: rid, in: '2026-11-20', out: '2026-11-23', rooms: 1, guests: 2, name: 'طالب حجز', phone: '0555000111', agree: '1' }));
+      ok(rq.status === 303 && !rq.headers.get('location').endsWith('/pay'), 'طلب الحجز لا يذهب للدفع');
+      const rref = rq.headers.get('location').split('/')[2];
+      const rv = await (await f('/booking/' + rref)).text(); ok(rv.includes('بانتظار تأكيد التوفر'), 'حالة بانتظار تأكيد التوفر');
+      const lp3 = await f('/admin/links', form({ _csrf: csrf(await (await f('/admin/links')).text()), amount: 4032, description: 'حجز ' + rref, booking_ref: rref, hours: 24 }));
+      ok(lp3.status === 303, 'رابط دفع لطلب الحجز');
+      const tk = /\/pay\/l\/([\w-]+)"/.exec(await (await f('/admin/links')).text())[1];
+      const l2 = await (await f('/pay/l/' + tk)).text();
+      await f('/pay/l/' + tk, form({ _csrf: csrf(l2), method: 'mock' })); await f('/pay/lr/' + tk);
+      ok((await (await f('/booking/' + rref)).text()).includes('مؤكد'), 'سداد الرابط يؤكد الحجز المطلوب');
+    }
     // ---------- النسخة الإنجليزية ----------
     const e0 = await f('/en'); const eh = await e0.text(); ok(eh.includes('<html lang="en" dir="ltr">') && eh.includes('hreflang="ar"'), 'الصفحة الإنجليزية LTR مع hreflang');
     ok(eh.includes('href="/en/hotels"') && !eh.includes('href="/hotels"'), 'روابط /en مسبوقة بالبادئة');
     await f('/en/hotels/demo-hotel-1?' + qs); await f('/en/hotels'); await f('/en/terms'); await f('/en/privacy'); await f('/en/cancellation'); await f('/en/about'); await f('/en/booking-lookup'); await f('/en/nope');
     await f('/en/hotels/demo-hotel-1?in=2020-01-01&out=2020-01-03'); await f('/en/hotels/demo-hotel-1?in=' + today + '&out=' + today);
     const ebf = await (await f(`/en/book?${qs}&room=1`)).text(); ok(ebf.includes('Guest details') || ebf.includes('Guest'), 'صفحة الحجز بالإنجليزية');
+    if (new Date().toISOString().slice(0, 10) <= '2026-11-18') { await f('/en/hotels/conrad-makkah-jabal-omar?in=2026-11-20&out=2026-11-23&rooms=1&guests=2'); const eh2 = await (await f('/en/hotels/conrad-makkah-jabal-omar?in=2026-11-20&out=2026-11-23&rooms=1&guests=2')).text(); ok(eh2.includes('Request booking') && eh2.includes('Optional extras'), 'صفحة الفندق المستورد بالإنجليزية'); }
     const eb = await f('/en/book', form({ _csrf: csrf(ebf), room: 1, in: today, out, rooms: 1, guests: 2, name: 'x', phone: '1', agree: '1' })); const ebt = await eb.text(); enHtml.set('/en/book#err', ebt);
     const eb2 = await f('/en/book', form({ _csrf: csrf(ebf), room: 1, in: today, out, rooms: 1, guests: 2, name: 'John Smith', phone: '0501234568', agree: '1' }));
     ok(eb2.status === 303 && eb2.headers.get('location').startsWith('/en/booking/'), 'إعادة التوجيه تحافظ على /en');

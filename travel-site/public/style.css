@@ -89,3 +89,4 @@ td input[readonly]{min-width:230px;font-size:.8rem}
 html[dir=ltr] .tag{right:auto;left:10px}
 html[dir=ltr] .t th,html[dir=ltr] .t td{text-align:left}
 html[dir=ltr] .money td:last-child{text-align:right}
+.tag2{top:40px;background:#1fa855}html[dir=ltr] .tag2{left:10px}.extras ul{padding-inline-start:18px;margin:6px 0}

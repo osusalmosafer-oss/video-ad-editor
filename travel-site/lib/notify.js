@@ -20,7 +20,7 @@ function mailer() {
 const staffEmail = () => env('NOTIFY_EMAIL') || setting('email');
 const staffWhatsapp = () => (env('NOTIFY_WHATSAPP') || setting('whatsapp')).replace(/\D/g, '');
 
-const TITLES = { new: 'حجز جديد', paid: 'تم الدفع وتأكيد الحجز', cancelled: 'إلغاء حجز', transfer: 'حجز بانتظار الحوالة', later: 'حجز بانتظار الدفع لاحقًا', link_paid: 'تم سداد رابط دفع' };
+const TITLES = { request: 'طلب حجز جديد بانتظار تأكيد التوفر', new: 'حجز جديد', paid: 'تم الدفع وتأكيد الحجز', cancelled: 'إلغاء حجز', transfer: 'حجز بانتظار الحوالة', later: 'حجز بانتظار الدفع لاحقًا', link_paid: 'تم سداد رابط دفع' };
 
 function lines(b) {
   return [`رقم الحجز: ${b.ref}`, `الحالة: ${STATUS_AR[b.status] || b.status}`, `الفندق: ${b.hotel_name} — ${b.room_name} × ${b.rooms}`,

@@ -25,7 +25,7 @@ const policyText = (key, s) => {
   return fill(s[k] || POLICIES[key], s);
 };
 
-const STATUS_AR = { pending: 'بانتظار الدفع', awaiting_transfer: 'بانتظار الحوالة', pay_later: 'حجز مبدئي', confirmed: 'مؤكد', cancelled: 'ملغي' };
+const STATUS_AR = { request: 'بانتظار تأكيد التوفر', pending: 'بانتظار الدفع', awaiting_transfer: 'بانتظار الحوالة', pay_later: 'حجز مبدئي', confirmed: 'مؤكد', cancelled: 'ملغي' };
 
 function layout({ title, desc, body, canonical, jsonld, admin, robots }) {
   const s = allSettings();
@@ -92,7 +92,7 @@ function searchForm(v = {}, today, action = '/hotels') {
 }
 const cover = (h) => h.cover ? `<img src="/uploads/${esc(h.cover)}" alt="${esc(L(h, 'name'))}" loading="lazy">` : `<div class="ph"><img src="/brand/icon-color.png" alt=""></div>`;
 function hotelCard(h, qs = '') {
-  return `<a class="card" href="/hotels/${esc(h.slug)}${qs}"><div class="img">${cover(h)}${h.kaaba_view ? '<span class="tag">إطلالة على الكعبة</span>' : ''}</div>
+  return `<a class="card" href="/hotels/${esc(h.slug)}${qs}"><div class="img">${cover(h)}${h.kaaba_view ? '<span class="tag">إطلالة على الكعبة</span>' : ''}${h.transfer ? '<span class="tag tag2">توصيل للحرم</span>' : ''}</div>
   <div class="pad"><div class="stars">${stars(h.stars)}</div><h3>${esc(L(h, 'name'))}</h3>
   <p class="muted">${esc(L(h, 'district') || 'مكة المكرمة')}${h.distance_m != null ? ` · ${Number(h.distance_m).toLocaleString('en-US')} م عن الحرم` : ''}</p>
   <p class="from">${h.price_from ? `ابتداءً من <b>${sar(h.price_from)}</b> / الليلة` : ''}${h.unavailable ? '<span class="soldout">غير متاح في هذه التواريخ</span>' : ''}</p></div></a>`;
@@ -133,7 +133,7 @@ const pages = {
       ${h.license_no ? `<p class="muted">ترخيص المنشأة الفندقية: ${esc(h.license_no)}</p>` : ''}
       <h2 class="sec" id="rooms">الغرف والأسعار</h2>${searchForm(v, today, `/hotels/${esc(h.slug)}#rooms`)}
       ${err ? `<p class="alert">${esc(err)}</p>` : ''}
-      ${rooms.length ? `<div class="rooms">${rooms.map((r) => roomRow(r, v, searched)).join('')}</div>` : '<p class="muted">لا توجد غرف معروضة.</p>'}</section>`,
+      ${rooms.length ? `<div class="rooms">${rooms.map((r) => roomRow(r, v, searched)).join('')}</div>` : '<p class="muted">لا توجد غرف معروضة.</p>'}${extrasBlock(h)}</section>`,
     });
   },
   book({ h, r, v, q: qt, avail, err, csrf, form }) {
@@ -148,8 +148,8 @@ const pages = {
         <label>الجنسية<input name="nationality" maxlength="40" value="${esc(f.nationality)}"></label>
         <label>ملاحظات (اختياري)<textarea name="notes" rows="3" maxlength="500">${esc(f.notes)}</textarea></label>
         <label class="check"><input type="checkbox" name="agree" value="1" required> أوافق على <a href="/terms" target="_blank">الشروط والأحكام</a> و<a href="/cancellation" target="_blank">سياسة الإلغاء والاسترداد</a> و<a href="/privacy" target="_blank">سياسة الخصوصية</a></label>
-        <button class="btn lg">متابعة إلى الدفع</button></form></div>
-      <aside class="sum">${summary({ hotel_name: L(h, 'name'), room_name: L(r, 'name'), check_in: v.in, check_out: v.out, nights: qt.nights, rooms: Number(v.rooms), guests: Number(v.guests), total: qt.total, vat: qt.vat })}<p class="muted">متبقي ${avail} غرفة من هذا النوع لهذه التواريخ.</p></aside></section>`,
+        <button class="btn lg">${r.on_request ? 'إرسال طلب الحجز' : 'متابعة إلى الدفع'}</button></form></div>
+      <aside class="sum">${summary({ hotel_name: L(h, 'name'), room_name: L(r, 'name'), check_in: v.in, check_out: v.out, nights: qt.nights, rooms: Number(v.rooms), guests: Number(v.guests), total: qt.total, vat: qt.vat })}${r.on_request ? '<p class="alert info">هذا طلب حجز: نتحقق من توفر الغرف مع الفندق ثم نرسل لك رابط الدفع عبر الواتساب. لا يُسحب أي مبلغ الآن.</p>' : `<p class="muted">متبقي ${avail} غرفة من هذا النوع لهذه التواريخ.</p>`}</aside></section>`,
     });
   },
   pay({ b, methods, s, csrf, err }) {
@@ -189,6 +189,7 @@ const pages = {
       body: `<section class="wrap voucher"><div class="vhead ${hl}"><div><small>رقم الحجز</small><h1>${esc(b.ref)}</h1></div><span class="pill">${esc(st)}</span></div>
       ${notice ? `<p class="alert info">${esc(notice)}</p>` : ''}
       ${bank ? `<div class="box"><h3>بيانات الحوالة</h3><p>المبلغ: <b>${sar(b.total)}</b> — اكتب رقم الحجز <b>${esc(b.ref)}</b> في بيان الحوالة وأرسل صورة الإيصال عبر الواتساب.</p><p>البنك: ${esc(s.bank_name)}<br>اسم المستفيد: ${esc(s.bank_holder)}<br>الآيبان: <b dir="ltr">${esc(s.bank_iban)}</b></p><p class="muted">تُحجز الغرفة لمدة ${esc(s.transfer_hold_hours)} ساعة ثم يُلغى الحجز تلقائيًا إن لم تصل الحوالة.</p></div>` : ''}
+      ${b.status === 'request' ? '<div class="box"><h3>تم استلام طلب الحجز</h3><p>سنتحقق من توفر الغرف مع الفندق ونرسل لك رابط الدفع عبر الواتساب. يتأكد الحجز بعد السداد. لا يُسحب أي مبلغ قبل ذلك.</p></div>' : ''}
       ${b.status === 'pending' ? `<p><a class="btn" href="/booking/${esc(b.ref)}/pay">إكمال الدفع</a></p>` : ''}
       <div class="grid2"><div class="box"><h3>${esc((I.isEn() && b.hotel_name_en || b.hotel_name))}</h3><p>${esc((I.isEn() && b.room_name_en || b.room_name))} × ${b.rooms}</p>
         <p>الوصول: <b>${fmtD(b.check_in)}</b><br><small class="muted">${hijri(b.check_in)}</small></p>
@@ -196,7 +197,7 @@ const pages = {
         <div class="box"><h3>النزيل</h3><p>${esc(b.guest_name)}<br><span dir="ltr">${esc(b.phone)}</span></p>${b.nationality ? `<p>${esc(b.nationality)}</p>` : ''}${summaryMoney(b)}</div></div>
       <p class="muted">يُرجى إحضار هوية سارية عند تسجيل الدخول. ${esc(sx(s, 'agency_name'))} — ترخيص وزارة السياحة ${esc(s.tourism_license || '—')}${s.vat_number ? ' — الرقم الضريبي ' + esc(s.vat_number) : ''}</p>
       <p class="noprint"><button class="btn" data-print>طباعة / حفظ PDF</button> ${wa ? `<a class="btn ghost" href="${esc(wa)}" rel="noopener">تواصل عبر الواتساب</a>` : ''}
-      ${['confirmed', 'pending', 'awaiting_transfer', 'pay_later'].includes(b.status) ? `<form method="post" action="/booking/${esc(b.ref)}/cancel" class="inline" data-confirm="هل تريد إلغاء الحجز؟">${csrf}<button class="btn danger">إلغاء الحجز</button></form>` : ''}</p></section>`,
+      ${['confirmed', 'pending', 'awaiting_transfer', 'pay_later', 'request'].includes(b.status) ? `<form method="post" action="/booking/${esc(b.ref)}/cancel" class="inline" data-confirm="هل تريد إلغاء الحجز؟">${csrf}<button class="btn danger">إلغاء الحجز</button></form>` : ''}</p></section>`,
     });
   },
   lookup({ err, csrf }) {
@@ -211,13 +212,19 @@ const pages = {
   notFound() { return layout({ title: 'غير موجود', robots: 'noindex', body: `<section class="wrap center"><h1>الصفحة غير موجودة</h1><p><a class="btn" href="/">العودة للرئيسية</a></p></section>` }); },
 };
 
+function extrasBlock(h) {
+  let list; try { list = JSON.parse(h.extras || '[]'); } catch { list = []; }
+  if (!list.length) return '';
+  const m = Number(setting('markup_percent')) || 0;
+  return `<div class="box extras"><h3>إضافات اختيارية</h3><ul>${list.map((x) => `<li>${esc(I.isEn() && x.en ? x.en : x.ar)}: <b>${sar(Math.ceil((x.cost * (100 + m)) / 100 - 1e-9))}</b></li>`).join('')}</ul><p class="muted">تُضاف إلى الإجمالي عند تأكيد الحجز، شاملة الضريبة.</p></div>`;
+}
 function roomRow(r, v, searched) {
-  const meta = `${r.capacity} نزلاء كحدٍّ أقصى${r.breakfast ? ' · شامل الإفطار' : ''}`;
+  const meta = `${r.capacity} نزلاء كحدٍّ أقصى${r.breakfast ? ' · شامل الإفطار' : r.on_request ? ' · بدون وجبات' : ''}`;
   let action;
   if (!searched) action = '<span class="muted">اختر التواريخ لعرض السعر والتوفر</span>';
   else if (r.err) action = `<span class="soldout">${esc(r.err)}</span>`;
   else action = `<div class="priceb"><b>${sar(r.quote.total)}</b><small>الإجمالي لـ ${r.quote.nights} ليلة × ${v.rooms} غرفة · شامل الضريبة</small>
-    <form method="get" action="/book">${hid(v)}<input type="hidden" name="room" value="${r.id}"><button class="btn">احجز</button></form>${r.avail <= 3 ? `<small class="warn">متبقي ${r.avail} فقط</small>` : ''}</div>`;
+    <form method="get" action="/book">${hid(v)}<input type="hidden" name="room" value="${r.id}"><button class="btn">${r.on_request ? 'اطلب الحجز' : 'احجز'}</button></form>${r.on_request ? '<small class="warn">التأكيد بعد التحقق من التوفر</small>' : ''}${r.avail <= 3 ? `<small class="warn">متبقي ${r.avail} فقط</small>` : ''}</div>`;
   return `<div class="room"><div><h3>${esc(L(r, 'name'))}</h3><p class="muted">${meta}</p>${L(r, 'description') ? `<p>${esc(L(r, 'description'))}</p>` : ''}<p class="muted">السعر يبدأ من ${sar(r.base_price)} / الليلة</p></div>${action}</div>`;
 }
 function summaryMoney(b) {
