@@ -1,0 +1,7 @@
+{"sample": false, "series": "أسئلة من التعليقات", "items": [
+ {"id":"l1","platform":"facebook","comment":"هل يوجد مدة لحفظ الأمتعة؟","question":"مدة الحفظ"},
+ {"id":"l2","platform":"facebook","comment":"لماذا لا تكمل المعلومة وتقول كم ثمن حفظ الأمتعة","question":"الثمن"},
+ {"id":"l3","platform":"tiktok","comment":"هل يقبلون الأمتعة من الحجم الكبير؟ وزن 23 كيلو؟","question":"الحجم"},
+ {"id":"l4","platform":"facebook","comment":"والأمتعة الضائعة وين تلقاها؟","question":"الضائعة"},
+ {"id":"l5","platform":"facebook","comment":"هل متاح مركز حفظ الأمتعة بالمدينة المنورة وأين مكانه؟","question":"المدينة"}
+]}

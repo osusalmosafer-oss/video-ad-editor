@@ -1,0 +1,12 @@
+{
+ "stories": [
+  {"id":"anjum","title":"فندق أنجم","hl":"أنجم","sub":"كم يبعد عن الحرم؟ مشي حقيقي","photo":"haram-courtyard-a.jpg","pos":"center 8%"},
+  {"id":"voco","title":"فندق فوكو مكة","hl":"فوكو","sub":"غرفة رباعية، سعر خاص حتى 15 أكتوبر","photo":"haram-wide.jpg","pos":"30% center"},
+  {"id":"midan","title":"فندق ميدان العزيزية","hl":"ميدان","sub":"جناح عائلي: غرفتان وصالة","photo":"haram-courtyard-b.jpg","pos":"center 14%"},
+  {"id":"address","title":"فندق العنوان جبل عمر","hl":"العنوان","sub":"أهدأ مكان جنب الحرم؟","photo":"jabal-omar-towers.jpg","pos":"center 6%"},
+  {"id":"sheraton","title":"شيراتون جبل الكعبة","hl":"شيراتون","sub":"أجنحة للعائلات الكبيرة","photo":"jabal-omar-towers.jpg","pos":"center 22%"},
+  {"id":"general","title":"احجز فندقك في مكة","hl":"فندقك","sub":"قريب من الحرم، وبأفضل سعر","photo":"haram-courtyard-a.jpg","pos":"center 20%"}
+ ],
+ "cta": "أرسل لنا تاريخ وصولك وعدد الأشخاص",
+ "note": "الرابط في البايو"
+}
