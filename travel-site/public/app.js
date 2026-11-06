@@ -17,3 +17,4 @@ document.querySelectorAll('input[name=in]').forEach((i) => {
     o.min = min; if (!o.value || o.value < min) o.value = min;
   });
 });
+document.addEventListener('focusin', (e) => { if (e.target.matches && e.target.matches('[data-select]')) e.target.select(); });

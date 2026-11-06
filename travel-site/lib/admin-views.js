@@ -1,6 +1,7 @@
 'use strict';
 const { esc, sar, fmtD, layout, STATUS_AR, waLink } = require('./views');
 const { DEFAULTS } = require('./db');
+const { payBadges } = require('./views');
 
 const A = (title, body) => layout({ title, body: `<section class="wrap">${body}</section>`, admin: true, robots: 'noindex,nofollow' });
 const val = (o, k) => esc(o && o[k] != null ? o[k] : '');
@@ -24,10 +25,23 @@ module.exports = {
     const guestWa = `https://wa.me/${String(b.phone).replace(/\D/g, '').replace(/^0/, '966')}?text=${encodeURIComponent(`السلام عليكم ${b.guest_name}، بخصوص حجزك رقم ${b.ref} في ${b.hotel_name}`)}`;
     return A('حجز ' + b.ref, `<p><a href="/admin">← الحجوزات</a></p><h1>${esc(b.ref)} <span class="pill s-${b.status}">${esc(STATUS_AR[b.status] || b.status)}</span></h1>
     <div class="grid2"><div class="box"><h3>${esc(b.hotel_name)}</h3><p>${esc(b.room_name)} × ${b.rooms} · ${b.guests} نزلاء</p><p>${fmtD(b.check_in)} ← ${fmtD(b.check_out)} (${b.nights} ليلة)</p><p>الإجمالي: <b>${sar(b.total)}</b> (الضريبة ${sar(b.vat)})</p><p>طريقة الدفع: ${esc(b.pay_method || '—')} ${b.paid_at ? '· ' + esc(b.paid_at.slice(0, 16)) : ''}</p></div>
-    <div class="box"><h3>النزيل</h3><p>${esc(b.guest_name)}<br><span dir="ltr">${esc(b.phone)}</span><br>${esc(b.email || '')}<br>${esc(b.nationality || '')}</p><p>${esc(b.notes || '')}</p><p><a class="btn sm wa" href="${esc(guestWa)}" target="_blank" rel="noopener">مراسلة النزيل واتساب</a> <a class="btn sm ghost" href="/booking/${esc(b.ref)}" target="_blank">القسيمة</a></p></div></div>
+    <div class="box"><h3>النزيل</h3><p>${esc(b.guest_name)}<br><span dir="ltr">${esc(b.phone)}</span><br>${esc(b.email || '')}<br>${esc(b.nationality || '')}</p><p>${esc(b.notes || '')}</p><p><a class="btn sm wa" href="${esc(guestWa)}" target="_blank" rel="noopener">مراسلة النزيل واتساب</a> <a class="btn sm ghost" href="/booking/${esc(b.ref)}" target="_blank">القسيمة</a> <a class="btn sm" href="/admin/links?${new URLSearchParams({ ref: b.ref, amount: b.total, name: b.guest_name, phone: b.phone, desc: 'حجز ' + b.ref + ' - ' + b.hotel_name }).toString()}">إنشاء رابط دفع</a></p></div></div>
     <form method="post" action="/admin/bookings/${b.id}" class="form box">${csrf}<label>الحالة<select name="status">${Object.entries(STATUS_AR).map(([k, l]) => `<option value="${k}" ${b.status === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     <label>ملاحظة داخلية<textarea name="admin_note" rows="3">${esc(b.admin_note || '')}</textarea></label><button class="btn">حفظ</button> <small class="muted">«مؤكد» يدويًا يُستخدم عند وصول الحوالة أو الدفع في المكتب.</small></form>
     <h3>سجل الدفعات</h3><table class="t"><tr><th>البوابة</th><th>المعرّف</th><th>المبلغ</th><th>الحالة</th><th>الوقت</th></tr>${payments.map((p) => `<tr><td>${esc(p.provider)}</td><td dir="ltr">${esc(p.provider_ref)}</td><td>${sar(p.amount)}</td><td>${esc(p.status)}</td><td>${esc(p.created_at)}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">لا يوجد</td></tr>'}</table>`);
+  },
+  links({ rows, pre, base, csrf, gateways }) {
+    const wa = (l) => `https://wa.me/${String(l.phone || '').replace(/\D/g, '').replace(/^0/, '966')}?text=${encodeURIComponent(`السلام عليكم${l.customer_name ? ' ' + l.customer_name : ''}، رابط الدفع (${l.description}) بمبلغ ${l.amount} ر.س:\n${base}/pay/l/${l.token}`)}`;
+    return A('روابط الدفع', `<h1>روابط الدفع</h1><p class="muted">أنشئ رابطًا بمبلغ محدد وأرسله للعميل (واتساب/رسالة) ليدفع بمدى أو فيزا. ${gateways.length ? '' : '<b class="warn">لا توجد بوابة دفع مفعّلة بعد.</b>'}</p>
+    <form method="post" action="/admin/links" class="form box">${csrf}<div class="row"><label>المبلغ (ر.س شامل الضريبة)<input name="amount" type="number" min="1" required value="${esc(pre.amount)}"></label>
+    <label>صلاحية الرابط (ساعة)<input name="hours" type="number" min="1" max="720" value="72"></label></div>
+    <label>البيان (يراه العميل)<input name="description" required maxlength="150" value="${esc(pre.desc)}" placeholder="دفعة حجز فندق مكة"></label>
+    <div class="row"><label>اسم العميل<input name="customer_name" maxlength="80" value="${esc(pre.name)}"></label><label>جوال العميل<input name="phone" dir="ltr" maxlength="20" value="${esc(pre.phone)}"></label>
+    <label>رقم الحجز المرتبط (اختياري)<input name="booking_ref" dir="ltr" maxlength="20" value="${esc(pre.ref)}"></label></div><button class="btn">إنشاء الرابط</button></form>
+    <div class="tablewrap"><table class="t"><tr><th>الرمز</th><th>البيان</th><th>المبلغ</th><th>الحالة</th><th>الرابط</th><th></th></tr>
+    ${rows.map((l) => `<tr><td>${esc(l.code)}${l.booking_ref ? `<br><small>${esc(l.booking_ref)}</small>` : ''}</td><td>${esc(l.description)}<br><small>${esc(l.customer_name || '')}</small></td><td>${sar(l.amount)}</td><td><span class="pill s-${l.status === 'paid' ? 'confirmed' : 'pending'}">${l.status === 'paid' ? 'مدفوع' : 'بانتظار الدفع'}</span><br><small>ينتهي ${esc((l.expires_at || '').slice(0, 16))}</small></td>
+    <td><input readonly dir="ltr" value="${esc(base)}/pay/l/${esc(l.token)}" data-select> ${l.status !== 'paid' ? `<a class="btn sm wa" href="${esc(wa(l))}" target="_blank" rel="noopener">إرسال واتساب</a>` : ''}</td>
+    <td>${l.status !== 'paid' ? `<form method="post" action="/admin/links/${l.id}/delete" data-confirm="حذف الرابط؟">${csrf}<button class="linkbtn">حذف</button></form>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">لا توجد روابط</td></tr>'}</table></div>`);
   },
   hotels({ rows, csrf }) {
     return A('الفنادق', `<h1>الفنادق</h1><p><a class="btn" href="/admin/hotels/new">+ فندق جديد</a></p><div class="tablewrap"><table class="t"><tr><th>الفندق</th><th>النجوم</th><th>البعد عن الحرم</th><th>الغرف</th><th>الحالة</th><th></th></tr>
@@ -58,7 +72,7 @@ module.exports = {
     }
     return A(isNew ? 'فندق جديد' : f.name, html);
   },
-  settings({ s, csrf, saved, methods }) {
+  settings({ s, csrf, saved, methods, notif }) {
     const I = (k, label, extra = '') => `<label>${label}<input name="${k}" value="${esc(s[k])}" ${extra}></label>`;
     const T = (k, label, ph) => `<label>${label}<textarea name="${k}" rows="6" placeholder="${esc(ph)}">${esc(s[k])}</textarea></label>`;
     return A('الإعدادات', `<h1>الإعدادات</h1>${saved ? '<p class="alert info">تم الحفظ</p>' : ''}
@@ -70,6 +84,8 @@ module.exports = {
     <fieldset class="box"><legend>الأسعار والحجز</legend>${I('vat_rate', 'نسبة ضريبة القيمة المضافة %', 'type="number" min="0" max="30"')}${I('hold_minutes', 'مدة حجز الغرفة أثناء الدفع الإلكتروني (دقيقة)', 'type="number" min="10" max="240"')}${I('cancel_free_hours', 'الإلغاء المجاني قبل الوصول بـ (ساعة)', 'type="number" min="0"')}</fieldset>
     <fieldset class="box"><legend>طرق الدفع</legend>
     <p>البوابات الإلكترونية المفعّلة (تُفعَّل بإضافة المفاتيح في متغيرات البيئة على الخادم، راجع README): <b>${methods.length ? methods.map((m) => esc(m.label)).join('، ') : 'لا شيء بعد'}</b></p>
+    <p>مدى وفيزا: يظهر خيار البطاقات من البوابة المفعّلة. لحصر الوسائل على مدى وفيزا فقط عطّل غيرها من لوحة البوابة نفسها.</p>
+    <p>إشعارات الحجز الجديد — بريد: <b>${notif.email ? 'مفعّل' : 'غير مفعّل'}</b> · واتساب: <b>${notif.whatsapp ? (notif.template ? 'مفعّل (قالب)' : 'مفعّل (نص)') : 'غير مفعّل'}</b></p>
     <label class="check"><input type="checkbox" name="enable_bank_transfer" value="1" ${s.enable_bank_transfer === '1' ? 'checked' : ''}> تفعيل الحوالة البنكية</label>
     ${I('bank_name', 'اسم البنك')}${I('bank_holder', 'اسم المستفيد')}${I('bank_iban', 'الآيبان', 'dir="ltr"')}${I('transfer_hold_hours', 'مدة حجز الغرفة بانتظار الحوالة (ساعة)', 'type="number" min="1" max="168"')}
     <label class="check"><input type="checkbox" name="enable_pay_later" value="1" ${s.enable_pay_later === '1' ? 'checked' : ''}> السماح بـ«احجز وادفع لاحقًا» (تأكيد يدوي)</label></fieldset>

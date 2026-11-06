@@ -37,12 +37,24 @@ CREATE TABLE IF NOT EXISTS bookings(
   guest_name TEXT NOT NULL, phone TEXT NOT NULL, email TEXT, nationality TEXT, notes TEXT,
   status TEXT DEFAULT 'pending', pay_method TEXT, paid_at TEXT, expires_at TEXT,
   admin_note TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS pay_links(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, token TEXT UNIQUE NOT NULL, code TEXT UNIQUE NOT NULL, amount INTEGER NOT NULL,
+  description TEXT NOT NULL, customer_name TEXT, phone TEXT, booking_ref TEXT, status TEXT DEFAULT 'unpaid',
+  expires_at TEXT, paid_at TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS payments(
-  id INTEGER PRIMARY KEY AUTOINCREMENT, booking_id INTEGER NOT NULL REFERENCES bookings(id),
+  id INTEGER PRIMARY KEY AUTOINCREMENT, booking_id INTEGER REFERENCES bookings(id), link_id INTEGER REFERENCES pay_links(id),
   provider TEXT NOT NULL, provider_ref TEXT, amount INTEGER NOT NULL, status TEXT DEFAULT 'created',
   created_at TEXT DEFAULT CURRENT_TIMESTAMP);
 CREATE INDEX IF NOT EXISTS idx_book_room ON bookings(room_type_id, check_in, check_out);
 `);
+
+// ترحيل قاعدة قديمة: كان booking_id إلزاميًا ولا يوجد link_id
+{ const cols = db.prepare('PRAGMA table_info(payments)').all();
+  if (cols.find((c) => c.name === 'booking_id' && c.notnull) || !cols.find((c) => c.name === 'link_id')) {
+    db.exec(`ALTER TABLE payments RENAME TO payments_old;
+      CREATE TABLE payments(id INTEGER PRIMARY KEY AUTOINCREMENT, booking_id INTEGER REFERENCES bookings(id), link_id INTEGER REFERENCES pay_links(id), provider TEXT NOT NULL, provider_ref TEXT, amount INTEGER NOT NULL, status TEXT DEFAULT 'created', created_at TEXT DEFAULT CURRENT_TIMESTAMP);
+      INSERT INTO payments(id,booking_id,provider,provider_ref,amount,status,created_at) SELECT id,booking_id,provider,provider_ref,amount,status,created_at FROM payments_old; DROP TABLE payments_old;`);
+  } }
 
 const q = {
   all: (sql, ...a) => db.prepare(sql).all(...a),
@@ -54,8 +66,8 @@ const q = {
 const DEFAULTS = {
   agency_name: 'أسس المسافر',
   agency_tagline: 'حجوزات فنادق مكة المكرمة للمعتمرين',
-  tourism_license: '',      // رقم ترخيص وزارة السياحة
-  cr_number: '',            // السجل التجاري
+  tourism_license: '73106939', // رقم ترخيص وزارة السياحة
+  cr_number: '7050251656',  // السجل التجاري
   vat_number: '',           // الرقم الضريبي
   sbc_cert_no: '',          // رقم/معرّف توثيق المركز السعودي للأعمال
   sbc_cert_url: '',         // رابط صفحة التوثيق في المركز السعودي للأعمال
@@ -111,7 +123,8 @@ function availableRooms(room, checkIn, checkOut) {
   return Math.max(0, room.total_rooms - max);
 }
 
+const newCode = () => 'PL-' + crypto.randomBytes(5).toString('base64url').replace(/[-_]/g, 'X').toUpperCase().slice(0, 7);
 const newRef = () => 'AS-' + crypto.randomBytes(6).toString('base64url').replace(/[-_]/g, 'X').toUpperCase().slice(0, 8);
 const slugify = (s) => String(s).trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'hotel-' + Date.now();
 
-module.exports = { db, q, DATA_DIR, UPLOAD_DIR, setting, allSettings, setSetting, DEFAULTS, isDate, toMs, nightsBetween, todayRiyadh, nightList, quote, availableRooms, newRef, slugify };
+module.exports = { db, q, DATA_DIR, UPLOAD_DIR, setting, allSettings, setSetting, DEFAULTS, isDate, toMs, nightsBetween, todayRiyadh, nightList, quote, availableRooms, newRef, newCode, slugify };

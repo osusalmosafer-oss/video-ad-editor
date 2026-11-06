@@ -20,7 +20,7 @@ const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x
   await new Promise((r) => setTimeout(r, 1500));
   try {
     ok((await f('/healthz')).status === 200, 'healthz');
-    const home = await (await f('/')).text(); ok(home.includes('dir="rtl"') && home.includes('فندق تجريبي'), 'الرئيسية عربية وفيها الفنادق');
+    const adminHome0 = 1; const home = await (await f('/')).text(); ok(home.includes('dir="rtl"') && home.includes('فندق تجريبي'), 'الرئيسية عربية وفيها الفنادق');
     const r0 = await f('/'); ok(r0.headers.get('content-security-policy')?.includes("default-src 'self'"), 'CSP مفعّل');
     const today = new Date(Date.now() + 3 * 3600000 + 86400000 * 10).toISOString().slice(0, 10);
     const out = new Date(Date.now() + 3 * 3600000 + 86400000 * 13).toISOString().slice(0, 10);
@@ -51,6 +51,16 @@ const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x
     const st = await f('/admin/settings', form({ _csrf: csrf(await (await f('/admin/settings')).text()), tourism_license: '73100000', cr_number: '4030000000', vat_number: '300000000000003', agency_name: 'أسس المسافر' }));
     ok(st.status === 303, 'حفظ الإعدادات');
     const ft = await (await f('/')).text(); ok(ft.includes('73100000') && ft.includes('4030000000') && ft.includes('300000000000003'), 'التراخيص تظهر في التذييل');
+    // روابط الدفع
+    const lt = csrf(await (await f('/admin/links')).text());
+    ok((await f('/admin/links', form({ _csrf: lt, amount: 250, description: 'دفعة اختبار', customer_name: 'عميل', phone: '0555555555', hours: 24 }))).status === 303, 'إنشاء رابط دفع');
+    const lp2 = await (await f('/admin/links')).text(); const tok2 = /\/pay\/l\/([\w-]+)"/.exec(lp2)[1];
+    for (const k of Object.keys(jar)) if (k === '_a') delete jar[k];
+    const lpage = await (await f('/pay/l/' + tok2)).text(); ok(lpage.includes('250') && lpage.includes('دفع تجريبي'), 'صفحة رابط الدفع العامة');
+    ok((await (await f('/pay/l/' + tok2, form({ _csrf: csrf(lpage), method: 'mock' }))).text()).includes('http-equiv="refresh"'), 'بدء دفع الرابط');
+    await f('/pay/lr/' + tok2); ok((await (await f('/pay/l/' + tok2)).text()).includes('تم السداد'), 'الرابط يصبح مدفوعًا');
+    ok((await f('/pay/l/badtoken')).status === 404, 'رابط غير صالح');
+    ok(ft.includes('مدى') && ft.includes('VISA'), 'شارات مدى وفيزا');
     ok((await (await f('/robots.txt')).text()).includes('Disallow: /admin'), 'robots');
     ok((await (await f('/sitemap.xml')).text()).includes('demo-hotel-1'), 'sitemap');
     const xss = await (await f('/hotels/demo-hotel-1?in=%22%3E%3Cscript%3E&out=x')).text(); ok(!xss.includes('<script>alert') && !/value=""><script/.test(xss), 'لا XSS في معاملات البحث');

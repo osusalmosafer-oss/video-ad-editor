@@ -9,6 +9,7 @@
  */
 const crypto = require('node:crypto');
 const { q } = require('./db');
+const notify = require('./notify');
 
 const env = (k) => (process.env[k] || '').trim();
 const halalas = (sar) => Math.round(sar * 100);
@@ -22,7 +23,7 @@ async function http(url, opts) {
 
 const PROVIDERS = {
   moyasar: {
-    label: 'بطاقة مدى / فيزا / ماستركارد / Apple Pay (ميسر)',
+    label: 'مدى / فيزا (ميسر)',
     enabled: () => !!env('MOYASAR_SECRET_KEY'),
     async create(b, u) {
       const auth = 'Basic ' + Buffer.from(env('MOYASAR_SECRET_KEY') + ':').toString('base64');
@@ -40,7 +41,7 @@ const PROVIDERS = {
     },
   },
   tap: {
-    label: 'بطاقة / مدى / Apple Pay (تاب)',
+    label: 'مدى / فيزا (تاب)',
     enabled: () => !!env('TAP_SECRET_KEY'),
     async create(b, u) {
       const j = await http('https://api.tap.company/v2/charges', {
@@ -57,7 +58,7 @@ const PROVIDERS = {
     },
   },
   paytabs: {
-    label: 'بطاقة / مدى / Apple Pay (باي تابس)',
+    label: 'مدى / فيزا (باي تابس)',
     enabled: () => !!(env('PAYTABS_SERVER_KEY') && env('PAYTABS_PROFILE_ID')),
     base: () => env('PAYTABS_BASE_URL') || 'https://secure.paytabs.sa',
     async create(b, u) {
@@ -88,31 +89,53 @@ const PROVIDERS = {
 
 const gatewayList = () => Object.entries(PROVIDERS).filter(([, p]) => p.enabled()).map(([id, p]) => ({ id, label: p.label }));
 
-async function startPayment(booking, method, baseUrl) {
+// order: حجز أو رابط دفع بنفس الحقول (ref,total,hotel_name,guest_name,phone,email)
+async function startPayment(order, method, baseUrl, opts) {
   const p = PROVIDERS[method];
   if (!p || !p.enabled()) throw new Error('بوابة غير مفعّلة');
-  const u = { callback: `${baseUrl}/pay/return/${booking.ref}`, ret: `${baseUrl}/pay/return/${booking.ref}`, back: `${baseUrl}/booking/${booking.ref}/pay` };
-  const { ref, url } = await p.create(booking, u);
+  const { ref, url } = await p.create(order, { callback: opts.ret, ret: opts.ret, back: opts.back });
   if (!ref || !url) throw new Error('رد غير متوقع من البوابة');
-  q.run('INSERT INTO payments(booking_id,provider,provider_ref,amount) VALUES(?,?,?,?)', booking.id, method, ref, booking.total);
+  q.run('INSERT INTO payments(booking_id,link_id,provider,provider_ref,amount) VALUES(?,?,?,?,?)', opts.bookingId || null, opts.linkId || null, method, ref, order.total);
   return url;
 }
+const bookingOrder = (b) => b;
+const startBooking = (b, method, baseUrl) => startPayment(b, method, baseUrl, { bookingId: b.id, ret: `${baseUrl}/pay/return/${b.ref}`, back: `${baseUrl}/booking/${b.ref}/pay` });
+const startLink = (l, method, baseUrl) => startPayment({ ref: l.code, total: l.amount, hotel_name: l.description, guest_name: l.customer_name || 'عميل', phone: l.phone || '0500000000', email: '' }, method, baseUrl, { linkId: l.id, ret: `${baseUrl}/pay/lr/${l.token}`, back: `${baseUrl}/pay/l/${l.token}` });
 
+async function verifyPayment(pay, total) {
+  const p = PROVIDERS[pay.provider]; if (!p) return false;
+  try { const r = await p.verify(pay.provider_ref); return r.paid && (r.amount == null || r.amount === halalas(total)); }
+  catch (e) { console.error('verify failed', pay.provider, e.message); return false; }
+}
 // يتحقق من آخر عملية دفع للحجز من خادم البوابة، ويؤكد الحجز عند نجاحها وتطابق المبلغ
 async function settle(booking) {
   if (booking.status === 'confirmed') return booking;
   const pay = q.get("SELECT * FROM payments WHERE booking_id=? AND status='created' ORDER BY id DESC LIMIT 1", booking.id);
-  if (!pay) return booking;
-  const p = PROVIDERS[pay.provider];
-  if (!p) return booking;
-  try {
-    const r = await p.verify(pay.provider_ref, booking);
-    if (r.paid && (r.amount == null || r.amount === halalas(booking.total))) {
-      q.run("UPDATE payments SET status='paid' WHERE id=?", pay.id);
-      q.run("UPDATE bookings SET status='confirmed', pay_method=?, paid_at=?, expires_at=NULL WHERE id=? AND status!='cancelled'", pay.provider, new Date().toISOString(), booking.id);
+  if (!pay || !(await verifyPayment(pay, booking.total))) return booking;
+  q.run("UPDATE payments SET status='paid' WHERE id=?", pay.id);
+  const r = q.run("UPDATE bookings SET status='confirmed', pay_method=?, paid_at=?, expires_at=NULL WHERE id=? AND status!='cancelled' AND status!='confirmed'", pay.provider, new Date().toISOString(), booking.id);
+  const fresh = q.get('SELECT * FROM bookings WHERE id=?', booking.id);
+  if (r.changes) notify.bookingEvent(fresh, 'paid');
+  return fresh;
+}
+async function settleLink(link) {
+  if (link.status === 'paid') return link;
+  const pay = q.get("SELECT * FROM payments WHERE link_id=? AND status='created' ORDER BY id DESC LIMIT 1", link.id);
+  if (!pay || !(await verifyPayment(pay, link.amount))) return link;
+  q.run("UPDATE payments SET status='paid' WHERE id=?", pay.id);
+  const r = q.run("UPDATE pay_links SET status='paid', paid_at=? WHERE id=? AND status!='paid'", new Date().toISOString(), link.id);
+  const fresh = q.get('SELECT * FROM pay_links WHERE id=?', link.id);
+  if (r.changes) {
+    notify.linkPaid(fresh);
+    if (fresh.booking_ref) { // رابط مرتبط بحجز بكامل مبلغه يؤكد الحجز
+      const b = q.get('SELECT * FROM bookings WHERE ref=?', fresh.booking_ref);
+      if (b && b.status !== 'confirmed' && b.status !== 'cancelled' && fresh.amount >= b.total) {
+        q.run("UPDATE bookings SET status='confirmed', pay_method=?, paid_at=?, expires_at=NULL WHERE id=?", pay.provider, new Date().toISOString(), b.id);
+        notify.bookingEvent(q.get('SELECT * FROM bookings WHERE id=?', b.id), 'paid');
+      }
     }
-  } catch (e) { console.error('verify failed', pay.provider, e.message); }
-  return q.get('SELECT * FROM bookings WHERE id=?', booking.id);
+  }
+  return fresh;
 }
 
-module.exports = { gatewayList, startPayment, settle, PROVIDERS };
+module.exports = { gatewayList, startBooking, startLink, settle, settleLink, PROVIDERS };

@@ -17,6 +17,7 @@ const V = require('./lib/views');
 const { esc, pages, policyText, baseUrl } = V;
 const AV = require('./lib/admin-views');
 const pay = require('./lib/payments');
+const notify = require('./lib/notify');
 
 const PROD = process.env.NODE_ENV === 'production';
 const PORT = Number(process.env.PORT || 3000);
@@ -169,6 +170,7 @@ app.post('/book', writeLimiter, (req, res) => {
   const exp = new Date(Date.now() + Number(setting('hold_minutes') || 30) * 60000).toISOString();
   q.run(`INSERT INTO bookings(ref,hotel_id,room_type_id,hotel_name,room_name,check_in,check_out,nights,rooms,guests,total,vat,guest_name,phone,email,nationality,notes,status,expires_at)
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending',?)`, ref, c.h.id, c.r.id, c.h.name, c.r.name, c.s.v.in, c.s.v.out, c.qt.nights, c.s.v.rooms, c.s.v.guests, c.qt.total, c.qt.vat, form.name, form.phone, form.email, form.nationality, form.notes, exp);
+  notify.bookingEvent(q.get('SELECT * FROM bookings WHERE ref=?', ref), 'new');
   setCookie(res, 'b_' + ref, sign('b:' + ref), 86400 * 30); // يسمح لصاحب المتصفح بفتح حجزه
   res.redirect(303, `/booking/${ref}/pay`);
 });
@@ -207,15 +209,17 @@ app.post('/booking/:ref/pay', writeLimiter, wrap(async (req, res) => {
   const again = (err) => res.status(400).send(pages.pay({ b, methods: pay.gatewayList(), s, csrf: res.locals.csrf, err }));
   if (method === 'bank_transfer' && s.enable_bank_transfer === '1') {
     q.run("UPDATE bookings SET status='awaiting_transfer', pay_method='bank_transfer', expires_at=? WHERE id=?", new Date(Date.now() + Number(s.transfer_hold_hours || 24) * 3600000).toISOString(), b.id);
+    notify.bookingEvent(q.get('SELECT * FROM bookings WHERE id=?', b.id), 'transfer');
     return res.redirect(303, '/booking/' + b.ref);
   }
   if (method === 'pay_later' && s.enable_pay_later === '1') {
     q.run("UPDATE bookings SET status='pay_later', pay_method='pay_later', expires_at=? WHERE id=?", new Date(Date.now() + 24 * 3600000).toISOString(), b.id);
+    notify.bookingEvent(q.get('SELECT * FROM bookings WHERE id=?', b.id), 'later');
     return res.redirect(303, '/booking/' + b.ref);
   }
   try {
     const base = baseUrl() || `${req.protocol}://${req.headers.host}`;
-    const url = await pay.startPayment(b, method, base);
+    const url = await pay.startBooking(b, method, base);
     // نمدّد الحجز أثناء إتمام الدفع
     q.run('UPDATE bookings SET expires_at=? WHERE id=?', new Date(Date.now() + 40 * 60000).toISOString(), b.id);
     res.send(pages.redirecting(url));
@@ -234,8 +238,30 @@ app.post('/booking/:ref/cancel', writeLimiter, (req, res) => {
   const b = loadBooking(req, res); if (!b) return;
   if (b.status === 'cancelled') return res.redirect(303, '/booking/' + b.ref);
   q.run("UPDATE bookings SET status='cancelled', expires_at=NULL, admin_note=COALESCE(admin_note,'')||? WHERE id=?", `\n[إلغاء من العميل ${new Date().toISOString().slice(0, 16)}${b.status === 'confirmed' ? ' — مدفوع: يتطلب مراجعة الاسترداد' : ''}]`, b.id);
+  notify.bookingEvent(q.get('SELECT * FROM bookings WHERE id=?', b.id), 'cancelled');
   res.redirect(303, `/booking/${b.ref}?n=cancelled`);
 });
+
+// ---------- روابط الدفع (يرسلها الموظف للعميل) ----------
+const loadLink = (req) => { const l = q.get('SELECT * FROM pay_links WHERE token=?', clean(req.params.token, 40)); return l && (l.status === 'paid' || !l.expires_at || l.expires_at > new Date().toISOString()) ? l : null; };
+app.get('/pay/l/:token', wrap(async (req, res) => {
+  let l = loadLink(req); if (!l) return res.status(404).send(pages.notFound().replace('الصفحة غير موجودة', 'الرابط غير صالح أو انتهت صلاحيته'));
+  if (l.status !== 'paid') l = await pay.settleLink(l);
+  res.send(pages.payLink({ l, methods: pay.gatewayList(), csrf: res.locals.csrf, s: allSettings() }));
+}));
+app.post('/pay/l/:token', writeLimiter, wrap(async (req, res) => {
+  const l = loadLink(req); if (!l || l.status === 'paid') return res.redirect(303, '/pay/l/' + clean(req.params.token, 40));
+  try {
+    const url = await pay.startLink(l, clean(req.body.method, 20), baseUrl() || `${req.protocol}://${req.headers.host}`);
+    res.send(pages.redirecting(url));
+  } catch (e) { console.error('link pay', e.message); res.status(400).send(pages.payLink({ l, methods: pay.gatewayList(), csrf: res.locals.csrf, s: allSettings(), err: 'تعذّر بدء الدفع الآن، حاول مجددًا' })); }
+}));
+app.all('/pay/lr/:token', wrap(async (req, res) => {
+  const l = q.get('SELECT * FROM pay_links WHERE token=?', clean(req.params.token, 40)); if (!l) return res.status(404).end();
+  await pay.settleLink(l);
+  if (req.method === 'GET') return res.redirect(303, '/pay/l/' + l.token);
+  res.json({ ok: true });
+}));
 
 // صفحات نظامية
 const S = () => allSettings();
@@ -357,7 +383,22 @@ app.post('/admin/rates/:id/delete', (req, res) => {
   q.run('DELETE FROM rates WHERE id=?', int(req.params.id)); res.redirect(303, x ? '/admin/hotels/' + x.hotel_id : '/admin/hotels');
 });
 
-app.get('/admin/settings', (req, res) => res.send(AV.settings({ s: allSettings(), csrf: res.locals.csrf, saved: req.query.ok === '1', methods: pay.gatewayList() })));
+app.get('/admin/links', (req, res) => {
+  const pre = { ref: clean(req.query.ref, 20), amount: clean(req.query.amount, 10), name: clean(req.query.name, 80), phone: clean(req.query.phone, 20), desc: clean(req.query.desc, 150) };
+  const base = baseUrl() || `${req.protocol}://${req.headers.host}`;
+  res.send(AV.links({ rows: q.all('SELECT * FROM pay_links ORDER BY id DESC LIMIT 100'), pre, base, csrf: res.locals.csrf, gateways: pay.gatewayList() }));
+});
+app.post('/admin/links', (req, res) => {
+  const amount = int(req.body.amount); const desc = clean(req.body.description, 150);
+  if (amount < 1 || !desc) return res.redirect(303, '/admin/links');
+  let ref = clean(req.body.booking_ref, 20).toUpperCase(); if (ref && !q.get('SELECT 1 FROM bookings WHERE ref=?', ref)) ref = '';
+  const hours = Math.min(720, Math.max(1, int(req.body.hours, 72)));
+  q.run('INSERT INTO pay_links(token,code,amount,description,customer_name,phone,booking_ref,expires_at) VALUES(?,?,?,?,?,?,?,?)', crypto.randomBytes(18).toString('base64url'), D.newCode(), amount, desc, clean(req.body.customer_name, 80), normPhone(req.body.phone), ref, new Date(Date.now() + hours * 3600000).toISOString());
+  res.redirect(303, '/admin/links');
+});
+app.post('/admin/links/:id/delete', (req, res) => { q.run("DELETE FROM pay_links WHERE id=? AND status!='paid'", int(req.params.id)); res.redirect(303, '/admin/links'); });
+
+app.get('/admin/settings', (req, res) => res.send(AV.settings({ s: allSettings(), csrf: res.locals.csrf, saved: req.query.ok === '1', methods: pay.gatewayList(), notif: notify.status() })));
 app.post('/admin/settings', (req, res) => {
   const b = req.body; const checks = ['enable_bank_transfer', 'enable_pay_later'];
   for (const k of Object.keys(D.DEFAULTS)) {
@@ -381,6 +422,8 @@ app.get('/admin/compliance', (req, res) => {
     { ok: !!(s.phone || s.whatsapp) && !!s.address, label: 'وسيلة تواصل وعنوان واضحان' },
     { ok: !!(s.policy_terms && s.policy_cancel && s.policy_privacy), label: 'الشروط والإلغاء والخصوصية مراجَعة ومعتمدة منك (النصوص الافتراضية نموذجية فقط)', hint: 'الإعدادات ← النصوص النظامية' },
     { ok: pay.gatewayList().filter((g) => g.id !== 'mock').length > 0, label: 'بوابة دفع إلكتروني مرخّصة مفعّلة', hint: 'مفاتيح البوابة في متغيرات البيئة' },
+    { ok: notify.status().email || notify.status().whatsapp, label: 'إشعارات الحجز الجديد (بريد/واتساب) مفعّلة', hint: 'SMTP_* أو WHATSAPP_TOKEN في متغيرات البيئة' },
+    { ok: fs.existsSync(path.join(__dirname, 'public/brand/mot-logo.png')) && fs.existsSync(path.join(__dirname, 'public/brand/moc-logo.png')), label: 'شعارا وزارة السياحة ووزارة التجارة مرفوعان', hint: 'ضع mot-logo.png و moc-logo.png في public/brand من المصادر الرسمية' },
     { ok: process.env.NODE_ENV === 'production' && HTTPS, label: 'الموقع يعمل على HTTPS ووضع الإنتاج' },
     { ok: cnt('hotels') > 0 && q.get("SELECT COUNT(*) c FROM hotels WHERE is_active=1 AND (license_no IS NULL OR license_no='')").c === 0, label: 'كل فندق معروض له رقم ترخيص منشأة فندقية', hint: 'اختياري لكن مستحسن' },
   ];
@@ -397,6 +440,7 @@ app.use((err, req, res, next) => { console.error(err); res.status(500).send('ح�
 
 module.exports = { app };
 if (require.main === module) {
+  if (process.env.SKIP_SEED !== '1') require('./lib/seed-hotels').run();
   const srv = app.listen(PORT, () => console.log(`✓ أسس المسافر يعمل على المنفذ ${PORT}`));
   for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => srv.close(() => process.exit(0)));
 }

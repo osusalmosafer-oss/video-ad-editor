@@ -1,5 +1,7 @@
 'use strict';
 // قوالب الصفحات (عربية RTL) — كل المخرجات تمر عبر esc() لمنع XSS
+const fs = require('node:fs');
+const path = require('node:path');
 const { setting, allSettings, toMs } = require('./db');
 const POLICIES = require('./policies');
 
@@ -37,13 +39,17 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(
 <header class="top"><div class="wrap bar">
   <a class="brand" href="${admin ? '/admin' : '/'}"><img src="/brand/logo-horizontal-on-dark.png" alt="${esc(s.agency_name)}"></a>
   <nav>${admin
-    ? `<a href="/admin">الحجوزات</a><a href="/admin/hotels">الفنادق</a><a href="/admin/compliance">الامتثال</a><a href="/admin/settings">الإعدادات</a><a href="/" target="_blank">الموقع</a><form method="post" action="/admin/logout" class="inline">__CSRF__<button class="linkbtn">خروج</button></form>`
+    ? `<a href="/admin">الحجوزات</a><a href="/admin/hotels">الفنادق</a><a href="/admin/links">روابط الدفع</a><a href="/admin/compliance">الامتثال</a><a href="/admin/settings">الإعدادات</a><a href="/" target="_blank">الموقع</a><form method="post" action="/admin/logout" class="inline">__CSRF__<button class="linkbtn">خروج</button></form>`
     : `<a href="/">الرئيسية</a><a href="/hotels">الفنادق</a><a href="/booking-lookup">تتبّع حجزي</a><a href="/about">من نحن</a>${wa ? `<a class="btn sm wa" href="${esc(wa)}" rel="noopener">واتساب</a>` : ''}`}</nav>
 </div></header>
 <main>${body}</main>
 ${admin ? '' : footer(s)}
 <script src="/app.js" defer></script></body></html>`;
 }
+
+const logoFile = (f) => fs.existsSync(path.join(__dirname, '..', 'public', 'brand', f));
+const govLogos = () => [['mot-logo.png', 'وزارة السياحة'], ['moc-logo.png', 'وزارة التجارة']].filter(([f]) => logoFile(f)).map(([f, a]) => `<img src="/brand/${f}" alt="${a}" class="gov">`).join('');
+const payBadges = () => '<span class="badges"><i class="bd mada">مدى</i><i class="bd visa">VISA</i></span>';
 
 function footer(s) {
   const rows = [
@@ -56,9 +62,9 @@ function footer(s) {
   <div><img class="flogo" src="/brand/logo-horizontal-on-dark.png" alt=""><p>${esc(s.agency_tagline)}</p>
     <p class="muted">${esc(s.address)}</p>
     ${s.phone ? `<p dir="ltr" class="muted">${esc(s.phone)}</p>` : ''}${s.email ? `<p dir="ltr" class="muted">${esc(s.email)}</p>` : ''}</div>
-  <div><h4>بيانات المنشأة</h4><ul class="lic">${rows || '<li class="muted">لم تُضف بعد</li>'}</ul></div>
+  <div><h4>بيانات المنشأة</h4><ul class="lic">${rows || '<li class="muted">لم تُضف بعد</li>'}</ul><div class="govs">${govLogos()}</div></div>
   <div><h4>روابط</h4><ul class="lic"><li><a href="/terms">الشروط والأحكام</a></li><li><a href="/cancellation">سياسة الإلغاء والاسترداد</a></li><li><a href="/privacy">سياسة الخصوصية</a></li><li><a href="/booking-lookup">تتبّع الحجز</a></li></ul>
-    <p class="pay">مدى · Visa · Mastercard · Apple Pay</p></div>
+    <div class="pay">${payBadges()}</div></div>
 </div><div class="copy">© ${new Date().getFullYear()} ${esc(s.agency_name)} — جميع الأسعار بالريال السعودي وشاملة ضريبة القيمة المضافة</div></footer>`;
 }
 
@@ -89,7 +95,7 @@ const pages = {
       body: `<section class="hero"><div class="wrap"><h1>فندقك في مكة المكرمة، قريب من الحرم</h1>
       <p>أسعار واضحة شاملة الضريبة · تأكيد فوري · دفع آمن · دعم عبر الواتساب</p>${searchForm(v, today)}</div></section>
       <section class="wrap"><h2 class="sec">فنادق مختارة</h2>${hotels.length ? `<div class="grid">${hotels.map((h) => hotelCard(h)).join('')}</div>` : '<p class="muted">لا توجد فنادق معروضة حاليًا.</p>'}</section>
-      <section class="wrap feats"><div><b>أسعار شاملة</b><span>السعر النهائي شامل ضريبة القيمة المضافة 15%</span></div><div><b>دفع آمن</b><span>مدى وبطاقات الائتمان وApple Pay عبر بوابات مرخّصة</span></div><div><b>قسيمة فورية</b><span>رقم حجز وقسيمة تأكيد بمجرد السداد</span></div><div><b>جهة مرخّصة</b><span>وكالة مرخّصة من وزارة السياحة</span></div></section>`,
+      <section class="wrap feats"><div><b>أسعار شاملة</b><span>السعر النهائي شامل ضريبة القيمة المضافة 15%</span></div><div><b>دفع آمن</b><span>مدى وفيزا عبر بوابات دفع مرخّصة</span></div><div><b>قسيمة فورية</b><span>رقم حجز وقسيمة تأكيد بمجرد السداد</span></div><div><b>جهة مرخّصة</b><span>وكالة مرخّصة من وزارة السياحة</span></div></section>`,
     });
   },
   hotels({ hotels, today, v, searched }) {
@@ -144,9 +150,18 @@ const pages = {
       ${bank ? btn('bank_transfer', 'حوالة بنكية') : ''}
       ${s.enable_pay_later === '1' ? btn('pay_later', 'احجز الآن وادفع لاحقًا (تأكيد عبر الواتساب)') : ''}
       ${!methods.length && !bank && s.enable_pay_later !== '1' ? '<p class="alert">لا توجد وسيلة دفع مفعّلة حاليًا. تواصل معنا عبر الواتساب لإتمام الحجز.</p>' : ''}
-      <p class="muted">🔒 تتم معالجة بيانات البطاقة لدى بوابة الدفع مباشرة، ولا تمر عبر خوادمنا.</p></div>
+      <p>${payBadges()}</p><p class="muted">🔒 تتم معالجة بيانات البطاقة لدى بوابة الدفع مباشرة، ولا تمر عبر خوادمنا.</p></div>
       <aside class="sum">${summary(b)}</aside></section>`,
     });
+  },
+  payLink({ l, methods, csrf, s, err }) {
+    const paid = l.status === 'paid';
+    return layout({ title: 'رابط دفع', robots: 'noindex', body: `<section class="wrap narrow"><div class="box center-box"><small class="muted">رابط دفع رقم ${esc(l.code)}</small><h1>${esc(l.description)}</h1>
+      ${l.customer_name ? `<p>العميل: ${esc(l.customer_name)}</p>` : ''}<p class="bigprice">${sar(l.amount)}</p><p class="muted">شامل ضريبة القيمة المضافة</p>
+      ${paid ? '<p class="alert info">تم السداد بنجاح — شكرًا لك</p>' : `${err ? `<p class="alert">${esc(err)}</p>` : ''}
+        ${methods.map((m) => `<form method="post" action="/pay/l/${esc(l.token)}" class="paybtn">${csrf}<input type="hidden" name="method" value="${m.id}"><button class="btn lg block">ادفع الآن — ${esc(m.label)}</button></form>`).join('') || '<p class="alert">الدفع الإلكتروني غير مفعّل حاليًا، تواصل معنا.</p>'}
+        <p>${payBadges()}</p><p class="muted">🔒 تتم معالجة بيانات البطاقة لدى بوابة الدفع مباشرة.</p>`}
+      <p class="muted">${esc(s.agency_name)} — ترخيص وزارة السياحة ${esc(s.tourism_license || '—')}</p></div></section>` });
   },
   redirecting(url) {
     return layout({ title: 'جارٍ التحويل', robots: 'noindex', body: `<section class="wrap center"><meta http-equiv="refresh" content="0;url=${esc(url)}"><h1>جارٍ تحويلك إلى بوابة الدفع الآمنة…</h1><p><a class="btn" href="${esc(url)}">اضغط هنا إن لم يتم التحويل</a></p></section>` });
@@ -199,4 +214,4 @@ function summary(b) {
   return `<h3>ملخص الحجز</h3><p><b>${esc(b.hotel_name)}</b><br>${esc(b.room_name)} × ${b.rooms}</p><p>${fmtD(b.check_in)} ← ${fmtD(b.check_out)}<br>${b.nights} ليلة · ${b.guests} نزلاء</p>${summaryMoney(b)}`;
 }
 
-module.exports = { esc, sar, sarText, fmtD, layout, pages, STATUS_AR, policyText, waLink, baseUrl, fill, hid };
+module.exports = { payBadges, govLogos, esc, sar, sarText, fmtD, layout, pages, STATUS_AR, policyText, waLink, baseUrl, fill, hid };

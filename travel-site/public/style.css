@@ -77,3 +77,9 @@ body.admin{background:#eef1f8}
 @media(max-width:760px){.two,.grid2{grid-template-columns:1fr}.room{grid-template-columns:1fr}.sum{position:static}.top nav{gap:10px}}
 @media print{.top,footer,.noprint{display:none!important}body{background:#fff}}
 .priceb b small{display:inline;margin:0 3px;font-size:.6em}
+.badges{display:inline-flex;gap:8px;align-items:center}
+.bd{font-style:normal;font-weight:900;border-radius:6px;padding:1px 12px;background:#fff;border:1.5px solid var(--line);font-size:.9rem;letter-spacing:.5px}
+.bd.mada{color:#0a7a3e;border-color:#0a7a3e}.bd.visa{color:#1a1f71;border-color:#1a1f71;font-family:Arial,sans-serif;font-style:italic}
+.govs{display:flex;gap:14px;align-items:center;margin-top:12px;flex-wrap:wrap}.govs .gov{height:46px;width:auto;background:#fff;border-radius:8px;padding:4px 8px}
+.center-box{text-align:center}.bigprice{font-size:2.2rem;font-weight:900;margin:.2em 0;color:var(--blue2)}
+td input[readonly]{min-width:230px;font-size:.8rem}
