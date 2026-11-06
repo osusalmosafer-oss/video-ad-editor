@@ -36,3 +36,38 @@ services:
       name: awj-data
       mountPath: /var/data
       sizeGB: 10
+
+  # ---------- موقع حجوزات فنادق مكة — أسس المسافر ----------
+  - type: web
+    name: asas-almusafer
+    runtime: node
+    rootDir: travel-site
+    plan: starter
+    region: frankfurt
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: WHATSAPP
+        sync: false
+      - key: BASE_URL
+        sync: false           # مثال: https://asas.sa
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: MOYASAR_SECRET_KEY
+        sync: false
+      - key: TAP_SECRET_KEY
+        sync: false
+    disk:
+      name: asas-data
+      mountPath: /var/data
+      sizeGB: 5

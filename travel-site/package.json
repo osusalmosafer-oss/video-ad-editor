@@ -1,0 +1,10 @@
+{
+  "name": "asas-almusafer-booking",
+  "version": "1.0.0",
+  "description": "موقع حجوزات فنادق مكة المكرمة — أسس المسافر",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "seed:demo": "node scripts/seed-demo.js", "test": "node scripts/smoke-test.js" },
+  "engines": { "node": ">=22.5" },
+  "license": "MIT",
+  "dependencies": { "express": "^4.21.2", "express-rate-limit": "^7.5.0", "helmet": "^8.0.0", "multer": "^1.4.5-lts.1" }
+}
