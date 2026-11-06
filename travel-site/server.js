@@ -483,7 +483,11 @@ app.use((err, req, res, next) => { console.error(err); res.status(500).send('ح�
 
 module.exports = { app };
 if (require.main === module) {
-  if (process.env.SKIP_SEED !== '1') require('./lib/seed-hotels').run();
+  if (process.env.SKIP_SEED !== '1') {
+    require('./lib/seed-hotels').run();
+    // قائمة أسعار الموردين: تُستورد مرة واحدة (الفنادق مخفية حتى تراجعها وتفعّلها)
+    if (!setting('imported:price-list-2026-11-03')) { try { const r = require('./scripts/import-rates').run(); console.log(`✓ استُوردت قائمة الأسعار: ${r.hotels} فندقًا`); } catch (e) { console.error('import failed', e.message); } }
+  }
   const srv = app.listen(PORT, () => console.log(`✓ أسس المسافر يعمل على المنفذ ${PORT}`));
   for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => srv.close(() => process.exit(0)));
 }

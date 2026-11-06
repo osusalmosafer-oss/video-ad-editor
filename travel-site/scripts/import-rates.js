@@ -5,8 +5,10 @@
 // - الغرف المستوردة «حسب الطلب» (التأكيد يدويًا بعد التحقق من التوفر) و«بالأسعار فقط» (لا تُباع خارج فترات الأسعار).
 // يمكن إعادة تشغيله بأمان: يستبدل غرف هذا الملف فقط.
 const path = require('node:path');
-const { db, q, setting } = require('../lib/db');
-const file = process.argv[2] || path.join(__dirname, 'data', 'price-list-2026-11-03.js');
+const { db, q, setting, setSetting } = require('../lib/db');
+
+function run(fileArg) {
+const file = fileArg || path.join(__dirname, 'data', 'price-list-2026-11-03.js');
 const SRC = path.basename(file, '.js');
 const data = require(path.resolve(file));
 const markup = Number(process.env.MARKUP || setting('markup_percent') || 12);
@@ -62,3 +64,8 @@ try {
 console.log(`الهامش: ${markup}% | فنادق: ${report.hotels} (جديد ${report.created.length}، محدَّث ${report.updated.length}) | غرف: ${report.rooms} | فترات أسعار: ${report.rates}`);
 console.log(`\nأسعار «س1 / س2» (اعتُمد الأعلى مؤقتًا): ${report.amb.length}`); report.amb.slice(0, 5).forEach((x) => console.log('  ' + x));
 console.log(`\nنقاط للمراجعة: ${report.checks.length}`); report.checks.forEach((x) => console.log('  ' + x));
+  setSetting('imported:' + SRC, '1');
+  return report;
+}
+module.exports = { run };
+if (require.main === module) run(process.argv[2]);
