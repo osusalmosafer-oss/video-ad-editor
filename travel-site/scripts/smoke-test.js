@@ -14,7 +14,7 @@ const f = async (url, o = {}) => {
   return r;
 };
 const csrf = (html) => /name="_csrf" value="([^"]+)"/.exec(html)[1];
-const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(o).toString() });
+const form = (o) => { const u = new URLSearchParams(); for (const [k, v] of Object.entries(o)) for (const x of [].concat(v)) u.append(k, x); return { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: u.toString() }; };
 (async () => {
   const seed = spawn('node', ['scripts/seed-demo.js'], { env, stdio: 'inherit' }); await new Promise((r) => seed.on('exit', r));
   const imp = spawn('node', ['scripts/import-rates.js'], { env, stdio: 'ignore' }); await new Promise((r) => imp.on('exit', r));
@@ -50,7 +50,7 @@ const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x
     ok((await f('/admin/login', form({ _csrf: csrf(lp), password: env.ADMIN_PASSWORD }))).status === 303, 'دخول الإدارة');
     const adm = await (await f('/admin')).text(); ok(adm.includes(ref), 'الحجز يظهر في لوحة الإدارة');
     ok((await (await f('/admin/compliance')).text()).includes('ترخيص وزارة السياحة'), 'صفحة الامتثال');
-    const st = await f('/admin/settings', form({ _csrf: csrf(await (await f('/admin/settings')).text()), tourism_license: '73100000', cr_number: '4030000000', vat_number: '300000000000003', agency_name: 'أسس المسافر' }));
+    const st = await f('/admin/settings', form({ _csrf: csrf(await (await f('/admin/settings')).text()), tourism_license: '73100000', cr_number: '4030000000', vat_number: '300000000000003', agency_name: 'أسس المسافر', weekend_days: ['4', '5'] }));
     ok(st.status === 303, 'حفظ الإعدادات');
     const ft = await (await f('/')).text(); ok(ft.includes('73100000') && ft.includes('4030000000') && ft.includes('300000000000003'), 'التراخيص تظهر في التذييل');
     // روابط الدفع
@@ -81,9 +81,9 @@ const form = (o) => ({ method: 'POST', headers: { 'content-type': 'application/x
       const wk = 'in=2026-11-25&out=2026-11-27&rooms=1&guests=2';
       ok((await (await f('/hotels/conrad-makkah-jabal-omar?' + wk)).text()).includes('2,554'), 'افتراضيًا الخميس والجمعة نهاية أسبوع: الأربعاء 1210 + الخميس 1344 = 2,554');
       ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2026-11-27&out=2026-11-29&rooms=1&guests=2')).text()).includes('1,344') && (await (await f('/hotels/conrad-makkah-jabal-omar?in=2026-11-27&out=2026-11-29&rooms=1&guests=2')).text()).includes('2,554'), 'الجمعة 1344 + السبت 1210 = 2,554');
-      { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, vat_registered: '1', weekend_days: '4' })); }
+      { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, vat_registered: '1', weekend_days: ['4', '5'] })); }
       ok((await (await f('/')).text()).includes('شاملة الضريبة'), 'عند تفعيل التسجيل الضريبي تظهر الضريبة');
-      { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, weekend_days: '4' })); }
+      { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, weekend_days: ['4', '5'] })); }
       const rid = /name="room" value="(\d+)"/.exec(hp2)[1];
       const bk = await (await f(`/book?${sk}&room=${rid}`)).text(); ok(bk.includes('إرسال طلب الحجز'), 'صفحة طلب الحجز');
       const rq = await f('/book', form({ _csrf: csrf(bk), room: rid, in: '2026-11-20', out: '2026-11-23', rooms: 1, guests: 2, name: 'طالب حجز', phone: '0555000111', agree: '1' }));
