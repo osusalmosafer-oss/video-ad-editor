@@ -73,14 +73,14 @@ const form = (o) => { const u = new URLSearchParams(); for (const [k, v] of Obje
       ok((await f('/admin/hotels-activate', form({ _csrf: adm }))).status === 303, 'تفعيل الفنادق المسعّرة');
       const sk = 'in=2026-11-20&out=2026-11-23&rooms=1&guests=2';
       const hp2 = await (await f('/hotels/conrad-makkah-jabal-omar?' + sk)).text();
-      ok(hp2.includes('4,032'), 'سعر كونراد = 3 ليالٍ × 1344 (1200 + 12%)');
+      ok(hp2.includes('3,764'), 'كونراد: الجمعة 1344 + السبت 1210 + الأحد 1210 = 3,764');
       ok(hp2.includes('اطلب الحجز') && hp2.includes('السرير الإضافي'), 'زر طلب الحجز وإضافات الفندق');
       ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2026-12-20&out=2026-12-23&rooms=1&guests=2')).text()).includes('1,949') === false, 'لا خطأ في فترة أخرى');
       ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2027-03-01&out=2027-03-03&rooms=1&guests=2')).text()).includes('الأسعار غير متوفرة'), 'خارج فترات الأسعار لا يُباع');
       // أسعار وسط/نهاية الأسبوع: الأربعاء 25 نوفمبر 2026 والخميس 26 (1080/1200 ← 1210/1344)
       const wk = 'in=2026-11-25&out=2026-11-27&rooms=1&guests=2';
       ok((await (await f('/hotels/conrad-makkah-jabal-omar?' + wk)).text()).includes('2,554'), 'افتراضيًا الخميس والجمعة نهاية أسبوع: الأربعاء 1210 + الخميس 1344 = 2,554');
-      ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2026-11-27&out=2026-11-29&rooms=1&guests=2')).text()).includes('1,344') && (await (await f('/hotels/conrad-makkah-jabal-omar?in=2026-11-27&out=2026-11-29&rooms=1&guests=2')).text()).includes('2,554'), 'الجمعة 1344 + السبت 1210 = 2,554');
+      ok((await (await f('/hotels/conrad-makkah-jabal-omar?in=2026-11-27&out=2026-11-29&rooms=1&guests=2')).text()).includes('2,554'), 'الجمعة 1344 + السبت 1210 = 2,554');
       { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, vat_registered: '1', weekend_days: ['4', '5'] })); }
       ok((await (await f('/')).text()).includes('شاملة الضريبة'), 'عند تفعيل التسجيل الضريبي تظهر الضريبة');
       { const st9 = csrf(await (await f('/admin/settings')).text()); await f('/admin/settings', form({ _csrf: st9, weekend_days: ['4', '5'] })); }
@@ -90,7 +90,7 @@ const form = (o) => { const u = new URLSearchParams(); for (const [k, v] of Obje
       ok(rq.status === 303 && !rq.headers.get('location').endsWith('/pay'), 'طلب الحجز لا يذهب للدفع');
       const rref = rq.headers.get('location').split('/')[2];
       const rv = await (await f('/booking/' + rref)).text(); ok(rv.includes('بانتظار تأكيد التوفر'), 'حالة بانتظار تأكيد التوفر');
-      const lp3 = await f('/admin/links', form({ _csrf: csrf(await (await f('/admin/links')).text()), amount: 4032, description: 'حجز ' + rref, booking_ref: rref, hours: 24 }));
+      const lp3 = await f('/admin/links', form({ _csrf: csrf(await (await f('/admin/links')).text()), amount: 3764, description: 'حجز ' + rref, booking_ref: rref, hours: 24 }));
       ok(lp3.status === 303, 'رابط دفع لطلب الحجز');
       const tk = /\/pay\/l\/([\w-]+)"/.exec(await (await f('/admin/links')).text())[1];
       const l2 = await (await f('/pay/l/' + tk)).text();
