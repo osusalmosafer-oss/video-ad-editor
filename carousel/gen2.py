@@ -2,7 +2,7 @@ slides = [
  dict(kind="cover", label="حجز مكة", h="ليش الوكالات المحلية <u>أرخص</u> غالباً؟", sub="مقارنة بين المواقع العالمية والوكالات والفندق مباشرة"),
  dict(kind="chips", label="المقارنة", h="٣ طرق <u>للحجز</u>", chips=[("موقع عالمي","سهل وسريع، لكن السعر فيه عمولة"),("الفندق مباشرة","سعر الواجهة، وأحياناً عروض خاصة"),("وكالة محلية","عقود بالجملة وباقات مجمّعة")]),
  dict(kind="card", label="السبب ١", h="عقود <u>بالجملة</u>", body="الوكالة تحجز عدد كبير من الغرف مقدماً للموسم بسعر مخفض، وتبيعها لك بهامش أقل من سعر الواجهة."),
- dict(kind="card", label="السبب ٢", h="أسعار <u>مو معروضة</u>", body="الفنادق تعطي الوكالات أسعار خاصة للتجار، ما تنعرض للزبون العادي على الموقع."),
+ dict(kind="card", label="السبب ٢", h="أسعار مو <u>معروضة</u>", body="الفنادق تعطي الوكالات أسعار خاصة للتجار، ما تنعرض للزبون العادي على الموقع."),
  dict(kind="card", label="السبب ٣", h="عمولة <u>الوسيط</u>", body="المواقع العالمية تاخذ عمولة من الفندق، والفندق يحسبها في السعر. الوكالة المحلية غالباً أقل تكلفة."),
  dict(kind="card", label="توفير ١", h="احجز <u>بدري</u>", body="بعيد عن رمضان وأيام الحج الأسعار أقل بكثير. كل ما قربت من الموسم ارتفع السعر."),
  dict(kind="card", label="توفير ٢", h="قارن <u>نفس</u> الغرفة", body="اطلب ٣ عروض بنفس الليالي ونوع الغرفة والإفطار وشروط الإلغاء، وبعدين قارن السعر."),
@@ -37,7 +37,7 @@ u{{color:var(--ac);text-decoration:none;background:linear-gradient(var(--ac),var
 .body,.sub{{font-weight:700;font-size:46px;line-height:1.7;margin-top:50px;color:#DCE0F2}}
 .big{{position:absolute;left:60px;top:200px;font-size:420px;font-weight:900;color:var(--ac);opacity:.12;line-height:1;direction:ltr}}
 .card .main{{top:520px}}
-.glow{{position:absolute;left:-200px;bottom:-200px;width:900px;height:900px;background:radial-gradient(circle,rgba(255,194,75,.30),transparent 65%)}}
+.glow{{position:absolute;left:-200px;bottom:-200px;width:900px;height:900px;background:radial-gradient(circle,rgba(255,194,75,.16),transparent 65%)}}
 .rings{{position:absolute;left:-340px;bottom:-340px;width:760px;height:760px}}
 .rings i{{position:absolute;border:6px solid var(--ac);border-radius:50%;inset:0}}
 .rings i:nth-child(2){{inset:120px;opacity:.6}}.rings i:nth-child(3){{inset:240px;opacity:.35}}
