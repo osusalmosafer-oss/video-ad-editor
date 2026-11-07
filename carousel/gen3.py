@@ -32,7 +32,7 @@ html=f'''<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><s
 .main{{position:absolute;right:80px;left:80px;top:420px;z-index:2}}
 h1{{font-weight:900;font-size:112px;line-height:1.35}}
 .cover h1{{font-size:128px}}
-u{{color:var(--ac);text-decoration:none;background:linear-gradient(var(--ac),var(--ac)) bottom 6px right/100% 10px no-repeat;padding-bottom:14px}}
+u{{display:inline-block;white-space:nowrap;line-height:1.25;color:var(--ac);text-decoration:none;background:linear-gradient(var(--ac),var(--ac)) bottom 6px right/100% 10px no-repeat;padding-bottom:14px}}
 .body,.sub{{font-weight:700;font-size:46px;line-height:1.7;margin-top:50px;color:#DCE0F2}}
 .big{{position:absolute;left:60px;top:200px;font-size:420px;font-weight:900;color:var(--ac);opacity:.12;line-height:1;direction:ltr}}
 .card .main{{top:520px}}
