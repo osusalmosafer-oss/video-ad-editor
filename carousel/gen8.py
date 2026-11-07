@@ -1,11 +1,11 @@
 slides = [
- dict(kind="cover", label="حجز مكة", h="وش <u>نضمنه</u> لك في حجزك؟", sub="ما تدفعه هو اللي تحصل عليه"),
- dict(kind="card", label="نضمن ١", h="عدد <u>الأشخاص</u>", body="الحجز يكون لعدد الأشخاص اللي تحتاجهم فعلاً، مكتوب وواضح قبل ما تدفع."),
- dict(kind="card", label="نضمن ٢", h="نوع <u>الغرفة</u>", body="تحصل على نوع الغرفة اللي حجزته بالتحديد، مو وصف عام يتغير عند الوصول."),
- dict(kind="card", label="نضمن ٣", h="الإفطار <u>مشمول</u>", body="إذا كان الإفطار ضمن حجزك، فهو مكتوب في العرض ومضمون لك."),
- dict(kind="card", label="نضمن ٤", h="الإطلالة <u>المحددة</u>", body="إذا اخترت غرفة بإطلالة معينة، تحصل عليها كما هي في عرضك."),
- dict(kind="card", label="نضمن ٥", h="المواصلات <u>المتوفرة</u>", body="إذا الفندق يوفر مواصلات، نكتبها لك ضمن العرض بوضوح."),
- dict(kind="last", label="الخلاصة", h="نفس الفندق <u>ومواصفاته</u>", body="تحجز نفس الفندق بنفس المواصفات اللي شفتها في العرض. راسلنا ونرسل لك عرضك مفصل."),
+ dict(kind="cover", label="حجز مكة", h="جهّز <u>٥ أشياء</u> قبل لا تراسل الوكالة", sub="تختصر عليك الوقت وتوصلك أنسب عرض"),
+ dict(kind="card", label="شي ١", h="عدد <u>الأشخاص</u>", body="كم شخص بالغ وكم طفل؟ هذا أول شي نحتاجه عشان نرشح لك الخيارات المناسبة."),
+ dict(kind="card", label="شي ٢", h="تواريخ <u>السفر</u>", body="تاريخ الوصول والمغادرة وعدد الليالي. الأسعار تتغير حسب الموسم، فالتاريخ يفرق."),
+ dict(kind="card", label="شي ٣", h="ميزانيتك <u>التقريبية</u>", body="حدد مبلغ تقريبي لليلة أو للرحلة كاملة، عشان نعرض عليك خيارات تناسبك بدون إضاعة وقت."),
+ dict(kind="card", label="شي ٤", h="القرب من <u>الحرم</u>", body="هل تفضل أقرب مكان ممكن، أو تقبل مسافة أبعد بسعر أقل؟ كل خيار له مزاياه."),
+ dict(kind="card", label="شي ٥", h="أولوياتك <u>الثانية</u>", body="الإفطار، الإطلالة، المواصلات. رتبها حسب أهميتك عشان نركز على اللي يهمك."),
+ dict(kind="last", label="الخلاصة", h="أرسلها لنا <u>وابدأ</u>", body="شاركنا هذي الأشياء الخمسة، ونرسل لك العروض المتوفرة. راسلنا الحين."),
 ]
 N=len(slides)
 out=[]
@@ -42,4 +42,4 @@ u{{display:inline-block;white-space:nowrap;line-height:1.25;color:var(--ac);text
 .rings i:nth-child(2){{inset:120px;opacity:.6}}.rings i:nth-child(3){{inset:240px;opacity:.35}}
 .chips{{margin-top:30px;display:flex;flex-direction:column;gap:28px}}.chip{{border:3px solid #3A4275;border-radius:28px;padding:30px 40px}}.chip b{{display:block;font-size:56px;font-weight:900;color:var(--ac)}}.chip span{{font-size:40px;font-weight:700;color:#DCE0F2;line-height:1.5}}.cover .main{{top:240px}}.chips-s .main{{top:230px}}.last .main{{top:420px}}
 </style></head><body>{"".join(out)}</body></html>'''
-open("carousel7.html","w").write(html)
+open("carousel8.html","w").write(html)
