@@ -5,3 +5,6 @@ node_modules/
 __pycache__/
 isbal-motion/renders/
 isbal-motion/vo/*.wav
+isbal-pro/renders/
+isbal-pro/vo/*.wav
+isbal-pro/render.log

@@ -1,0 +1,102 @@
+{
+ "name": "الإسبال — تحذير (احترافي)",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 100,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#05070D",
+  "ink": "#F4EFE4",
+  "acc": "#C9A25B",
+  "clay": "#9C7A3C",
+  "hi": "#E9D2A0",
+  "mut": "#7C8594",
+  "red": "#C42B35",
+  "green": "#3FA37A"
+ },
+ "fonts": {
+  "display": "Readex Pro",
+  "body": "IBM Plex Sans Arabic",
+  "num": "Inter",
+  "kufi": "Noto Kufi Arabic",
+  "ruqaa": "Aref Ruqaa"
+ },
+ "post": {
+  "grain": 0.06,
+  "vignette": 0.5
+ },
+ "timing": {
+  "snap": "none",
+  "keepOriginal": true,
+  "leadIn": 0.3,
+  "gap": 0,
+  "startPad": 0.0,
+  "tail": 1.0
+ },
+ "scenes": [
+  {
+   "id": "s1",
+   "file": "scenes/s1.js",
+   "lines": [
+    "l1"
+   ],
+   "minDur": 1
+  },
+  {
+   "id": "s2",
+   "file": "scenes/s2.js",
+   "lines": [
+    "l2",
+    "l3"
+   ],
+   "minDur": 1,
+   "transition": {
+    "type": "wipe",
+    "dur": 0.4,
+    "dir": "up",
+    "color": "#D9A441"
+   }
+  },
+  {
+   "id": "s3",
+   "file": "scenes/s3.js",
+   "lines": [
+    "l4",
+    "l5"
+   ],
+   "minDur": 1,
+   "transition": {
+    "type": "crossfade",
+    "dur": 0.5
+   }
+  },
+  {
+   "id": "s4",
+   "file": "scenes/s4.js",
+   "lines": [
+    "l6",
+    "l7"
+   ],
+   "minDur": 1,
+   "transition": {
+    "type": "iris",
+    "dur": 0.6
+   }
+  },
+  {
+   "id": "s5",
+   "file": "scenes/s5.js",
+   "lines": [
+    "l8",
+    "l9"
+   ],
+   "minDur": 1,
+   "transition": {
+    "type": "crossfade",
+    "dur": 0.5
+   }
+  }
+ ]
+}
