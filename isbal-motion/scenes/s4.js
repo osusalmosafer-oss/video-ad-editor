@@ -5,8 +5,9 @@ MOTION.scene({
     const { X, P, at, FX, E } = ctx, ISB = window.ISB, red = P.red || '#D4503A';
     const w7 = ctx.wordTime('l6', -1);
     const punch = Math.max(0, 1 - Math.abs(t - w7.s - 0.12) / 0.35) * 0.035;
-    const push = 1 + 0.03 * at(lt, 0, 6, 'linear') + punch;
+    const push = 1 + punch;
     X.save(); X.translate(540, 960); X.scale(push, push); X.translate(-540, -960);
+    FX.pushIn(ctx, t, { s: ctx.scene.start + 0.2, dur: 5, to: 1.07, focus: [540, 860], blur: false, draw: (Y) => {
     ISB.bg(ctx, t);
     ISB.mosque(ctx, 540, 1750, 0.7, P.acc, 0.12);
     // إطار مزدوج يترسم
@@ -30,6 +31,7 @@ MOTION.scene({
       X.strokeStyle = P.bg; X.lineWidth = 5; X.beginPath(); X.roundRect(330, 1275, 48, 52, 6); X.stroke(); X.beginPath(); X.moveTo(354, 1275); X.lineTo(354, 1327); X.stroke();
       X.restore();
     }
+    } });
     X.restore();
   }
 });

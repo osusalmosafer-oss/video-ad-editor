@@ -17,9 +17,7 @@ MOTION.scene({
     if (k > 0.01) {
       X.save(); X.globalAlpha = k; X.translate(0, 30 * (1 - k));
       FX.scrollReveal(ctx, t, { line: 'l9', y: 300, size: 76, maxWidth: 900, step: 0.3, dim: 0.12, accent: [1] });
-      X.fillStyle = P.acc; X.beginPath(); X.roundRect(270, 1380, 540, 100, 50); X.fill();
-      ctx.text(X, 'شارك التذكير', 560, 1450, { family: 'display', size: 60, color: P.bg, align: 'center' });
-      X.strokeStyle = P.bg; X.lineWidth = 6; X.lineCap = 'round'; X.lineJoin = 'round'; X.beginPath(); X.moveTo(350, 1440); X.lineTo(350, 1405); X.moveTo(336, 1419); X.lineTo(350, 1405); X.lineTo(364, 1419); X.stroke();
+      FX.ctaPulse(ctx, t, { text: 'شارك التذكير', s: s9.s + 0.3, y: 1450, tap: s9.s + 2.2 });
       X.restore();
     }
   }
