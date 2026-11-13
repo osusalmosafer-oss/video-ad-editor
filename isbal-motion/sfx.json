@@ -1,0 +1,14 @@
+[
+ {"type":"impact","at":0.1,"gain":0.8},
+ {"type":"whoosh","at":"scene:s2"},
+ {"type":"impact","at":"word:l2:2","gain":0.7},
+ {"type":"pop","at":"word:l3:-1"},
+ {"type":"whoosh","at":"scene:s3"},
+ {"type":"whoosh","at":"scene:s4-0.3"},
+ {"type":"tick","at":"word:l6:0","gain":0.5},
+ {"type":"impact","at":"word:l6:-1","gain":0.9},
+ {"type":"pop","at":"line:l7"},
+ {"type":"whoosh","at":"scene:s5"},
+ {"type":"shimmer","at":"word:l8:0"},
+ {"type":"pop","at":"line:l9"}
+]

@@ -1,0 +1,13 @@
+{ "name": "تحذير من الإسبال", "fps": 60, "width": 1080, "height": 1920, "bpm": 100, "beatsPerBar": 4, "beatOffset": 0,
+  "palette": { "bg": "#0C1B17", "ink": "#F4EFE3", "acc": "#D9A441", "clay": "#B8892E", "hi": "#EBCB8B", "mut": "#8FA39B", "red": "#D4503A", "green": "#4FB286" },
+  "fonts": { "display": "Lalezar", "body": "IBM Plex Sans Arabic", "num": "Inter" },
+  "voice": { "name": "ar-SA-HamedNeural", "rate": "-4%", "pitch": "-2Hz" },
+  "post": { "grain": 0.035, "vignette": 0.3 },
+  "timing": { "snap": "none", "leadIn": 0.2, "gap": 0.2, "startPad": 0.2, "tail": 0.8 },
+  "scenes": [
+    { "id": "s1", "file": "scenes/s1.js", "lines": ["l1"], "minDur": 2.4 },
+    { "id": "s2", "file": "scenes/s2.js", "lines": ["l2","l3"], "minDur": 4, "transition": { "type": "wipe", "dur": 0.4, "dir": "up", "color": "#D9A441" } },
+    { "id": "s3", "file": "scenes/s3.js", "lines": ["l4","l5"], "minDur": 4, "transition": { "type": "crossfade", "dur": 0.5 } },
+    { "id": "s4", "file": "scenes/s4.js", "lines": ["l6","l7"], "minDur": 6, "transition": { "type": "iris", "dur": 0.6 } },
+    { "id": "s5", "file": "scenes/s5.js", "lines": ["l8","l9"], "minDur": 5, "transition": { "type": "crossfade", "dur": 0.5 } }
+  ] }
