@@ -64,36 +64,27 @@ ISB.foot = (THREE, skin, nailMat, inner) => {
 
 // عالم ثلاثي الأبعاد: رجلين حقيقيتين بكعبين + ثوب بيضاوي يتموج + حلقة الكعبين
 ISB.world = (ctx) => {
-  const { THREE, P } = ctx, w = {};
+  const { THREE, P } = ctx, w = { AN: 0.55 };
   w.st = ctx.stage3D({ fov: 24, camera: [0, 1.1, 25], env: 'room', tone: 'neutral', exposure: 1.0 });
   const st = w.st;
   const key = new THREE.DirectionalLight(0xffdca8, 2.6); key.position.set(4, 7, 6); st.add(key);
   const rim = new THREE.DirectionalLight(0x7fa8ff, 1.6); rim.position.set(-6, 3, -5); st.add(rim);
-  const skin = new THREE.MeshPhysicalMaterial({ color: '#a87858', roughness: 0.55, envMapIntensity: 0.3, sheen: 0.45, sheenColor: new THREE.Color('#d9a584'), sheenRoughness: 0.5, clearcoat: 0.08, clearcoatRoughness: 0.6 });
-  const nail = new THREE.MeshPhysicalMaterial({ color: '#e9cbb8', roughness: 0.25, clearcoat: 0.6 });
-  const bone = new THREE.MeshPhysicalMaterial({ color: '#a87858', roughness: 0.55, envMapIntensity: 0.4 });
-  const prof = [[0, -0.34], [0.18, -0.3], [0.26, -0.2], [0.285, -0.08], [0.295, 0.0], [0.3, 0.45], [0.36, 1.2], [0.45, 2.2], [0.53, 3.3], [0.5, 4.5], [0.47, 5.5], [0.5, 7.2], [0, 7.2]].map(([r, y]) => new THREE.Vector2(r, y));
-  const legG = new THREE.LatheGeometry(prof, 56), sph = new THREE.SphereGeometry(1, 32, 24);
-  const mk = (geo, mat, p, s) => { const m = new THREE.Mesh(geo, mat); m.position.set(...p); m.scale.set(...s); return m; };
-  [-0.82, 0.82].forEach(cx => {
-    const g = new THREE.Group(); g.position.x = cx; const inner = -Math.sign(cx);
-    g.add(new THREE.Mesh(legG, skin));
-    g.add(mk(sph, bone, [inner * 0.27, 0.26, 0.0], [0.07, 0.13, 0.12]));          // الكعب الداخلي (أعلى)
-    g.add(mk(sph, bone, [-inner * 0.275, 0.12, -0.03], [0.065, 0.11, 0.11]));       // الكعب الخارجي (أوطى)
-    g.add(ISB.foot(THREE, skin, nail, inner));
-    st.add(g);
-  });
+  // قدم حقيقية من صورة (مقطوعة الخلفية) كلوحة داخل العالم
+  const FS = 3.3 / 798, FW = 822 * FS, FH = 546 * FS, FYB = -0.72 - (546 - 535) * FS;
+  const tex = new THREE.Texture(ctx.img('foot')); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8; tex.needsUpdate = true;
+  w.photo = st.add(new THREE.Mesh(new THREE.PlaneGeometry(FW, FH), new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.03, toneMapped: false, color: new THREE.Color(0.93, 0.9, 0.88) })));
+  w.photo.position.set(0, FYB + FH / 2, 0);
   w.floor = st.add(new THREE.Mesh(new THREE.CircleGeometry(8, 64), new THREE.MeshBasicMaterial({ color: '#05080f' })));
   w.floor.rotation.x = -Math.PI / 2; w.floor.position.y = -0.75;
   const HH = 7, geo = new THREE.CylinderGeometry(0.93, 1.0, HH, 72, 70, true);
   w.base = Float32Array.from(geo.attributes.position.array); w.H = HH;
   geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3)); w.geo = geo;
   w.thobe = st.add(new THREE.Mesh(geo, new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.62, sheen: 1, sheenColor: new THREE.Color('#ffffff'), sheenRoughness: 0.4, side: THREE.DoubleSide, envMapIntensity: 0.7 })));
-  w.thobe.scale.x = 1.75;
+  w.thobe.scale.x = 1.25;
   w.ringMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(P.acc) });
-  w.ring = st.add(new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.022, 12, 160), w.ringMat)); w.ring.rotation.x = Math.PI / 2; w.ring.scale.set(1.95, 1, 1);
-  w.ring2 = st.add(new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.01, 8, 160), new THREE.MeshBasicMaterial({ color: new THREE.Color(P.acc), transparent: true, opacity: 0.45 }))); w.ring2.rotation.x = Math.PI / 2; w.ring2.scale.set(1.75, 1, 1);
-  w.disc = st.add(new THREE.Mesh(new THREE.CircleGeometry(1.55, 64), new THREE.MeshBasicMaterial({ color: new THREE.Color(P.acc), transparent: true, opacity: 0.07, side: THREE.DoubleSide }))); w.disc.rotation.x = Math.PI / 2; w.disc.scale.set(1.75, 1, 1);
+  w.ring = st.add(new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.022, 12, 160), w.ringMat)); w.ring.rotation.x = Math.PI / 2; w.ring.scale.set(1.32, 1, 1); w.ring.position.set(-1.0, w.AN, 0);
+  w.ring2 = st.add(new THREE.Mesh(new THREE.TorusGeometry(1.55, 0.01, 8, 160), new THREE.MeshBasicMaterial({ color: new THREE.Color(P.acc), transparent: true, opacity: 0.45 }))); w.ring2.rotation.x = Math.PI / 2; w.ring2.scale.set(1.2, 1, 1); w.ring2.position.set(-1.0, w.AN, 0);
+  w.disc = st.add(new THREE.Mesh(new THREE.CircleGeometry(1.55, 64), new THREE.MeshBasicMaterial({ color: new THREE.Color(P.acc), transparent: true, opacity: 0.07, side: THREE.DoubleSide }))); w.disc.rotation.x = Math.PI / 2; w.disc.scale.set(1.2, 1, 1); w.disc.position.set(-1.0, w.AN, 0);
   w.white = new THREE.Color('#f2eee5'); w.red = new THREE.Color(P.red); w.tmp = new THREE.Color();
   w.update = (t, hem, o = {}) => {
     const pos = w.geo.attributes.position, col = w.geo.attributes.color, b = w.base, n = pos.count;
@@ -101,16 +92,16 @@ ISB.world = (ctx) => {
       const x = b[i * 3], by = b[i * 3 + 1], z = b[i * 3 + 2], u = (by + HH / 2) / HH, ang = Math.atan2(x, z), r0 = Math.hypot(x, z);
       const near = 1 - sm(0, 0.2, u), amp = 0.055 * near, r = r0 * (1 + amp * Math.sin(ang * 6 + t * 2.1) + 0.014 * Math.sin(ang * 11 - t * 0.7) + 0.02 * near * Math.sin(ang * 3 + t * 1.2));
       pos.setXYZ(i, r * Math.sin(ang), by + 0.06 * near * Math.sin(ang * 5 + t * 1.7), r * Math.cos(ang));
-      const wy = hem + u * HH, bad = (o.crimson == null ? 1 : o.crimson) * sm(0.04, -0.2, wy), shade = 0.82 + 0.18 * Math.cos(ang * 2 - 0.6);
+      const wy = hem + u * HH, bad = (o.crimson == null ? 1 : o.crimson) * sm(w.AN + 0.04, w.AN - 0.2, wy), shade = 0.82 + 0.18 * Math.cos(ang * 2 - 0.6);
       w.tmp.copy(w.white).lerp(w.red, bad * 0.9).multiplyScalar(shade); col.setXYZ(i, w.tmp.r, w.tmp.g, w.tmp.b);
     }
     pos.needsUpdate = true; col.needsUpdate = true; w.geo.computeVertexNormals();
-    w.thobe.position.y = hem + HH / 2;
-    const pulse = 1 + 0.03 * ctx.beatPulse(t, 7, 1); w.ring.scale.set(1.95 * pulse, 1, pulse);
+    w.thobe.position.set(-1.0, hem + HH / 2, 0);
+    const pulse = 1 + 0.03 * ctx.beatPulse(t, 7, 1); w.ring.scale.set(1.32 * pulse, 1, pulse);
     w.ring2.rotation.z = t * 0.25; w.ringMat.color.set(o.ringColor || ctx.P.acc);
   };
   w.project = (x, y, z) => { const v = new THREE.Vector3(x, y, z); st.camera.updateMatrixWorld(); v.project(st.camera); return [(v.x * 0.5 + 0.5) * 1080, (-v.y * 0.5 + 0.5) * 1920]; };
-  w.BONE = [1.08, 0.12, 0];    // كعب الرجل اليمنى الخارجي
+  w.BONE = [-0.95, 0.55, 0.05];    // كعب الرجل اليمنى الخارجي
   return w;
 };
 
@@ -145,9 +136,9 @@ MOTION.scene({
     // ── الجزء 2: العالم 3D + عدسة تركيز + كشيدة، ثم كلمات تطيح
     const partB = () => {
       ISB.bg(ctx, t, { light: 0.8 });
-      const wd = ctx.wordTime('l2', 2), drop = at(t, wd.s - 0.1, wd.e + 0.5, 'cubicInOut'), hem = 1.7 - 2.3 * drop;
+      const wd = ctx.wordTime('l2', 2), drop = at(t, wd.s - 0.1, wd.e + 0.5, 'cubicInOut'), hem = 1.05 - 1.0 * drop;
       w.update(t, hem, {});
-      w.st.orbit(0.28 + 0.1 * Math.sin(t * 0.35), 0.1, 25 - 1.2 * at(t, l2.s, l2.s + 5, 'sineInOut'), [0, 1.1, 0]);
+      w.photo.rotation.y = 0; w.st.orbit(0.12 * Math.sin(t * 0.35), 0.08, 21 - 1.0 * at(t, l2.s, l2.s + 5, 'sineInOut'), [-0.3, 1.0, 0]);
       w.st.draw(X); ISB.fog(ctx);
       ISB.hud(ctx, t, l2.s, 2, 'التعريف');
       const [bx, by] = w.project(...w.BONE), k = at(t, l2.s + 0.5, l2.s + 1.3, 'cubicOut');

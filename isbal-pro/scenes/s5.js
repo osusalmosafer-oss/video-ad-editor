@@ -5,9 +5,9 @@ MOTION.scene({
   draw(t, lt, ctx) {
     const { X, P, at, FX } = ctx, ISB = window.ISB, w = this.w, green = P.green;
     ISB.bg(ctx, t, { light: 0.8 });
-    const wd = ctx.wordTime('l8', 0), up = at(t, wd.s + 0.1, wd.s + 1.3, 'cubicInOut'), hem = -0.6 + 2.3 * up;
+    const wd = ctx.wordTime('l8', 0), up = at(t, wd.s + 0.1, wd.s + 1.3, 'cubicInOut'), hem = 0.05 + 1.0 * up;
     w.update(t, hem, { ringColor: up > 0.85 ? green : P.acc });
-    w.st.orbit(0.3 - 0.1 * Math.sin(lt * 0.3), 0.2, 21, [0, 0.9, 0]);
+    w.st.orbit(-0.1 * Math.sin(lt * 0.3), 0.08, 21, [-0.3, 1.0, 0]);
     w.st.draw(X); ISB.fog(ctx);
     ISB.hud(ctx, t, ctx.scene.start, 5, 'الحل');
     const [bx, by] = w.project(...w.BONE), k = at(t, wd.s + 1.2, wd.s + 1.8, 'backOut');

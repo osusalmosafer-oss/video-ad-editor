@@ -74,5 +74,8 @@
     "dur": 0.5
    }
   }
- ]
+ ],
+ "images": {
+  "foot": "assets/foot.png"
+ }
 }
