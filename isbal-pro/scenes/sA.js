@@ -128,8 +128,18 @@ MOTION.scene({
       const k = at(lt, 0.0, 0.5, 'cubicOut');
       ctx.text(X, 'انتبه', 540, 820, { family: 'kufi', weight: 900, size: 380, color: P.ink, align: 'center', alpha: k });
       X.save(); X.strokeStyle = red; X.lineWidth = 4; X.globalAlpha = k; X.beginPath(); X.moveTo(240, 880); X.lineTo(840, 880); X.stroke(); X.restore();
-      const a = at(t, ctx.wordTime('l1', 1).s - 0.1, ctx.wordTime('l1', 1).s + 0.4, 'cubicOut');
-      X.save(); X.globalAlpha = a; FX.wordSwap(ctx, t, { lead: 'قد تكون في خطر وأنت لا', words: ['تدري', 'تنتبه', 'تشعر'], s: lastW - 1.1, every: 0.55, y: 1130, size: 84, pill: red }); X.restore();
+      const w1 = ctx.wordTime('l1', 1).s, a = at(t, w1 - 0.1, w1 + 0.4, 'cubicOut');
+      X.save(); X.globalAlpha = a; ctx.text(X, 'قد تكون في خطر وأنت', 540, 1090, { family: 'display', weight: 600, size: 84, color: P.ink, align: 'center' }); X.restore();
+      // «لا تشعر» تظهر حمرا بضربة
+      const hs = ctx.wordTime('l1', 6).s - 0.04, hk = at(t, hs, hs + 0.2, 'expoOut');
+      if (t >= hs) {
+        const sh = (1 - at(t, hs, hs + 0.4, 'cubicOut')), sx = Math.sin((t - hs) * 90) * 16 * sh, sy = Math.cos((t - hs) * 77) * 10 * sh;
+        X.save(); X.translate(540 + sx, 1300 + sy); const sc = 1 + 0.55 * (1 - hk); X.scale(sc, sc);
+        ctx.text(X, 'لا تشعر', 0, 0, { family: 'kufi', weight: 900, size: 170, color: red, align: 'center', alpha: Math.min(1, hk * 2) });
+        X.restore();
+        const fl = 1 - at(t, hs, hs + 0.3, 'cubicOut'); if (fl > 0.01) { X.save(); X.globalAlpha = 0.28 * fl; X.fillStyle = red; X.fillRect(0, 0, 1080, 1920); X.restore(); }
+        const rk = at(t, hs, hs + 0.5, 'expoOut'); X.save(); X.globalAlpha = 0.6 * (1 - rk); X.strokeStyle = red; X.lineWidth = 6; X.beginPath(); X.arc(540, 1280, 80 + 520 * rk, 0, 6.2832); X.stroke(); X.restore();
+      }
     };
 
     // ── الجزء 2: العالم 3D + عدسة تركيز + كشيدة، ثم كلمات تطيح

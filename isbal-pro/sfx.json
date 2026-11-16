@@ -5,6 +5,11 @@
   "gain": 0.8
  },
  {
+  "type": "impact",
+  "at": "word:l1:6",
+  "gain": 1.0
+ },
+ {
   "type": "riser",
   "at": "line:l2"
  },
