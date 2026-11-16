@@ -144,7 +144,7 @@ MOTION.scene({
       const [bx, by] = w.project(...w.BONE), k = at(t, l2.s + 0.5, l2.s + 1.3, 'cubicOut');
       ctx.drawPath(X, [[bx, by], [bx + 70, by - 80], [960, by - 80]], k, { width: 3, color: P.acc, cap: 'round', smooth: false, tip: { r: 7, color: P.acc } });
       X.save(); X.globalAlpha = k; X.strokeStyle = P.acc; X.lineWidth = 3; X.beginPath(); X.arc(bx, by, 28 + 6 * ctx.beatPulse(t, 6, 1), 0, 6.2832); X.stroke();
-      ctx.text(X, 'الكعبان', 960, by - 100, { family: 'body', weight: 700, size: 40, color: P.acc, align: 'right' }); X.restore();
+      ctx.text(X, 'الكعب', 960, by - 100, { family: 'body', weight: 700, size: 40, color: P.acc, align: 'right' }); X.restore();
       const ak = at(t, wd.e + 0.4, wd.e + 1.0, 'cubicOut');
       if (ak > 0.01) { const [lx, ly] = w.project(-2.3, hem + 0.2, 0);
         ctx.drawPath(X, [[lx, ly], [lx - 40, ly + 60], [110, ly + 60]], ak, { width: 3, color: red, cap: 'round', smooth: false, tip: { r: 7, color: red } });
