@@ -33,6 +33,35 @@ ISB.line = (ctx, t, id, o) => {
 };
 ISB.fog = (ctx) => { const { X } = ctx, g = X.createLinearGradient(0, 0, 0, 760); g.addColorStop(0, 'rgba(5,7,13,1)'); g.addColorStop(0.55, 'rgba(5,7,13,0.96)'); g.addColorStop(1, 'rgba(5,7,13,0)'); X.fillStyle = g; X.fillRect(0, 0, 1080, 760); };
 
+
+// قدم واقعية: جسم مُشكَّل بمقاطع عرضية (عقب ← قوس ← مقدّمة) + 5 أصابع بأظافر
+ISB.foot = (THREE, skin, nailMat, inner) => {
+  const g = new THREE.Group(), FY = -0.72;
+  const PZ = [-0.48, -0.3, 0, 0.35, 0.7, 1.0, 1.18], PW = [0.2, 0.28, 0.335, 0.35, 0.37, 0.36, 0.33], PH = [0.22, 0.44, 0.56, 0.48, 0.34, 0.25, 0.19];
+  const itp = (A, z) => { let i = 0; while (i < PZ.length - 2 && z > PZ[i + 1]) i++; const k = Math.min(1, Math.max(0, (z - PZ[i]) / (PZ[i + 1] - PZ[i]))), e = k * k * (3 - 2 * k); return A[i] + (A[i + 1] - A[i]) * e; };
+  const NZ = 44, NA = 36, pos = [], idx = [], zmin = PZ[0], zmax = PZ[PZ.length - 1];
+  for (let i = 0; i <= NZ; i++) {
+    const z = zmin + (zmax - zmin) * i / NZ, e0 = Math.min(1, Math.sqrt(Math.max(0, (z - zmin) / 0.16))), e1 = Math.min(1, Math.sqrt(Math.max(0, (zmax - z) / 0.1)));
+    const cap = Math.min(e0, e1), w = itp(PW, z) * cap, h = itp(PH, z) * Math.max(0.3, cap), lift = 0.07 * Math.sin(Math.PI * Math.min(1, Math.max(0, (z + 0.1) / 0.9))), yc = FY + lift * 0.5 + h / 2;
+    for (let j = 0; j < NA; j++) { const a = j / NA * 6.2832, c = Math.cos(a), sn = Math.sin(a), n = 2.7;
+      const x = w * Math.sign(c) * Math.pow(Math.abs(c), 2 / n), y = sn > 0 ? yc + (h / 2) * Math.pow(sn, 2 / n) : yc - (h / 2 - lift * 0.5) * Math.pow(-sn, 2 / n);
+      pos.push(x, y, z); }
+  }
+  for (let i = 0; i < NZ; i++) for (let j = 0; j < NA; j++) { const a = i * NA + j, b = i * NA + (j + 1) % NA, c = (i + 1) * NA + j, d = (i + 1) * NA + (j + 1) % NA; idx.push(a, c, b, b, c, d); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+  g.add(new THREE.Mesh(geo, skin));
+  // الأصابع: الإبهام جهة الداخل
+  const sph = new THREE.SphereGeometry(1, 28, 20), W = [0.115, 0.085, 0.078, 0.07, 0.06].map(v => v * 0.88), LEN = [0.36, 0.38, 0.33, 0.29, 0.24], HT = [0.15, 0.12, 0.11, 0.1, 0.085];
+  let x = inner * (0.36 - W[0]);
+  for (let i = 0; i < 5; i++) {
+    const t = new THREE.Mesh(sph, skin), zc = 1.05 + LEN[i] * 0.5 - (i ? 0.03 * i : 0);
+    t.position.set(x, FY + HT[i] * 0.5 + 0.02, zc); t.scale.set(W[i], HT[i] * 0.55, LEN[i] * 0.55); t.rotation.x = -0.05 - (i === 0 ? 0.05 : 0); g.add(t);
+    const n = new THREE.Mesh(sph, nailMat); n.position.set(x, FY + HT[i] * 0.98 + 0.012, zc + LEN[i] * 0.28); n.scale.set(W[i] * 0.62, 0.012, LEN[i] * 0.2); n.rotation.x = 0.18; g.add(n);
+    if (i < 4) x -= inner * (W[i] + W[i + 1] + 0.012);
+  }
+  return g;
+};
+
 // عالم ثلاثي الأبعاد: رجلين حقيقيتين بكعبين + ثوب بيضاوي يتموج + حلقة الكعبين
 ISB.world = (ctx) => {
   const { THREE, P } = ctx, w = {};
@@ -40,19 +69,18 @@ ISB.world = (ctx) => {
   const st = w.st;
   const key = new THREE.DirectionalLight(0xffdca8, 2.6); key.position.set(4, 7, 6); st.add(key);
   const rim = new THREE.DirectionalLight(0x7fa8ff, 1.6); rim.position.set(-6, 3, -5); st.add(rim);
-  const skin = new THREE.MeshPhysicalMaterial({ color: '#c08f68', roughness: 0.58, envMapIntensity: 0.35, sheen: 0.5, sheenColor: new THREE.Color('#f0c0a0'), sheenRoughness: 0.6 });
-  const bone = new THREE.MeshPhysicalMaterial({ color: '#cc9c76', roughness: 0.5, envMapIntensity: 0.4 });
-  const prof = [[0, -0.12], [0.27, -0.1], [0.35, 0.0], [0.33, 0.5], [0.37, 1.2], [0.45, 2.2], [0.53, 3.3], [0.5, 4.5], [0.47, 5.5], [0.5, 7.2], [0, 7.2]].map(([r, y]) => new THREE.Vector2(r, y));
+  const skin = new THREE.MeshPhysicalMaterial({ color: '#a87858', roughness: 0.55, envMapIntensity: 0.3, sheen: 0.45, sheenColor: new THREE.Color('#d9a584'), sheenRoughness: 0.5, clearcoat: 0.08, clearcoatRoughness: 0.6 });
+  const nail = new THREE.MeshPhysicalMaterial({ color: '#e9cbb8', roughness: 0.25, clearcoat: 0.6 });
+  const bone = new THREE.MeshPhysicalMaterial({ color: '#a87858', roughness: 0.55, envMapIntensity: 0.4 });
+  const prof = [[0, -0.34], [0.18, -0.3], [0.26, -0.2], [0.285, -0.08], [0.295, 0.0], [0.3, 0.45], [0.36, 1.2], [0.45, 2.2], [0.53, 3.3], [0.5, 4.5], [0.47, 5.5], [0.5, 7.2], [0, 7.2]].map(([r, y]) => new THREE.Vector2(r, y));
   const legG = new THREE.LatheGeometry(prof, 56), sph = new THREE.SphereGeometry(1, 32, 24);
   const mk = (geo, mat, p, s) => { const m = new THREE.Mesh(geo, mat); m.position.set(...p); m.scale.set(...s); return m; };
   [-0.82, 0.82].forEach(cx => {
     const g = new THREE.Group(); g.position.x = cx; const inner = -Math.sign(cx);
     g.add(new THREE.Mesh(legG, skin));
-    g.add(mk(sph, bone, [inner * 0.31, 0.22, 0.0], [0.15, 0.2, 0.15]));          // الكعب الداخلي (أعلى)
-    g.add(mk(sph, bone, [-inner * 0.32, 0.1, -0.03], [0.15, 0.17, 0.15]));       // الكعب الخارجي (أوطى)
-    g.add(mk(sph, skin, [0, -0.45, -0.1], [0.34, 0.3, 0.36]));                    // العقب
-    g.add(mk(sph, skin, [0, -0.52, 0.55], [0.38, 0.22, 0.95]));                   // القدم
-    [0.115, 0.088, 0.08, 0.07, 0.06].forEach((r, i) => g.add(mk(sph, skin, [inner * (0.25 - 0.125 * i), -0.6, 1.42 - 0.03 * i], [r * 1.1, r, r * 1.2])));
+    g.add(mk(sph, bone, [inner * 0.27, 0.26, 0.0], [0.07, 0.13, 0.12]));          // الكعب الداخلي (أعلى)
+    g.add(mk(sph, bone, [-inner * 0.275, 0.12, -0.03], [0.065, 0.11, 0.11]));       // الكعب الخارجي (أوطى)
+    g.add(ISB.foot(THREE, skin, nail, inner));
     st.add(g);
   });
   w.floor = st.add(new THREE.Mesh(new THREE.CircleGeometry(8, 64), new THREE.MeshBasicMaterial({ color: '#05080f' })));
@@ -82,7 +110,7 @@ ISB.world = (ctx) => {
     w.ring2.rotation.z = t * 0.25; w.ringMat.color.set(o.ringColor || ctx.P.acc);
   };
   w.project = (x, y, z) => { const v = new THREE.Vector3(x, y, z); st.camera.updateMatrixWorld(); v.project(st.camera); return [(v.x * 0.5 + 0.5) * 1080, (-v.y * 0.5 + 0.5) * 1920]; };
-  w.BONE = [1.16, 0.1, 0];    // كعب الرجل اليمنى الخارجي
+  w.BONE = [1.08, 0.12, 0];    // كعب الرجل اليمنى الخارجي
   return w;
 };
 
