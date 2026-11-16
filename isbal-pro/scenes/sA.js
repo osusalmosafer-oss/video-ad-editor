@@ -158,6 +158,23 @@ MOTION.scene({
         FX.kashida(ctx, t, { text: 'الكعبين', s: w5 - 0.15, hold: 0.15, y: 1440, size: 150, w: 760, color: P.acc, underline: false });
         X.restore();
       }
+      // الصور الثلاث (الكولاج) عند «أمر يراه كثيرون بسيطًا»
+      {
+        const dim = at(t, l3.s - 0.15, l3.s + 0.3, 'cubicOut') * (1 - at(t, l3.e - 0.05, l3.e + 0.3, 'cubicIn'));
+        if (dim > 0.01) {
+          X.save(); X.globalAlpha = 0.72 * dim; X.fillStyle = '#05070d'; X.fillRect(0, 0, 1080, 1920); X.restore();
+          const im = ctx.img('collage'), PN = [[10, 165, 0], [280, 112, 2], [515, 175, 3]], DW = 780, K = DW / 440; let y = 540;
+          PN.forEach(([sy, sh, wi], i) => {
+            const dh = sh * K, ts = ctx.wordTime('l3', wi).s - 0.05, k = at(t, ts, ts + 0.6, 'expoOut'), ko = 1 - at(t, l3.e - 0.05, l3.e + 0.3, 'cubicIn');
+            if (k > 0.01 && ko > 0.01) {
+              X.save(); X.globalAlpha = k * ko; X.translate(70 * (1 - k) * (i % 2 ? -1 : 1), 0);
+              X.beginPath(); X.roundRect(540 - DW / 2, y, DW, dh, 22); X.save(); X.clip(); X.drawImage(im, 0, sy, 440, sh, 540 - DW / 2, y, DW, dh); X.restore();
+              X.strokeStyle = P.acc; X.lineWidth = 3; X.stroke(); X.restore();
+            }
+            y += dh + 22;
+          });
+        }
+      }
       // كلمات تطيح
       if (t > l3.s - 0.1) FX.wordDrop(ctx, t, { text: l3.text, s: l3.s, y: 360, size: 82, maxWidth: 900, stagger: 0.36, accent: [4] });
     };

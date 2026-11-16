@@ -76,6 +76,7 @@
   }
  ],
  "images": {
-  "foot": "assets/foot.png"
+  "foot": "assets/foot.png",
+  "collage": "assets/collage.jpg"
  }
 }
