@@ -77,56 +77,30 @@
  "sections": [],
  "scenes": [
   {
-   "id": "s1",
-   "file": "scenes/s1.js",
+   "id": "sA",
+   "file": "scenes/sA.js",
    "start": 0.0,
    "lines": [
-    "l1"
-   ],
-   "transition": null,
-   "end": 3.22
-  },
-  {
-   "id": "s2",
-   "file": "scenes/s2.js",
-   "start": 3.22,
-   "lines": [
+    "l1",
     "l2",
     "l3"
    ],
-   "transition": {
-    "type": "wipe",
-    "dur": 0.4,
-    "dir": "up",
-    "color": "#D9A441"
-   },
+   "transition": null,
    "end": 8.84
   },
   {
-   "id": "s3",
-   "file": "scenes/s3.js",
+   "id": "sB",
+   "file": "scenes/sB.js",
    "start": 8.84,
    "lines": [
     "l4",
-    "l5"
-   ],
-   "transition": {
-    "type": "crossfade",
-    "dur": 0.5
-   },
-   "end": 15.9
-  },
-  {
-   "id": "s4",
-   "file": "scenes/s4.js",
-   "start": 15.9,
-   "lines": [
+    "l5",
     "l6",
     "l7"
    ],
    "transition": {
-    "type": "iris",
-    "dur": 0.6
+    "type": "crossfade",
+    "dur": 0.5
    },
    "end": 21.17
   },

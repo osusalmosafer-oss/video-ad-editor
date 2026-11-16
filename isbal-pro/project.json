@@ -37,52 +37,28 @@
  },
  "scenes": [
   {
-   "id": "s1",
-   "file": "scenes/s1.js",
+   "id": "sA",
+   "file": "scenes/sA.js",
    "lines": [
-    "l1"
+    "l1",
+    "l2",
+    "l3"
    ],
    "minDur": 1
   },
   {
-   "id": "s2",
-   "file": "scenes/s2.js",
-   "lines": [
-    "l2",
-    "l3"
-   ],
-   "minDur": 1,
-   "transition": {
-    "type": "wipe",
-    "dur": 0.4,
-    "dir": "up",
-    "color": "#D9A441"
-   }
-  },
-  {
-   "id": "s3",
-   "file": "scenes/s3.js",
+   "id": "sB",
+   "file": "scenes/sB.js",
    "lines": [
     "l4",
-    "l5"
-   ],
-   "minDur": 1,
-   "transition": {
-    "type": "crossfade",
-    "dur": 0.5
-   }
-  },
-  {
-   "id": "s4",
-   "file": "scenes/s4.js",
-   "lines": [
+    "l5",
     "l6",
     "l7"
    ],
    "minDur": 1,
    "transition": {
-    "type": "iris",
-    "dur": 0.6
+    "type": "crossfade",
+    "dur": 0.5
    }
   },
   {
