@@ -14,22 +14,22 @@ h1{position:absolute;left:0;right:0;top:330px;text-align:center;font-family:K;fo
 .bar{position:absolute;left:230px;right:230px;top:560px;height:6px;background:#C42B35}
 .dot{position:absolute;left:526px;top:556px;width:28px;height:28px;border-radius:50%;background:#C42B35}
 .sub{position:absolute;left:0;right:0;top:690px;text-align:center;font-size:54px;color:#C42B35;font-family:K;font-weight:800}
-.foot{position:absolute;left:200px;top:1010px;width:640px}
+.foot{position:absolute;left:200px;top:1070px;width:640px}
 svg{position:absolute;left:0;top:0}
-.hadith{position:absolute;left:80px;right:80px;top:660px;text-align:center;font-family:R;font-weight:700;font-size:64px;line-height:1.65;color:#F4EFE4}
+.hadith{position:absolute;left:80px;right:80px;top:640px;text-align:center;font-family:R;font-weight:700;font-size:64px;line-height:1.65;color:#F4EFE4}
 .hadith b{color:#E8545E;font-weight:700}
-.src{position:absolute;left:0;right:0;top:1640px;text-align:center;font-size:36px;color:#C9A25B}
+.src{position:absolute;left:0;right:0;top:870px;text-align:center;font-size:36px;color:#C9A25B}
 .src:before,.src:after{content:"";display:inline-block;width:150px;height:2px;background:#C9A25B;vertical-align:middle;margin:0 24px;opacity:.7}
 .corner{position:absolute;width:70px;height:70px;border:4px solid #C9A25B}
 </style></head><body>
 <div class="bg"></div>
 <div class="beam" style="left:60px;transform:rotate(-14deg)"></div><div class="beam" style="left:380px;transform:rotate(-14deg);opacity:.6"></div>
 <script>for(let i=0;i<70;i++){const d=document.createElement('div');d.className='dust';const s=1+Math.random()*2.4;d.style.cssText+=`left:${Math.random()*1080}px;top:${Math.random()*1900}px;width:${s}px;height:${s}px;opacity:${.15+Math.random()*.4}`;document.body.appendChild(d)}</script>
-<div class="hud"><span>رواه البخاري</span><i></i></div>
+<div class="hud"><span></span><i></i></div>
 <h1><span style="color:#C42B35">خطر</span> الإسبال</h1><div class="bar"></div><div class="dot"></div>
 
 <img class="foot" src="foot.png">
-<svg id="sv" style="top:130px" width="1080" height="1920" viewBox="0 0 1080 1920">
+<svg id="sv" style="top:190px" width="1080" height="1920" viewBox="0 0 1080 1920">
  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f1e6" stop-opacity="0"/><stop offset=".25" stop-color="#f6f1e6"/><stop offset="1" stop-color="#d9d2c0"/></linearGradient>
  <linearGradient id="r" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C42B35" stop-opacity="0"/><stop offset="1" stop-color="#C42B35" stop-opacity=".85"/></linearGradient></defs>
  <path id="cloth" fill="url(#g)"/><path id="red" fill="url(#r)" opacity=".6"/><path id="hem" fill="none" stroke="#C42B35" stroke-width="9" stroke-linecap="round"/>
@@ -48,5 +48,6 @@ document.getElementById('red').setAttribute('d','M'+(xl-10)+' 920 L'+(xr+10)+' 9
 </script>
 <div class="hadith">«ما أسفلَ من الكعبينِ من الإزارِ<br>فَفِي <b>النَّارِ</b>»</div>
 
+<div class="src">رواه البخاري</div>
 <div class="corner" style="left:70px;top:230px;border-right:0;border-bottom:0"></div><div class="corner" style="right:70px;top:230px;border-left:0;border-bottom:0"></div>
 </body></html>
