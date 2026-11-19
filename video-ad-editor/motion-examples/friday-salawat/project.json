@@ -1,0 +1,15 @@
+{
+ "name": "فضل الصلاة على النبي ﷺ ليلة الجمعة",
+ "fps": 60, "width": 1080, "height": 1920, "bpm": 72, "beatsPerBar": 4, "beatOffset": 0,
+ "palette": { "bg": "#070B1F", "ink": "#F6EBCB", "acc": "#E3B04B", "clay": "#B98A2E", "hi": "#FFE2A0", "mut": "#9AA6D6" },
+ "fonts": { "display": "Lalezar", "body": "IBM Plex Sans Arabic", "num": "Inter" },
+ "post": { "grain": 0.03, "vignette": 0.35 },
+ "scenes": [
+  { "id": "s1", "file": "scenes/s1.js", "minDur": 4.2 },
+  { "id": "s2", "file": "scenes/s2.js", "minDur": 6 },
+  { "id": "s3", "file": "scenes/s3.js", "minDur": 6.2 },
+  { "id": "s4", "file": "scenes/s4.js", "minDur": 5.4 },
+  { "id": "s5", "file": "scenes/s5.js", "minDur": 6 },
+  { "id": "s6", "file": "scenes/s6.js", "minDur": 6.2 }
+ ]
+}
