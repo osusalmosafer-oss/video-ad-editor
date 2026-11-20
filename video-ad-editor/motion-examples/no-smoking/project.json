@@ -31,52 +31,47 @@
   {
    "id": "s1",
    "file": "scenes/s1.js",
-   "minDur": 4.6
+   "minDur": 3.8
   },
   {
    "id": "s2",
    "file": "scenes/s2.js",
-   "minDur": 8.4
-  },
-  {
-   "id": "s3",
-   "file": "scenes/s3.js",
-   "minDur": 8.4
+   "minDur": 6.8
   },
   {
    "id": "s4",
    "file": "scenes/s4.js",
-   "minDur": 4.6
+   "minDur": 3.8
   },
   {
    "id": "s4b",
    "file": "scenes/s4b.js",
-   "minDur": 12.6
+   "minDur": 9.6
   },
   {
    "id": "s5",
    "file": "scenes/s5.js",
-   "minDur": 7.0
+   "minDur": 6.2
   },
   {
    "id": "s6",
    "file": "scenes/s6.js",
-   "minDur": 6.8
+   "minDur": 6.0
   },
   {
    "id": "s7",
    "file": "scenes/s7.js",
-   "minDur": 6.6
+   "minDur": 5.6
   },
   {
    "id": "s8",
    "file": "scenes/s8.js",
-   "minDur": 6.6
+   "minDur": 5.8
   },
   {
    "id": "s9",
    "file": "scenes/s9.js",
-   "minDur": 6.6
+   "minDur": 5.8
   }
  ]
 }

@@ -114,7 +114,7 @@ const QS = [
 ];
 MOTION.scene({ id: 's4b',
   draw(t, lt, ctx) {
-    const { X, at } = ctx; const D = 4.2, i = Math.max(0, Math.min(2, Math.floor(lt / D))), sl = lt - i * D, q = QS[i];
+    const { X, at } = ctx; const D = 3.2, i = Math.max(0, Math.min(2, Math.floor(lt / D))), sl = lt - i * D, q = QS[i];
     NG.bg(ctx, t, { gy: 800, glow: .14 });
     NG.label(ctx, 'من أقوال العلماء', lt, '#E8C46A');
     const k = at(sl, 0, .7, 'expoOut'), cx = 540, cy = 640, R = 150;
@@ -247,7 +247,7 @@ MOTION.scene({ id: 's9',
     NG.src(ctx, 'سورة الطلاق — واستعن بالله ثم بطبيب مختص', 1560, lt, 4.4, '#8FB9A4');
   } });
 """
-dur = {'s1': 4.6, 's2': 8.4, 's3': 8.4, 's4': 4.6, 's4b': 12.6, 's5': 7.0, 's6': 6.8, 's7': 6.6, 's8': 6.6, 's9': 6.6}
+dur = {'s1': 3.8, 's2': 6.8, 's4': 3.8, 's4b': 9.6, 's5': 6.2, 's6': 6.0, 's7': 5.6, 's8': 5.8, 's9': 5.8}
 for k, v in S.items(): open(f'{D}/scenes/{k}.js', 'w').write(HELP + v)
 bpm = 72; spb = 60 / bpm; total = round(sum(dur.values()), 3)
 beats = [round(i * spb, 4) for i in range(int(total / spb) + 1)]
@@ -260,8 +260,8 @@ json.dump({'name': 'أدلة تحريم الدخان والشيشة وأضرار
   'fonts': {'display': 'Lalezar', 'body': 'IBM Plex Sans Arabic', 'num': 'Inter'}, 'images': {k: f'assets/{f}' for k, f in {'p_baz': 'baz.jpg', 'p_uth': 'uth.jpg'}.items() if os.path.exists(f'{D}/assets/{f}')}, 'post': {'grain': 0.04, 'vignette': 0.4},
   'scenes': [{'id': k, 'file': f'scenes/{k}.js', 'minDur': d} for k, d in dur.items()]}, open(f'{D}/project.json', 'w'), ensure_ascii=False, indent=1)
 sfx = [{'type': 'impact', 'at': 'scene:s4+2.0', 'gain': .9}, {'type': 'riser', 'at': 'scene:s4+2.0', 'gain': .5}]
-for k in ['s2', 's3', 's4b', 's5', 's6', 's7', 's8', 's9']: sfx.append({'type': 'swoosh-pass', 'at': f'scene:{k}', 'gain': .5})
-sfx += [{'type': 'tick', 'at': 'scene:s2+4.2', 'gain': .6}, {'type': 'tick', 'at': 'scene:s3+4.2', 'gain': .6}]
+for k in ['s2', 's4b', 's5', 's6', 's7', 's8', 's9']: sfx.append({'type': 'swoosh-pass', 'at': f'scene:{k}', 'gain': .5})
+sfx += [{'type': 'tick', 'at': 'scene:s2+3.4', 'gain': .6}]
 for i, t0 in enumerate([1.2, 2.2, 3.2, 4.2]): sfx.append({'type': 'pop', 'at': f'scene:s5+{t0}', 'gain': .5})
 for i, t0 in enumerate([2.4, 3.6, 4.8]): sfx.append({'type': 'pop', 'at': f'scene:s6+{t0}', 'gain': .5})
 for t0 in [.6, 1.8, 3.0]: sfx.append({'type': 'pop', 'at': f'scene:s8+{t0}', 'gain': .5})

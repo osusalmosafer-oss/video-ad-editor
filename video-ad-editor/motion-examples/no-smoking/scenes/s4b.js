@@ -56,7 +56,7 @@ const QS = [
 ];
 MOTION.scene({ id: 's4b',
   draw(t, lt, ctx) {
-    const { X, at } = ctx; const D = 4.2, i = Math.max(0, Math.min(2, Math.floor(lt / D))), sl = lt - i * D, q = QS[i];
+    const { X, at } = ctx; const D = 3.2, i = Math.max(0, Math.min(2, Math.floor(lt / D))), sl = lt - i * D, q = QS[i];
     NG.bg(ctx, t, { gy: 800, glow: .14 });
     NG.label(ctx, 'من أقوال العلماء', lt, '#E8C46A');
     const k = at(sl, 0, .7, 'expoOut'), cx = 540, cy = 640, R = 150;
