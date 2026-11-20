@@ -57,7 +57,7 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
-const V9 = {"wav": "assets/v65.wav", "dur": 6.12, "ref": "سورة الطلاق · 2", "words": [["﴿وَمَن", 0.12], ["يَتَّقِ", 1.1], ["اللَّهَ", 2.3], ["يَجْعَل", 2.56], ["لَّهُ", 3.66], ["مَخْرَجًا﴾", 4.2]]};
+const V9 = {"wav": "assets/v65.wav", "dur": 4.48, "ref": "سورة الطلاق · 2", "words": [["﴿وَمَن", 0.12], ["يَتَّقِ", 0.62], ["اللَّهَ", 1.52], ["يَجْعَل", 2.04], ["لَّهُ", 2.75], ["مَخْرَجًا﴾", 3.24]]};
 
 MOTION.scene({ id: 's9',
   draw(t, lt, ctx) {
@@ -72,6 +72,6 @@ MOTION.scene({ id: 's9',
     X.restore();
     NG.words(ctx, 'ابدأ اليوم… الإقلاع ممكن', 1120, lt, 1.4, .3, 100, '#F2EFE9', { glow: 'rgba(79,191,139,.5)' });
     NG.vwords(ctx, V9.words, lt - 2.7, 1380, 58, lt - 2.5, '#7FE0B0', { hi: '#C8FFE2', maxW: 940, lh: 1.5 });
-    NG.src(ctx, V9.ref + ' — تلاوة صلاح البدير', 1540, lt, 3.2, '#8FB9A4');
+    NG.src(ctx, V9.ref + ' — تلاوة محمد اللحيدان', 1540, lt, 3.2, '#8FB9A4');
     NG.src(ctx, 'واستعن بالله ثم بطبيب مختص', 1600, lt, 3.6, '#8FB9A4');
   } });

@@ -57,7 +57,7 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
-const V7 = {"wav": "assets/v27.wav", "dur": 6.57, "ref": "سورة الإسراء · 27", "words": [["﴿إِنَّ", 0], ["الْمُبَذِّرِينَ", 0.97], ["كَانُوا", 2.55], ["إِخْوَانَ", 3.57], ["الشَّيَاطِينِ﴾", 4.55]]};
+const V7 = {"wav": "assets/v27.wav", "dur": 7.31, "ref": "سورة الإسراء · 27", "words": [["﴿إِنَّ", 0.05], ["الْمُبَذِّرِينَ", 1.13], ["كَانُوا", 2.91], ["إِخْوَانَ", 4.03], ["الشَّيَاطِينِ﴾", 5.83]]};
 
 MOTION.scene({ id: 's7',
   setup(ctx) { const r = ctx.rng('coins'); this.c = []; for (let i = 0; i < 26; i++) this.c.push({ x: 540 + r.range(-300, 300), y: 1040 + r.range(-40, 150) - Math.abs(r.range(-300, 300)) * .35, rr: r.range(46, 62), d: 1.2 + i * .12 }); },
@@ -80,5 +80,5 @@ MOTION.scene({ id: 's7',
     const b = at(lt, 3.4, 4.0, 'expoOut');
     ctx.text(X, 'يوميًا، شهريًا، سنةً بعد سنة…', 540, 1290, { family: 'body', weight: 700, size: 54, color: '#F2EFE9', align: 'center', alpha: b });
     NG.vwords(ctx, V7.words, lt - 4.3, 1400, 56, lt - 4.1, '#F0B04A', { hi: '#FFE0A0', maxW: 940, lh: 1.5 });
-    NG.src(ctx, V7.ref + ' — ' + 'تلاوة صلاح البدير', 1585, lt, 4.9);
+    NG.src(ctx, V7.ref + ' — ' + 'تلاوة محمد اللحيدان', 1585, lt, 4.9);
   } });

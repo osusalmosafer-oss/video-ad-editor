@@ -94,7 +94,7 @@ def quote(id, label, segs, dur):
 
 # ---- s2 الأدلة من القرآن بصوت القارئ (make_verses.py)
 VS = json.load(open(f'{D}/verses.json', encoding='utf8'))
-RECITER = 'تلاوة القارئ صلاح البدير'
+RECITER = 'تلاوة القارئ محمد اللحيدان'
 AUDIO = []   # (scene, local_t, wav, gain)
 VC = [dict(v=k, **VS[k]) for k in ['v195', 'v29', 'v157']]
 t2 = 0.0
@@ -254,7 +254,7 @@ MOTION.scene({ id: 's7',
     const b = at(lt, 3.4, 4.0, 'expoOut');
     ctx.text(X, 'يوميًا، شهريًا، سنةً بعد سنة…', 540, 1290, { family: 'body', weight: 700, size: 54, color: '#F2EFE9', align: 'center', alpha: b });
     NG.vwords(ctx, V7.words, lt - 4.3, 1400, 56, lt - 4.1, '#F0B04A', { hi: '#FFE0A0', maxW: 940, lh: 1.5 });
-    NG.src(ctx, V7.ref + ' — ' + 'تلاوة صلاح البدير', 1585, lt, 4.9);
+    NG.src(ctx, V7.ref + ' — ' + 'تلاوة محمد اللحيدان', 1585, lt, 4.9);
   } });
 """
 # ---- s8 religious
@@ -290,7 +290,7 @@ MOTION.scene({ id: 's9',
     X.restore();
     NG.words(ctx, 'ابدأ اليوم… الإقلاع ممكن', 1120, lt, 1.4, .3, 100, '#F2EFE9', { glow: 'rgba(79,191,139,.5)' });
     NG.vwords(ctx, V9.words, lt - 2.7, 1380, 58, lt - 2.5, '#7FE0B0', { hi: '#C8FFE2', maxW: 940, lh: 1.5 });
-    NG.src(ctx, V9.ref + ' — تلاوة صلاح البدير', 1540, lt, 3.2, '#8FB9A4');
+    NG.src(ctx, V9.ref + ' — تلاوة محمد اللحيدان', 1540, lt, 3.2, '#8FB9A4');
     NG.src(ctx, 'واستعن بالله ثم بطبيب مختص', 1600, lt, 3.6, '#8FB9A4');
   } });
 """

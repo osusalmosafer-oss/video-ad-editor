@@ -36,7 +36,7 @@
   {
    "id": "s2",
    "file": "scenes/s2.js",
-   "minDur": 16.78
+   "minDur": 19.28
   },
   {
    "id": "s4",
@@ -61,7 +61,7 @@
   {
    "id": "s7",
    "file": "scenes/s7.js",
-   "minDur": 11.57
+   "minDur": 12.31
   },
   {
    "id": "s8",
@@ -71,7 +71,7 @@
   {
    "id": "s9",
    "file": "scenes/s9.js",
-   "minDur": 9.92
+   "minDur": 8.28
   }
  ]
 }

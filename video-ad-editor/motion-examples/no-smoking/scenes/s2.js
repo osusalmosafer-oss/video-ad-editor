@@ -57,7 +57,7 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
-const VC = [{"v": "v195", "wav": "assets/v195.wav", "dur": 4.64, "ref": "سورة البقرة · 195", "words": [["﴿وَلَا", 0.12], ["تُلْقُوا", 0.58], ["بِأَيْدِيكُمْ", 1.52], ["إِلَى", 2.6], ["التَّهْلُكَةِ﴾", 3.02]], "start": 0.0, "audio_at": 0.6, "cd": 6.04}, {"v": "v29", "wav": "assets/v29.wav", "dur": 3.84, "ref": "سورة النساء · 29", "words": [["﴿وَلَا", 0.12], ["تَقْتُلُوا", 0.92], ["أَنفُسَكُمْ﴾", 2.2]], "start": 6.04, "audio_at": 6.64, "cd": 5.24}, {"v": "v157", "wav": "assets/v157.wav", "dur": 4.1, "ref": "سورة الأعراف · 157", "words": [["﴿وَيُحَرِّمُ", 0.12], ["عَلَيْهِمُ", 1.24], ["الْخَبَائِثَ﴾", 2.08]], "start": 11.28, "audio_at": 11.88, "cd": 5.5}]
+const VC = [{"v": "v195", "wav": "assets/v195.wav", "dur": 4.22, "ref": "سورة البقرة · 195", "words": [["﴿وَلَا", 0.12], ["تُلْقُوا", 0.6], ["بِأَيْدِيكُمْ", 1.5], ["إِلَى", 2.5], ["التَّهْلُكَةِ﴾", 2.92]], "start": 0.0, "audio_at": 0.6, "cd": 5.62}, {"v": "v29", "wav": "assets/v29.wav", "dur": 5.72, "ref": "سورة النساء · 29", "words": [["﴿وَلَا", 0.12], ["تَقْتُلُوا", 1.02], ["أَنفُسَكُمْ﴾", 2.36]], "start": 5.62, "audio_at": 6.22, "cd": 7.12}, {"v": "v157", "wav": "assets/v157.wav", "dur": 5.14, "ref": "سورة الأعراف · 157", "words": [["﴿وَيُحَرِّمُ", 0.12], ["عَلَيْهِمُ", 1.22], ["الْخَبَائِثَ﴾", 2.08]], "start": 12.74, "audio_at": 13.34, "cd": 6.54}]
 ;
 MOTION.scene({ id: 's2',
   draw(t, lt, ctx) {
@@ -69,6 +69,6 @@ MOTION.scene({ id: 's2',
     X.globalAlpha = 1;
     NG.vwords(ctx, c.words, au, 620, 104, sl);
     NG.src(ctx, c.ref, 1240, sl, 1.2);
-    ctx.text(X, 'تلاوة القارئ صلاح البدير', 540, 1320, { family: 'body', weight: 400, size: 34, color: '#7A766F', align: 'center', alpha: at(sl, .6, 1.2) });
+    ctx.text(X, 'تلاوة القارئ محمد اللحيدان', 540, 1320, { family: 'body', weight: 400, size: 34, color: '#7A766F', align: 'center', alpha: at(sl, .6, 1.2) });
     const f = 1 - at(sl, 0, .25, 'cubicOut'); if (f > 0 && ci > 0) { X.fillStyle = 'rgba(229,72,59,' + f * .4 + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
   } });
