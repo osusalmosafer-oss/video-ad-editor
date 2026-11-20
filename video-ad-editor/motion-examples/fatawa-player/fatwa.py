@@ -56,7 +56,7 @@ def mix():
     ins = ['-i', v]; fl = []; labs = []
     for i, c in enumerate(tl['clips']):
         ins += ['-i', c['wav']]; ms = int(c['at'] * 1000); fl.append(f'[{i+1}:a]adelay={ms}|{ms}[a{i}]'); labs.append(f'[a{i}]')
-    fl.append(''.join(labs) + f'amix=inputs={len(labs)}:normalize=0,loudnorm=I=-16:TP=-1.5[a]')
+    fl.append(''.join(labs) + f'amix=inputs={len(labs)}:normalize=0,loudnorm=I=-16:TP=-1.5,apad[a]')
     run(['ffmpeg', '-v', 'error', '-y'] + ins + ['-filter_complex', ';'.join(fl), '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', out])
     print('✅', out)
 
