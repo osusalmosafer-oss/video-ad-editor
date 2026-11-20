@@ -1,0 +1,10 @@
+{
+  "name": "donations-pickup-system",
+  "version": "1.0.0",
+  "description": "نظام إدارة ومتابعة طلبات استلام التبرعات",
+  "main": "server.js",
+  "scripts": { "start": "node --disable-warning=ExperimentalWarning server.js", "test": "node --disable-warning=ExperimentalWarning test.js" },
+  "engines": { "node": ">=22.5" },
+  "license": "MIT",
+  "dependencies": { "exceljs": "^4.4.0", "express": "^4.21.0" }
+}
