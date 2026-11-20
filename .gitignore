@@ -5,3 +5,5 @@ node_modules/
 __pycache__/
 video-ad-editor/motion-examples/fatawa-player/assets/*.mp3
 video-ad-editor/motion-examples/fatawa-player/assets/*.wav
+video-ad-editor/motion-examples/no-smoking/assets/*.mp3
+video-ad-editor/motion-examples/no-smoking/assets/*.wav

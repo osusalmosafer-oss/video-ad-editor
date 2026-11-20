@@ -48,28 +48,34 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
-
-const QS = [
-  { n: 'الشيخ محمد بن صالح العثيمين', r: 'رحمه الله', ph: 'p_uth', t: 'التدخين الذي هو شرب الدخان أو التبغ محرم بدلالة الكتاب والسنة والاعتبار الصحيح', s: 'موقع الشيخ ابن عثيمين — «حكم شرب الدخان»' },
-  { n: 'الشيخ عبدالعزيز بن باز', r: 'رحمه الله', ph: 'p_baz', t: 'التدخين يضيق مجاري الدم، يسيء إلى شرايينه، يسيء إلى صدره، يسيء إلى قلبه… فمضاره كثيرة', s: 'موقع الشيخ ابن باز — «التدخين والسهر من أسباب الطلاق»' },
-  { n: 'الشيخ محمد بن صالح العثيمين', r: 'رحمه الله', ph: 'p_uth', t: 'شرب الدخان ضرر في البدن، وفي المال', s: 'موقع الشيخ ابن عثيمين — «حكم شرب الدخان»' }
-];
+const CARDS = [{"n": "الشيخ محمد بن صالح العثيمين", "ph": "p_uth", "k": "uth", "pre": "التدخين الذي هو شرب الدخان أو التبغ", "s": "موقع الشيخ ابن عثيمين — «حكم شرب الدخان»", "start": 0.0, "dur": 8.01, "audio_at": 0.6, "words": [["محرم", 0.25], ["بدلالة", 1.62], ["الكتاب", 2.32], ["والسنة", 3.39], ["والاعتبار", 4.66], ["الصحيح", 5.56]]}, {"n": "الشيخ عبدالعزيز بن باز", "ph": "p_baz", "k": "baz", "pre": "التدخين…", "s": "موقع الشيخ ابن باز — «التدخين والسهر من أسباب الطلاق»", "start": 8.01, "dur": 7.6, "audio_at": 8.61, "words": [["يضيق", 0.2], ["مجاري", 0.56], ["الدم،", 0.82], ["يسيء", 1.68], ["إلى", 1.95], ["شرايينه،", 2.28], ["يسيء", 3.14], ["إلى", 3.45], ["صدره،", 4.16], ["يسيء", 5.02], ["إلى", 5.3], ["قلبه", 5.42]]}]
+;
 MOTION.scene({ id: 's4b',
   draw(t, lt, ctx) {
-    const { X, at } = ctx; const D = 3.2, i = Math.max(0, Math.min(2, Math.floor(lt / D))), sl = lt - i * D, q = QS[i];
+    const { X, at } = ctx; let ci = 0; CARDS.forEach((c, i) => { if (lt >= c.start) ci = i; });
+    const c = CARDS[ci], sl = lt - c.start, au = sl - 0.6;
     NG.bg(ctx, t, { gy: 800, glow: .14 });
     NG.label(ctx, 'من أقوال العلماء', lt, '#E8C46A');
     const k = at(sl, 0, .7, 'expoOut'), cx = 540, cy = 640, R = 150;
-    X.save(); X.globalAlpha = k; X.strokeStyle = '#E8C46A'; X.lineWidth = 6; X.beginPath(); X.arc(cx, cy, R + 10 + 6 * Math.sin(sl * 3), 0, 6.283); X.stroke();
+    // نبض الحلقة مع الصوت: يرتفع بين الكلمات
+    let pulse = 0; c.words.forEach(w => { const d = au - w[1]; if (d >= 0 && d < .5) pulse = Math.max(pulse, 1 - d / .5); });
+    X.save(); X.globalAlpha = k; X.strokeStyle = '#E8C46A'; X.lineWidth = 6; X.beginPath(); X.arc(cx, cy, R + 12 + 14 * pulse, 0, 6.283); X.stroke();
+    X.globalAlpha = k * .35 * pulse; X.lineWidth = 3; X.beginPath(); X.arc(cx, cy, R + 34 + 30 * pulse, 0, 6.283); X.stroke(); X.globalAlpha = k;
     X.beginPath(); X.arc(cx, cy, R, 0, 6.283); X.clip();
-    const img = ctx.images && ctx.images[q.ph] && ctx.img(q.ph);
-    if (img) { const s = (R * 2.1) / Math.min(img.width, img.height); X.drawImage(img, cx - img.width * s / 2, cy - img.height * s / 2, img.width * s, img.height * s); }
-    else { X.fillStyle = '#2A2420'; X.fillRect(cx - R, cy - R, R * 2, R * 2); X.fillStyle = '#5B4A30'; X.beginPath(); X.arc(cx, cy - 36, 54, 0, 6.283); X.fill(); X.beginPath(); X.ellipse(cx, cy + 130, 100, 86, 0, 0, 6.283); X.fill(); }
+    const img = ctx.images && ctx.images[c.ph] && ctx.img(c.ph);
+    if (img) { const s = (R * 2.1 * (1 + .03 * pulse)) / Math.min(img.width, img.height); X.drawImage(img, cx - img.width * s / 2, cy - img.height * s / 2, img.width * s, img.height * s); }
+    else { X.fillStyle = '#2A2420'; X.fillRect(cx - R, cy - R, R * 2, R * 2); }
     X.restore();
-    ctx.text(X, q.n, 540, 880, { family: 'display', size: 64, color: '#F2EFE9', align: 'center', alpha: k, maxWidth: 960 });
-    ctx.text(X, q.r, 540, 950, { family: 'body', weight: 400, size: 38, color: '#E8C46A', align: 'center', alpha: k });
-    ctx.text(X, '«', 540, 1030, { family: 'display', size: 140, color: '#E5483B', align: 'center', alpha: .8 * k });
-    NG.words(ctx, q.t, 1140, sl, .3, .17, 62, '#F2EFE9', { family: 'body', lh: 1.65 });
-    NG.src(ctx, q.s, 1500, sl, 1.8);
-    const f = 1 - at(sl, 0, .25, 'cubicOut'); if (f > 0 && i > 0) { X.fillStyle = 'rgba(232,196,106,' + f * .35 + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
+    ctx.text(X, c.n, 540, 880, { family: 'display', size: 64, color: '#F2EFE9', align: 'center', alpha: k, maxWidth: 960 });
+    ctx.text(X, 'رحمه الله', 540, 950, { family: 'body', weight: 400, size: 38, color: '#E8C46A', align: 'center', alpha: k });
+    ctx.text(X, c.pre, 540, 1040, { family: 'body', weight: 400, size: 40, color: '#9A968F', align: 'center', alpha: k, maxWidth: 940 });
+    const str = c.words.map(w => w[0]).join(' ');
+    const L = ctx.text.layout(X, str, { family: 'body', weight: 700, size: 68, maxWidth: 900, lineHeight: 1.6 });
+    ctx.text.drawLayout(X, L, 540, 1110, { align: 'center', color: '#F2EFE9', perWord: (i) => {
+      const w0 = c.words[i][1], w1 = i + 1 < c.words.length ? c.words[i + 1][1] : w0 + .9;
+      const cur = au >= w0 && au < w1, past = au >= w1;
+      return { alpha: k * (past || cur ? 1 : .3), color: cur ? '#F3DDA0' : '#F2EFE9', scale: cur ? 1.1 : 1, shadow: cur ? { blur: 30, y: 0, color: 'rgba(232,196,106,.8)' } : undefined };
+    } });
+    NG.src(ctx, c.s, 1500, sl, 1.0);
+    const f = 1 - at(sl, 0, .25, 'cubicOut'); if (f > 0 && ci > 0) { X.fillStyle = 'rgba(232,196,106,' + f * .35 + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
   } });
