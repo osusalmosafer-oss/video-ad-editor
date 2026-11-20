@@ -21,6 +21,15 @@ NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   } });
   return L;
 };
+NG.vwords = function (ctx, words, au, y, size, sl, color, o = {}) {
+  const X = ctx.X, str = words.map(w => w[0]).join(' ');
+  const L = ctx.text.layout(X, str, { family: 'body', weight: 700, size, maxWidth: o.maxW || 900, lineHeight: o.lh || 1.7 });
+  const k = ctx.at(sl, 0, .5, 'expoOut');
+  ctx.text.drawLayout(X, L, 540, y, { align: 'center', color: color || '#F2EFE9', perWord: (i) => {
+    const w0 = words[i][1], w1 = i + 1 < words.length ? words[i + 1][1] : w0 + 1.2, cur = au >= w0 && au < w1, past = au >= w1;
+    return { alpha: k * (past || cur ? 1 : .3), color: cur ? (o.hi || '#FFD27A') : (color || '#F2EFE9'), scale: cur ? 1.08 : 1, shadow: cur ? { blur: 30, y: 0, color: 'rgba(255,200,90,.8)' } : undefined };
+  } });
+};
 NG.label = function (ctx, str, lt, col) {
   const k = ctx.at(lt, 0, .5, 'expoOut');
   ctx.text(ctx.X, str, 540, 270 + (1 - k) * 30, { family: 'display', size: 96, color: col || '#E5483B', align: 'center', alpha: k });
@@ -82,12 +91,33 @@ def quote(id, label, segs, dur):
   } });
 """
     return js
-S['s2'] = quote('s2', 'من القرآن الكريم', [
-    {'t': '﴿ وَلَا تُلْقُوا بِأَيْدِيكُمْ إِلَى التَّهْلُكَةِ ﴾', 's': 'سورة البقرة', 'mark': '١'.replace('١', '1')},
-    {'t': '﴿ وَلَا تَقْتُلُوا أَنفُسَكُمْ ﴾', 's': 'سورة النساء', 'mark': '2', 'size': 110}], 8.4)
-S['s3'] = quote('s3', 'وتحريم الخبائث', [
-    {'t': '﴿ وَيُحَرِّمُ عَلَيْهِمُ الْخَبَائِثَ ﴾', 's': 'سورة الأعراف', 'mark': '3', 'size': 104},
-    {'t': '«لا ضَرَرَ ولا ضِرَارَ»', 's': 'حديث نبوي — رواه ابن ماجه', 'mark': '4', 'size': 118}], 8.4)
+
+# ---- s2 الأدلة من القرآن بصوت القارئ (make_verses.py)
+VS = json.load(open(f'{D}/verses.json', encoding='utf8'))
+RECITER = 'تلاوة القارئ صلاح البدير'
+AUDIO = []   # (scene, local_t, wav, gain)
+VC = [dict(v=k, **VS[k]) for k in ['v195', 'v29', 'v157']]
+t2 = 0.0
+for c in VC:
+    c['start'] = round(t2, 2); c['audio_at'] = round(t2 + 0.6, 2); c['cd'] = round(0.6 + c['dur'] + 0.8, 2); t2 += c['cd']; AUDIO.append(('s2', c['audio_at'], c['wav'], 1.0))
+S2_DUR = round(t2, 2)
+S['s2'] = "const VC = " + json.dumps(VC, ensure_ascii=False) + r"""
+;
+MOTION.scene({ id: 's2',
+  draw(t, lt, ctx) {
+    const { X, at } = ctx; let ci = 0; VC.forEach((c, i) => { if (lt >= c.start) ci = i; });
+    const c = VC[ci], sl = lt - c.start, au = sl - 0.6;
+    NG.bg(ctx, t, { gy: 900, glow: .13 });
+    NG.label(ctx, 'من القرآن الكريم', lt);
+    for (let q = 0; q < 3; q++) { X.globalAlpha = .06; X.strokeStyle = '#E5483B'; X.lineWidth = 2; X.save(); X.translate(540, 900); X.rotate(lt * .05 * (q % 2 ? -1 : 1) + q); X.strokeRect(-420 + q * 60, -420 + q * 60, 840 - q * 120, 840 - q * 120); X.restore(); }
+    X.globalAlpha = 1;
+    NG.vwords(ctx, c.words, au, 620, 104, sl);
+    NG.src(ctx, c.ref, 1240, sl, 1.2);
+    ctx.text(X, '__REC__', 540, 1320, { family: 'body', weight: 400, size: 34, color: '#7A766F', align: 'center', alpha: at(sl, .6, 1.2) });
+    const f = 1 - at(sl, 0, .25, 'cubicOut'); if (f > 0 && ci > 0) { X.fillStyle = 'rgba(229,72,59,' + f * .4 + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
+  } });
+""".replace("__REC__", RECITER)
+
 S['s4'] = r"""
 MOTION.scene({ id: 's4',
   draw(t, lt, ctx) {
@@ -202,7 +232,7 @@ MOTION.scene({ id: 's6',
   } });
 """
 # ---- s7 money
-S['s7'] = r"""
+S['s7'] = "const V7 = " + json.dumps(VS['v27'], ensure_ascii=False) + ";\n" + r"""
 MOTION.scene({ id: 's7',
   setup(ctx) { const r = ctx.rng('coins'); this.c = []; for (let i = 0; i < 26; i++) this.c.push({ x: 540 + r.range(-300, 300), y: 1040 + r.range(-40, 150) - Math.abs(r.range(-300, 300)) * .35, rr: r.range(46, 62), d: 1.2 + i * .12 }); },
   draw(t, lt, ctx) {
@@ -222,10 +252,9 @@ MOTION.scene({ id: 's7',
     });
     NG.smoke(ctx, lt + 1, 540, 1150, { n: 20, h: 520, alpha: at(lt, 1.5, 3, 'sineOut'), c: '120,116,110', r: 80, spread: 280 });
     const b = at(lt, 3.4, 4.0, 'expoOut');
-    ctx.text(X, 'يوميًا، شهريًا، سنةً بعد سنة…', 540, 1380, { family: 'body', weight: 700, size: 54, color: '#F2EFE9', align: 'center', alpha: b });
-    const c2 = at(lt, 4.4, 5.0, 'expoOut');
-    ctx.text(X, '﴿ إِنَّ الْمُبَذِّرِينَ كَانُوا إِخْوَانَ الشَّيَاطِينِ ﴾', 540, 1470, { family: 'body', weight: 700, size: 42, color: '#F0B04A', align: 'center', alpha: c2, maxWidth: 940 });
-    NG.src(ctx, 'سورة الإسراء', 1560, lt, 5.0);
+    ctx.text(X, 'يوميًا، شهريًا، سنةً بعد سنة…', 540, 1290, { family: 'body', weight: 700, size: 54, color: '#F2EFE9', align: 'center', alpha: b });
+    NG.vwords(ctx, V7.words, lt - 4.3, 1400, 56, lt - 4.1, '#F0B04A', { hi: '#FFE0A0', maxW: 940, lh: 1.5 });
+    NG.src(ctx, V7.ref + ' — ' + 'تلاوة صلاح البدير', 1585, lt, 4.9);
   } });
 """
 # ---- s8 religious
@@ -247,7 +276,7 @@ MOTION.scene({ id: 's8',
   } });
 """
 # ---- s9 hope
-S['s9'] = r"""
+S['s9'] = "const V9 = " + json.dumps(VS['v65'], ensure_ascii=False) + ";\n" + r"""
 MOTION.scene({ id: 's9',
   draw(t, lt, ctx) {
     const { X, at } = ctx;
@@ -260,11 +289,13 @@ MOTION.scene({ id: 's9',
     X.save(); X.translate(120 * br, 40 * br * br); X.rotate(.5 * br + 1.9); X.translate(0, 120); NG.cig(ctx, 0, 0, 260, 0, 0, lt, 0); X.restore();
     X.restore();
     NG.words(ctx, 'ابدأ اليوم… الإقلاع ممكن', 1120, lt, 1.4, .3, 100, '#F2EFE9', { glow: 'rgba(79,191,139,.5)' });
-    NG.words(ctx, '﴿ وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا ﴾', 1400, lt, 3.0, .22, 56, '#7FE0B0', { family: 'body', glow: 'rgba(79,191,139,.4)' });
-    NG.src(ctx, 'سورة الطلاق — واستعن بالله ثم بطبيب مختص', 1560, lt, 4.4, '#8FB9A4');
+    NG.vwords(ctx, V9.words, lt - 2.7, 1380, 58, lt - 2.5, '#7FE0B0', { hi: '#C8FFE2', maxW: 940, lh: 1.5 });
+    NG.src(ctx, V9.ref + ' — تلاوة صلاح البدير', 1540, lt, 3.2, '#8FB9A4');
+    NG.src(ctx, 'واستعن بالله ثم بطبيب مختص', 1600, lt, 3.6, '#8FB9A4');
   } });
 """
-dur = {'s1': 3.8, 's2': 6.8, 's4': 3.8, 's4b': S4B_DUR, 's5': 6.2, 's6': 6.0, 's7': 5.6, 's8': 5.8, 's9': 5.8}
+S7_DUR = round(4.3 + VS['v27']['dur'] + 0.7, 2); S9_DUR = round(2.7 + VS['v65']['dur'] + 1.1, 2)
+dur = {'s1': 3.8, 's2': S2_DUR, 's4': 3.8, 's4b': S4B_DUR, 's5': 6.2, 's6': 6.0, 's7': S7_DUR, 's8': 5.8, 's9': S9_DUR}
 for k, v in S.items(): open(f'{D}/scenes/{k}.js', 'w').write(HELP + v)
 bpm = 72; spb = 60 / bpm; total = round(sum(dur.values()), 3)
 beats = [round(i * spb, 4) for i in range(int(total / spb) + 1)]
@@ -278,10 +309,13 @@ json.dump({'name': 'أدلة تحريم الدخان والشيشة وأضرار
   'scenes': [{'id': k, 'file': f'scenes/{k}.js', 'minDur': d} for k, d in dur.items()]}, open(f'{D}/project.json', 'w'), ensure_ascii=False, indent=1)
 sfx = [{'type': 'impact', 'at': 'scene:s4+2.0', 'gain': .9}, {'type': 'riser', 'at': 'scene:s4+2.0', 'gain': .5}]
 for k in ['s2', 's4b', 's5', 's6', 's7', 's8', 's9']: sfx.append({'type': 'swoosh-pass', 'at': f'scene:{k}', 'gain': .5})
-sfx += [{'type': 'tick', 'at': 'scene:s2+3.4', 'gain': .6}]
+sfx += [{'type': 'tick', 'at': 'scene:s2+0.3', 'gain': .3}]
 for i, t0 in enumerate([1.2, 2.2, 3.2, 4.2]): sfx.append({'type': 'pop', 'at': f'scene:s5+{t0}', 'gain': .5})
 for i, t0 in enumerate([2.4, 3.6, 4.8]): sfx.append({'type': 'pop', 'at': f'scene:s6+{t0}', 'gain': .5})
 for t0 in [.6, 1.8, 3.0]: sfx.append({'type': 'pop', 'at': f'scene:s8+{t0}', 'gain': .5})
 sfx += [{'type': 'shimmer', 'at': 'scene:s9+1.2', 'gain': .9}]
 json.dump(sfx, open(f'{D}/sfx.json', 'w'))
+AUDIO += [('s7', 4.3, VS['v27']['wav'], 1.0), ('s9', 2.7, VS['v65']['wav'], 1.0)]
+for c in CARDS: AUDIO.append(('s4b', c['audio_at'], EX[c['k']]['wav'], 1.5))
+json.dump([{'scene': a, 'at': b, 'wav': c, 'gain': g} for a, b, c, g in AUDIO], open(f'{D}/audio_cues.json', 'w'), ensure_ascii=False, indent=1)
 print('total', total)

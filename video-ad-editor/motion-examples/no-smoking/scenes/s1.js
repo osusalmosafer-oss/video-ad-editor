@@ -17,6 +17,15 @@ NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   } });
   return L;
 };
+NG.vwords = function (ctx, words, au, y, size, sl, color, o = {}) {
+  const X = ctx.X, str = words.map(w => w[0]).join(' ');
+  const L = ctx.text.layout(X, str, { family: 'body', weight: 700, size, maxWidth: o.maxW || 900, lineHeight: o.lh || 1.7 });
+  const k = ctx.at(sl, 0, .5, 'expoOut');
+  ctx.text.drawLayout(X, L, 540, y, { align: 'center', color: color || '#F2EFE9', perWord: (i) => {
+    const w0 = words[i][1], w1 = i + 1 < words.length ? words[i + 1][1] : w0 + 1.2, cur = au >= w0 && au < w1, past = au >= w1;
+    return { alpha: k * (past || cur ? 1 : .3), color: cur ? (o.hi || '#FFD27A') : (color || '#F2EFE9'), scale: cur ? 1.08 : 1, shadow: cur ? { blur: 30, y: 0, color: 'rgba(255,200,90,.8)' } : undefined };
+  } });
+};
 NG.label = function (ctx, str, lt, col) {
   const k = ctx.at(lt, 0, .5, 'expoOut');
   ctx.text(ctx.X, str, 540, 270 + (1 - k) * 30, { family: 'display', size: 96, color: col || '#E5483B', align: 'center', alpha: k });

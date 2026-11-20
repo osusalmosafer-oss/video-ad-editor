@@ -17,6 +17,15 @@ NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   } });
   return L;
 };
+NG.vwords = function (ctx, words, au, y, size, sl, color, o = {}) {
+  const X = ctx.X, str = words.map(w => w[0]).join(' ');
+  const L = ctx.text.layout(X, str, { family: 'body', weight: 700, size, maxWidth: o.maxW || 900, lineHeight: o.lh || 1.7 });
+  const k = ctx.at(sl, 0, .5, 'expoOut');
+  ctx.text.drawLayout(X, L, 540, y, { align: 'center', color: color || '#F2EFE9', perWord: (i) => {
+    const w0 = words[i][1], w1 = i + 1 < words.length ? words[i + 1][1] : w0 + 1.2, cur = au >= w0 && au < w1, past = au >= w1;
+    return { alpha: k * (past || cur ? 1 : .3), color: cur ? (o.hi || '#FFD27A') : (color || '#F2EFE9'), scale: cur ? 1.08 : 1, shadow: cur ? { blur: 30, y: 0, color: 'rgba(255,200,90,.8)' } : undefined };
+  } });
+};
 NG.label = function (ctx, str, lt, col) {
   const k = ctx.at(lt, 0, .5, 'expoOut');
   ctx.text(ctx.X, str, 540, 270 + (1 - k) * 30, { family: 'display', size: 96, color: col || '#E5483B', align: 'center', alpha: k });
@@ -48,6 +57,7 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
+const V7 = {"wav": "assets/v27.wav", "dur": 6.57, "ref": "سورة الإسراء · 27", "words": [["﴿إِنَّ", 0], ["الْمُبَذِّرِينَ", 0.97], ["كَانُوا", 2.55], ["إِخْوَانَ", 3.57], ["الشَّيَاطِينِ﴾", 4.55]]};
 
 MOTION.scene({ id: 's7',
   setup(ctx) { const r = ctx.rng('coins'); this.c = []; for (let i = 0; i < 26; i++) this.c.push({ x: 540 + r.range(-300, 300), y: 1040 + r.range(-40, 150) - Math.abs(r.range(-300, 300)) * .35, rr: r.range(46, 62), d: 1.2 + i * .12 }); },
@@ -68,8 +78,7 @@ MOTION.scene({ id: 's7',
     });
     NG.smoke(ctx, lt + 1, 540, 1150, { n: 20, h: 520, alpha: at(lt, 1.5, 3, 'sineOut'), c: '120,116,110', r: 80, spread: 280 });
     const b = at(lt, 3.4, 4.0, 'expoOut');
-    ctx.text(X, 'يوميًا، شهريًا، سنةً بعد سنة…', 540, 1380, { family: 'body', weight: 700, size: 54, color: '#F2EFE9', align: 'center', alpha: b });
-    const c2 = at(lt, 4.4, 5.0, 'expoOut');
-    ctx.text(X, '﴿ إِنَّ الْمُبَذِّرِينَ كَانُوا إِخْوَانَ الشَّيَاطِينِ ﴾', 540, 1470, { family: 'body', weight: 700, size: 42, color: '#F0B04A', align: 'center', alpha: c2, maxWidth: 940 });
-    NG.src(ctx, 'سورة الإسراء', 1560, lt, 5.0);
+    ctx.text(X, 'يوميًا، شهريًا، سنةً بعد سنة…', 540, 1290, { family: 'body', weight: 700, size: 54, color: '#F2EFE9', align: 'center', alpha: b });
+    NG.vwords(ctx, V7.words, lt - 4.3, 1400, 56, lt - 4.1, '#F0B04A', { hi: '#FFE0A0', maxW: 940, lh: 1.5 });
+    NG.src(ctx, V7.ref + ' — ' + 'تلاوة صلاح البدير', 1585, lt, 4.9);
   } });

@@ -17,6 +17,15 @@ NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   } });
   return L;
 };
+NG.vwords = function (ctx, words, au, y, size, sl, color, o = {}) {
+  const X = ctx.X, str = words.map(w => w[0]).join(' ');
+  const L = ctx.text.layout(X, str, { family: 'body', weight: 700, size, maxWidth: o.maxW || 900, lineHeight: o.lh || 1.7 });
+  const k = ctx.at(sl, 0, .5, 'expoOut');
+  ctx.text.drawLayout(X, L, 540, y, { align: 'center', color: color || '#F2EFE9', perWord: (i) => {
+    const w0 = words[i][1], w1 = i + 1 < words.length ? words[i + 1][1] : w0 + 1.2, cur = au >= w0 && au < w1, past = au >= w1;
+    return { alpha: k * (past || cur ? 1 : .3), color: cur ? (o.hi || '#FFD27A') : (color || '#F2EFE9'), scale: cur ? 1.08 : 1, shadow: cur ? { blur: 30, y: 0, color: 'rgba(255,200,90,.8)' } : undefined };
+  } });
+};
 NG.label = function (ctx, str, lt, col) {
   const k = ctx.at(lt, 0, .5, 'expoOut');
   ctx.text(ctx.X, str, 540, 270 + (1 - k) * 30, { family: 'display', size: 96, color: col || '#E5483B', align: 'center', alpha: k });
@@ -48,6 +57,7 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
+const V9 = {"wav": "assets/v65.wav", "dur": 6.12, "ref": "سورة الطلاق · 2", "words": [["﴿وَمَن", 0.12], ["يَتَّقِ", 1.1], ["اللَّهَ", 2.3], ["يَجْعَل", 2.56], ["لَّهُ", 3.66], ["مَخْرَجًا﴾", 4.2]]};
 
 MOTION.scene({ id: 's9',
   draw(t, lt, ctx) {
@@ -61,6 +71,7 @@ MOTION.scene({ id: 's9',
     X.save(); X.translate(120 * br, 40 * br * br); X.rotate(.5 * br + 1.9); X.translate(0, 120); NG.cig(ctx, 0, 0, 260, 0, 0, lt, 0); X.restore();
     X.restore();
     NG.words(ctx, 'ابدأ اليوم… الإقلاع ممكن', 1120, lt, 1.4, .3, 100, '#F2EFE9', { glow: 'rgba(79,191,139,.5)' });
-    NG.words(ctx, '﴿ وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا ﴾', 1400, lt, 3.0, .22, 56, '#7FE0B0', { family: 'body', glow: 'rgba(79,191,139,.4)' });
-    NG.src(ctx, 'سورة الطلاق — واستعن بالله ثم بطبيب مختص', 1560, lt, 4.4, '#8FB9A4');
+    NG.vwords(ctx, V9.words, lt - 2.7, 1380, 58, lt - 2.5, '#7FE0B0', { hi: '#C8FFE2', maxW: 940, lh: 1.5 });
+    NG.src(ctx, V9.ref + ' — تلاوة صلاح البدير', 1540, lt, 3.2, '#8FB9A4');
+    NG.src(ctx, 'واستعن بالله ثم بطبيب مختص', 1600, lt, 3.6, '#8FB9A4');
   } });

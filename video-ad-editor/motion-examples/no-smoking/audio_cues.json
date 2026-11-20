@@ -1,0 +1,44 @@
+[
+ {
+  "scene": "s2",
+  "at": 0.6,
+  "wav": "assets/v195.wav",
+  "gain": 1.0
+ },
+ {
+  "scene": "s2",
+  "at": 6.64,
+  "wav": "assets/v29.wav",
+  "gain": 1.0
+ },
+ {
+  "scene": "s2",
+  "at": 11.88,
+  "wav": "assets/v157.wav",
+  "gain": 1.0
+ },
+ {
+  "scene": "s7",
+  "at": 4.3,
+  "wav": "assets/v27.wav",
+  "gain": 1.0
+ },
+ {
+  "scene": "s9",
+  "at": 2.7,
+  "wav": "assets/v65.wav",
+  "gain": 1.0
+ },
+ {
+  "scene": "s4b",
+  "at": 0.6,
+  "wav": "assets/uth_x.wav",
+  "gain": 1.5
+ },
+ {
+  "scene": "s4b",
+  "at": 8.61,
+  "wav": "assets/baz_x.wav",
+  "gain": 1.5
+ }
+]

@@ -17,6 +17,15 @@ NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   } });
   return L;
 };
+NG.vwords = function (ctx, words, au, y, size, sl, color, o = {}) {
+  const X = ctx.X, str = words.map(w => w[0]).join(' ');
+  const L = ctx.text.layout(X, str, { family: 'body', weight: 700, size, maxWidth: o.maxW || 900, lineHeight: o.lh || 1.7 });
+  const k = ctx.at(sl, 0, .5, 'expoOut');
+  ctx.text.drawLayout(X, L, 540, y, { align: 'center', color: color || '#F2EFE9', perWord: (i) => {
+    const w0 = words[i][1], w1 = i + 1 < words.length ? words[i + 1][1] : w0 + 1.2, cur = au >= w0 && au < w1, past = au >= w1;
+    return { alpha: k * (past || cur ? 1 : .3), color: cur ? (o.hi || '#FFD27A') : (color || '#F2EFE9'), scale: cur ? 1.08 : 1, shadow: cur ? { blur: 30, y: 0, color: 'rgba(255,200,90,.8)' } : undefined };
+  } });
+};
 NG.label = function (ctx, str, lt, col) {
   const k = ctx.at(lt, 0, .5, 'expoOut');
   ctx.text(ctx.X, str, 540, 270 + (1 - k) * 30, { family: 'display', size: 96, color: col || '#E5483B', align: 'center', alpha: k });
@@ -48,17 +57,18 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
+const VC = [{"v": "v195", "wav": "assets/v195.wav", "dur": 4.64, "ref": "سورة البقرة · 195", "words": [["﴿وَلَا", 0.12], ["تُلْقُوا", 0.58], ["بِأَيْدِيكُمْ", 1.52], ["إِلَى", 2.6], ["التَّهْلُكَةِ﴾", 3.02]], "start": 0.0, "audio_at": 0.6, "cd": 6.04}, {"v": "v29", "wav": "assets/v29.wav", "dur": 3.84, "ref": "سورة النساء · 29", "words": [["﴿وَلَا", 0.12], ["تَقْتُلُوا", 0.92], ["أَنفُسَكُمْ﴾", 2.2]], "start": 6.04, "audio_at": 6.64, "cd": 5.24}, {"v": "v157", "wav": "assets/v157.wav", "dur": 4.1, "ref": "سورة الأعراف · 157", "words": [["﴿وَيُحَرِّمُ", 0.12], ["عَلَيْهِمُ", 1.24], ["الْخَبَائِثَ﴾", 2.08]], "start": 11.28, "audio_at": 11.88, "cd": 5.5}]
+;
 MOTION.scene({ id: 's2',
   draw(t, lt, ctx) {
-    const { X, at } = ctx;
+    const { X, at } = ctx; let ci = 0; VC.forEach((c, i) => { if (lt >= c.start) ci = i; });
+    const c = VC[ci], sl = lt - c.start, au = sl - 0.6;
     NG.bg(ctx, t, { gy: 900, glow: .13 });
-    NG.label(ctx, "من القرآن الكريم", lt);
-    const SEG = [{"t": "﴿ وَلَا تُلْقُوا بِأَيْدِيكُمْ إِلَى التَّهْلُكَةِ ﴾", "s": "سورة البقرة", "mark": "1"}, {"t": "﴿ وَلَا تَقْتُلُوا أَنفُسَكُمْ ﴾", "s": "سورة النساء", "mark": "2", "size": 110}], N = 2, SD = 4.200;
-    const i = Math.max(0, Math.min(N - 1, Math.floor(lt / SD))), sl = lt - i * SD, s = SEG[i];
-    for (let q = 0; q < 3; q++) { X.globalAlpha = .06; X.strokeStyle = '#E5483B'; X.lineWidth = 2; X.save(); X.translate(540, 940); X.rotate(lt * .05 * (q % 2 ? -1 : 1) + q); X.strokeRect(-420 + q * 60, -420 + q * 60, 840 - q * 120, 840 - q * 120); X.restore(); }
+    NG.label(ctx, 'من القرآن الكريم', lt);
+    for (let q = 0; q < 3; q++) { X.globalAlpha = .06; X.strokeStyle = '#E5483B'; X.lineWidth = 2; X.save(); X.translate(540, 900); X.rotate(lt * .05 * (q % 2 ? -1 : 1) + q); X.strokeRect(-420 + q * 60, -420 + q * 60, 840 - q * 120, 840 - q * 120); X.restore(); }
     X.globalAlpha = 1;
-    const vs = s.t.indexOf('﴿') >= 0;
-    NG.words(ctx, s.t, 640, sl, .3, .26, vs ? 92 : (s.size || 96), '#F2EFE9', vs ? { family: 'body', lh: 1.7 } : {});
-    NG.src(ctx, s.s, 1330, sl, 2.2 + (s.t.split(' ').length) * .1);
-    const f = 1 - at(sl, 0, .28, 'cubicOut'); if (f > 0) { X.fillStyle = 'rgba(229,72,59,' + (f * .5) + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
+    NG.vwords(ctx, c.words, au, 620, 104, sl);
+    NG.src(ctx, c.ref, 1240, sl, 1.2);
+    ctx.text(X, 'تلاوة القارئ صلاح البدير', 540, 1320, { family: 'body', weight: 400, size: 34, color: '#7A766F', align: 'center', alpha: at(sl, .6, 1.2) });
+    const f = 1 - at(sl, 0, .25, 'cubicOut'); if (f > 0 && ci > 0) { X.fillStyle = 'rgba(229,72,59,' + f * .4 + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
   } });
