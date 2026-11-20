@@ -1,0 +1,39 @@
+{
+ "name": "فتاوى أهل العلم",
+ "fps": 60,
+ "width": 1080,
+ "height": 1920,
+ "bpm": 72,
+ "beatsPerBar": 4,
+ "beatOffset": 0,
+ "palette": {
+  "bg": "#07120F",
+  "ink": "#F4EFE3",
+  "acc": "#D9B25B",
+  "clay": "#A8812F",
+  "hi": "#F3DDA0",
+  "mut": "#8FA79B"
+ },
+ "fonts": {
+  "display": "Lalezar",
+  "body": "IBM Plex Sans Arabic",
+  "num": "Inter"
+ },
+ "images": {},
+ "post": {
+  "grain": 0.03,
+  "vignette": 0.35
+ },
+ "scenes": [
+  {
+   "id": "intro",
+   "file": "scenes/intro.js",
+   "minDur": 3.0
+  },
+  {
+   "id": "c1",
+   "file": "scenes/c1.js",
+   "minDur": 16.9
+  }
+ ]
+}
