@@ -69,13 +69,13 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
-const CARDS = [{"n": "الشيخ محمد بن صالح العثيمين", "ph": "p_uth", "k": "uth", "pre": "التدخين الذي هو شرب الدخان أو التبغ", "s": "موقع الشيخ ابن عثيمين — «حكم شرب الدخان»", "start": 0.0, "dur": 8.01, "audio_at": 0.6, "words": [["محرم", 0.25], ["بدلالة", 1.62], ["الكتاب", 2.32], ["والسنة", 3.39], ["والاعتبار", 4.66], ["الصحيح", 5.56]]}, {"n": "الشيخ عبدالعزيز بن باز", "ph": "p_baz", "k": "baz", "pre": "التدخين…", "s": "موقع الشيخ ابن باز — «التدخين والسهر من أسباب الطلاق»", "start": 8.01, "dur": 7.6, "audio_at": 8.61, "words": [["يضيق", 0.2], ["مجاري", 0.56], ["الدم،", 0.82], ["يسيء", 1.68], ["إلى", 1.95], ["شرايينه،", 2.28], ["يسيء", 3.14], ["إلى", 3.45], ["صدره،", 4.16], ["يسيء", 5.02], ["إلى", 5.3], ["قلبه", 5.42]]}]
+const CARDS = [{"n": "الشيخ محمد بن صالح العثيمين", "ph": "p_uth", "k": "uth", "pre": "التدخين الذي هو شرب الدخان أو التبغ", "s": "موقع الشيخ ابن عثيمين — «حكم شرب الدخان»", "start": 0.0, "dur": 6.75, "audio_at": 0.04, "words": [["محرم", 0.25], ["بدلالة", 1.62], ["الكتاب", 2.32], ["والسنة", 3.39], ["والاعتبار", 4.66], ["الصحيح", 5.56]]}, {"n": "الشيخ عبدالعزيز بن باز", "ph": "p_baz", "k": "baz", "pre": "التدخين…", "s": "موقع الشيخ ابن باز — «التدخين والسهر من أسباب الطلاق»", "start": 6.75, "dur": 6.34, "audio_at": 6.79, "words": [["يضيق", 0.2], ["مجاري", 0.56], ["الدم،", 0.82], ["يسيء", 1.68], ["إلى", 1.95], ["شرايينه،", 2.28], ["يسيء", 3.14], ["إلى", 3.45], ["صدره،", 4.16], ["يسيء", 5.02], ["إلى", 5.3], ["قلبه", 5.42]]}]
 ;
 MOTION.scene({ id: 's4b',
   draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
   draw0(t, lt, ctx) {
     const { X, at } = ctx; let ci = 0; CARDS.forEach((c, i) => { if (lt >= c.start) ci = i; });
-    const c = CARDS[ci], sl = lt - c.start, au = sl - 0.6;
+    const c = CARDS[ci], sl = lt - c.start, au = sl - 0.04;
     NG.bg(ctx, t, { gy: 800, glow: .14 });
     NG.label(ctx, 'من أقوال العلماء', lt, '#E8C46A');
     const k = at(sl, 0, .7, 'expoOut'), cx = 540, cy = 640, R = 150;
@@ -98,6 +98,6 @@ MOTION.scene({ id: 's4b',
       const cur = au >= w0 && au < w1, past = au >= w1;
       return { alpha: k * (past || cur ? 1 : .3), color: cur ? '#F3DDA0' : '#F2EFE9', scale: cur ? 1.1 : 1, shadow: cur ? { blur: 30, y: 0, color: 'rgba(232,196,106,.8)' } : undefined };
     } });
-    NG.src(ctx, c.s, 1500, sl, 1.0);
+    NG.src(ctx, c.s, 1500, sl, .6);
     const f = 1 - at(sl, 0, .25, 'cubicOut'); if (f > 0 && ci > 0) { X.fillStyle = 'rgba(232,196,106,' + f * .35 + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
   } });

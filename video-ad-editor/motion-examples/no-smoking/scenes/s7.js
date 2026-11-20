@@ -70,7 +70,7 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   X.restore();
 };
 const V7 = {"wav": "assets/v27.wav", "dur": 7.31, "ref": "سورة الإسراء · 27", "words": [["﴿إِنَّ", 0.05], ["الْمُبَذِّرِينَ", 1.13], ["كَانُوا", 2.91], ["إِخْوَانَ", 4.03], ["الشَّيَاطِينِ﴾", 5.83]]};
-const T7 = {"burn": 1.07, "yom": 2.14, "verse": 5.73};
+const T7 = {"burn": 0.81, "yom": 1.88, "verse": 5.02};
 
 MOTION.scene({ id: 's7',
   setup(ctx) { const r = ctx.rng('coins'); this.c = []; for (let i = 0; i < 26; i++) this.c.push({ x: 540 + r.range(-300, 300), y: 1040 + r.range(-40, 150) - Math.abs(r.range(-300, 300)) * .35, rr: r.range(46, 62), d: T7.burn + i * .1 }); },

@@ -112,21 +112,21 @@ AUDIO = []   # (scene, local_t, wav, gain)
 VC = [dict(v=k, **VS[k]) for k in ['v195', 'v29', 'v157']]
 t2 = 0.0
 for c in VC:
-    c['start'] = round(t2, 2); c['audio_at'] = round(t2 + 0.6, 2); c['cd'] = round(0.6 + c['dur'] + 0.8, 2); t2 += c['cd']; AUDIO.append(('s2', c['audio_at'], c['wav'], 1.0))
+    c['start'] = round(t2, 2); c['audio_at'] = round(t2 + 0.04, 2); c['cd'] = round(0.04 + c['dur'] - 0.10, 2); t2 += c['cd']; AUDIO.append(('s2', c['audio_at'], c['wav'], 1.0))
 S2_DUR = round(t2, 2)
 S['s2'] = "const VC = " + json.dumps(VC, ensure_ascii=False) + r"""
 ;
 MOTION.scene({ id: 's2',
   draw(t, lt, ctx) {
     const { X, at } = ctx; let ci = 0; VC.forEach((c, i) => { if (lt >= c.start) ci = i; });
-    const c = VC[ci], sl = lt - c.start, au = sl - 0.6;
+    const c = VC[ci], sl = lt - c.start, au = sl - 0.04;
     NG.bg(ctx, t, { gy: 900, glow: .13 });
     NG.label(ctx, 'من القرآن الكريم', lt);
     for (let q = 0; q < 3; q++) { X.globalAlpha = .06; X.strokeStyle = '#E5483B'; X.lineWidth = 2; X.save(); X.translate(540, 900); X.rotate(lt * .05 * (q % 2 ? -1 : 1) + q); X.strokeRect(-420 + q * 60, -420 + q * 60, 840 - q * 120, 840 - q * 120); X.restore(); }
     X.globalAlpha = 1;
     NG.vwords(ctx, c.words, au, 620, 104, sl);
-    NG.src(ctx, c.ref, 1240, sl, 1.2);
-    ctx.text(X, '__REC__', 540, 1320, { family: 'body', weight: 400, size: 34, color: '#7A766F', align: 'center', alpha: at(sl, .6, 1.2) });
+    NG.src(ctx, c.ref, 1240, sl, .5);
+    ctx.text(X, '__REC__', 540, 1320, { family: 'body', weight: 400, size: 34, color: '#7A766F', align: 'center', alpha: at(sl, .3, .8) });
     const f = 1 - at(sl, 0, .25, 'cubicOut'); if (f > 0 && ci > 0) { X.fillStyle = 'rgba(229,72,59,' + f * .4 + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
   } });
 """.replace("__REC__", RECITER)
@@ -150,7 +150,7 @@ MOTION.scene({ id: 's4',
 
 # ---- s4b أقوال العلماء: مقتطفات صوتية قصيرة بصوت الشيخين (من make_excerpts.py)
 EX = json.load(open(f'{D}/excerpts.json', encoding='utf8'))
-LEAD, TAILC = 0.6, 0.6
+LEAD, TAILC = 0.04, -0.10
 CARDS = [
   {'n': 'الشيخ محمد بن صالح العثيمين', 'ph': 'p_uth', 'k': 'uth', 'pre': 'التدخين الذي هو شرب الدخان أو التبغ', 's': 'موقع الشيخ ابن عثيمين — «حكم شرب الدخان»'},
   {'n': 'الشيخ عبدالعزيز بن باز', 'ph': 'p_baz', 'k': 'baz', 'pre': 'التدخين…', 's': 'موقع الشيخ ابن باز — «التدخين والسهر من أسباب الطلاق»'},
@@ -165,7 +165,7 @@ S['s4b'] = "const CARDS = " + json.dumps(CARDS, ensure_ascii=False) + r"""
 MOTION.scene({ id: 's4b',
   draw(t, lt, ctx) {
     const { X, at } = ctx; let ci = 0; CARDS.forEach((c, i) => { if (lt >= c.start) ci = i; });
-    const c = CARDS[ci], sl = lt - c.start, au = sl - 0.6;
+    const c = CARDS[ci], sl = lt - c.start, au = sl - 0.04;
     NG.bg(ctx, t, { gy: 800, glow: .14 });
     NG.label(ctx, 'من أقوال العلماء', lt, '#E8C46A');
     const k = at(sl, 0, .7, 'expoOut'), cx = 540, cy = 640, R = 150;
@@ -188,20 +188,21 @@ MOTION.scene({ id: 's4b',
       const cur = au >= w0 && au < w1, past = au >= w1;
       return { alpha: k * (past || cur ? 1 : .3), color: cur ? '#F3DDA0' : '#F2EFE9', scale: cur ? 1.1 : 1, shadow: cur ? { blur: 30, y: 0, color: 'rgba(232,196,106,.8)' } : undefined };
     } });
-    NG.src(ctx, c.s, 1500, sl, 1.0);
+    NG.src(ctx, c.s, 1500, sl, .6);
     const f = 1 - at(sl, 0, .25, 'cubicOut'); if (f > 0 && ci > 0) { X.fillStyle = 'rgba(232,196,106,' + f * .35 + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
   } });
 """
 
-def tw(k, word, off=0.0, lead=0.3):
+LEAD0, OV = 0.04, 0.10   # بداية الصوت داخل المشهد · تراكب بسيط بين المقاطع (بلا صمت)
+def tw(k, word, off=0.0, lead=LEAD0):
     for w, t in VO[k]['words']:
         if w.startswith(word): return round(lead + t + off, 2)
     raise SystemExit('word not found: ' + word)
-T5 = {'i1': tw('m3', 'سرطان', -.2), 'i2': tw('m3', 'وأمراض', -.12), 'i3': tw('m3', 'وضيغ', -.12), 'i4': tw('m3', 'وتلف', -.12), 'who': round(0.3 + VO['m3']['dur'] - 0.3, 2)}
-T6 = {'a': tw('m4', 'ليست', -.25), 'i1': tw('m4', 'جلسة', -.12), 'i2': tw('m4', 'وفحمها', -.12), 'end': round(0.3 + VO['m4']['dur'], 2)}
-T7 = {'burn': tw('m5', 'يحترق', -.5), 'yom': tw('m5', 'يومي', -.15), 'verse': round(0.3 + VO['m5']['dur'] + 0.35, 2)}
-T8 = {'i1': tw('m6', 'معصية', -.25), 'i2': tw('m6', 'وتبذير', -.2), 'i3': tw('m6', 'وسؤال', -.2), 'q': round(0.3 + VO['m6']['dur'] - 2.4, 2)}
-T9 = {'w1': tw('m7', 'الإقلاع', -.05), 'w2': tw('m7', 'ممكن', -.05), 'w3': tw('m7', 'إبدأ', -.05), 'w4': tw('m7', 'اليوم', -.05), 'verse': round(0.3 + VO['m7']['dur'] + 0.2, 2)}
+T5 = {'i1': tw('m3', 'سرطان', -.2), 'i2': tw('m3', 'وأمراض', -.12), 'i3': tw('m3', 'وضيغ', -.12), 'i4': tw('m3', 'وتلف', -.12), 'who': round(LEAD0 + VO['m3']['dur'] - 2.1, 2)}
+T6 = {'a': tw('m4', 'ليست', -.25), 'i1': tw('m4', 'جلسة', -.12), 'i2': tw('m4', 'وفحمها', -.12), 'end': round(LEAD0 + VO['m4']['dur'], 2)}
+T7 = {'burn': tw('m5', 'يحترق', -.5), 'yom': tw('m5', 'يومي', -.15), 'verse': round(LEAD0 + VO['m5']['dur'] - OV, 2)}
+T8 = {'i1': tw('m6', 'معصية', -.25), 'i2': tw('m6', 'وتبذير', -.2), 'i3': tw('m6', 'وسؤال', -.2), 'q': round(LEAD0 + VO['m6']['dur'] - 2.4, 2)}
+T9 = {'w1': tw('m7', 'الإقلاع', -.05), 'w2': tw('m7', 'ممكن', -.05), 'w3': tw('m7', 'إبدأ', -.05), 'w4': tw('m7', 'اليوم', -.05), 'verse': round(LEAD0 + VO['m7']['dur'] - OV, 2)}
 # ---- s5 health
 S['s5'] = "const T5 = " + json.dumps(T5) + ";\n" + r"""
 MOTION.scene({ id: 's5',
@@ -318,16 +319,16 @@ MOTION.scene({ id: 's9',
     NG.src(ctx, 'واستعن بالله ثم بطبيب مختص', 1600, lt, T9.verse + 1.0, '#8FB9A4');
   } });
 """
-S5_DUR = round(T5['who'] + 2.4, 2); S6_DUR = round(T6['end'] + 0.9, 2)
-S7_DUR = round(T7['verse'] + VS['v27']['dur'] + 0.7, 2); S8_DUR = round(0.3 + VO['m6']['dur'] + 1.0, 2); S9_DUR = round(T9['verse'] + VS['v65']['dur'] + 1.1, 2)
-dur = {'s1': 3.8, 's2': S2_DUR, 's4': 3.8, 's4b': S4B_DUR, 's5': S5_DUR, 's6': S6_DUR, 's7': S7_DUR, 's8': S8_DUR, 's9': S9_DUR}
+S5_DUR = round(LEAD0 + VO['m3']['dur'] - OV, 2); S6_DUR = round(T6['end'] - OV, 2)
+S7_DUR = round(T7['verse'] + VS['v27']['dur'] - OV, 2); S8_DUR = round(LEAD0 + VO['m6']['dur'] - OV, 2); S9_DUR = round(T9['verse'] + VS['v65']['dur'] + 0.6, 2)
+dur = {'s1': round(LEAD0 + VO['m1']['dur'] - OV, 2), 's2': S2_DUR, 's4': round(LEAD0 + VO['m2']['dur'] - OV, 2), 's4b': S4B_DUR, 's5': S5_DUR, 's6': S6_DUR, 's7': S7_DUR, 's8': S8_DUR, 's9': S9_DUR}
 for k, v in S.items():
     v = v.replace("draw(t, lt, ctx) {", "draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },\n  draw0(t, lt, ctx) {", 1)
     open(f'{D}/scenes/{k}.js', 'w').write(HELP + v)
 bpm = 72; spb = 60 / bpm; total = round(sum(dur.values()), 3)
 beats = [round(i * spb, 4) for i in range(int(total / spb) + 1)]
-TRANS = {'s1': {'type': 'cut', 'dur': .4}, 's2': {'type': 'zoom', 'dur': .6}, 's4': {'type': 'flash', 'dur': .35}, 's4b': {'type': 'wipe', 'dur': .55, 'dir': 'rtl', 'bar': 90, 'color': '#E5483B'},
-         's5': {'type': 'glitch', 'dur': .5}, 's6': {'type': 'push', 'dur': .55, 'dir': 'up'}, 's7': {'type': 'dip', 'dur': .5, 'color': '#0A0B0F'}, 's8': {'type': 'wipe', 'dur': .55, 'dir': 'ltr', 'bar': 90, 'color': '#F0B04A'}, 's9': {'type': 'iris', 'dur': .8, 'at': [540, 900]}}
+TRANS = {k: {'type': 'crossfade', 'dur': .28} for k in ['s1','s2','s4','s4b','s5','s6','s7','s8','s9']}
+TRANS['s1'] = {'type': 'cut', 'dur': .2}; TRANS['s4'] = {'type': 'flash', 'dur': .22}
 sc = []; t = 0.0
 for k, d in dur.items():
     sc.append({'id': k, 'file': f'scenes/{k}.js', 'start': round(t, 3), 'end': round(t + d, 3), 'lines': [], 'transition': TRANS[k]}); t += d
@@ -337,7 +338,7 @@ json.dump({'name': 'أدلة تحريم الدخان والشيشة وأضرار
   'fonts': {'display': 'Lalezar', 'body': 'IBM Plex Sans Arabic', 'num': 'Inter'}, 'images': {k: f'assets/{f}' for k, f in {'p_baz': 'baz.jpg', 'p_uth': 'uth.jpg'}.items() if os.path.exists(f'{D}/assets/{f}')}, 'post': {'grain': 0.04, 'vignette': 0.4},
   'scenes': [{'id': k, 'file': f'scenes/{k}.js', 'minDur': d} for k, d in dur.items()]}, open(f'{D}/project.json', 'w'), ensure_ascii=False, indent=1)
 sfx = [{'type': 'impact', 'at': 'scene:s4+2.3', 'gain': .9}, {'type': 'riser', 'at': 'scene:s4+2.3', 'gain': .5}]
-for k in ['s2', 's4b', 's5', 's6', 's7', 's8', 's9']: sfx.append({'type': 'swoosh-pass', 'at': f'scene:{k}', 'gain': .4})
+for k in ['s2', 's4b', 's5', 's6', 's7', 's8', 's9']: sfx.append({'type': 'swoosh-pass', 'at': f'scene:{k}', 'gain': .22})
 sfx += [{'type': 'tick', 'at': 'scene:s2+0.3', 'gain': .3}]
 for t0 in [T5['i1'], T5['i2'], T5['i3'], T5['i4']]: sfx.append({'type': 'pop', 'at': f'scene:s5+{t0}', 'gain': .45})
 sfx.append({'type': 'shimmer', 'at': f"scene:s5+{T5['who']}", 'gain': .5})
@@ -346,7 +347,7 @@ for t0 in [T8['i1'], T8['i2'], T8['i3']]: sfx.append({'type': 'pop', 'at': f'sce
 sfx += [{'type': 'shimmer', 'at': f"scene:s9+{T9['w3']}", 'gain': .8}]
 json.dump(sfx, open(f'{D}/sfx.json', 'w'))
 AUDIO += [('s7', T7['verse'], VS['v27']['wav'], 1.0), ('s9', T9['verse'], VS['v65']['wav'], 1.0)]
-AUDIO += [('s1', 0.15, VO['m1']['wav'], 1.5), ('s4', 0.1, VO['m2']['wav'], 1.5), ('s5', 0.3, VO['m3']['wav'], 1.5), ('s6', 0.3, VO['m4']['wav'], 1.5), ('s7', 0.3, VO['m5']['wav'], 1.5), ('s8', 0.3, VO['m6']['wav'], 1.5), ('s9', 0.3, VO['m7']['wav'], 1.5)]
+AUDIO += [(sc_, LEAD0, VO[m_]['wav'], 1.5) for sc_, m_ in [('s1', 'm1'), ('s4', 'm2'), ('s5', 'm3'), ('s6', 'm4'), ('s7', 'm5'), ('s8', 'm6'), ('s9', 'm7')]]
 for c in CARDS: AUDIO.append(('s4b', c['audio_at'], EX[c['k']]['wav'], 1.5))
 json.dump([{'scene': a, 'at': b, 'wav': c, 'gain': g} for a, b, c, g in AUDIO], open(f'{D}/audio_cues.json', 'w'), ensure_ascii=False, indent=1)
 print('total', total)

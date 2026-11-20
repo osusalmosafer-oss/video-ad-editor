@@ -69,19 +69,19 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
-const VC = [{"v": "v195", "wav": "assets/v195.wav", "dur": 4.22, "ref": "سورة البقرة · 195", "words": [["﴿وَلَا", 0.12], ["تُلْقُوا", 0.6], ["بِأَيْدِيكُمْ", 1.5], ["إِلَى", 2.5], ["التَّهْلُكَةِ﴾", 2.92]], "start": 0.0, "audio_at": 0.6, "cd": 5.62}, {"v": "v29", "wav": "assets/v29.wav", "dur": 5.72, "ref": "سورة النساء · 29", "words": [["﴿وَلَا", 0.12], ["تَقْتُلُوا", 1.02], ["أَنفُسَكُمْ﴾", 2.36]], "start": 5.62, "audio_at": 6.22, "cd": 7.12}, {"v": "v157", "wav": "assets/v157.wav", "dur": 5.14, "ref": "سورة الأعراف · 157", "words": [["﴿وَيُحَرِّمُ", 0.12], ["عَلَيْهِمُ", 1.22], ["الْخَبَائِثَ﴾", 2.08]], "start": 12.74, "audio_at": 13.34, "cd": 6.54}]
+const VC = [{"v": "v195", "wav": "assets/v195.wav", "dur": 4.22, "ref": "سورة البقرة · 195", "words": [["﴿وَلَا", 0.12], ["تُلْقُوا", 0.6], ["بِأَيْدِيكُمْ", 1.5], ["إِلَى", 2.5], ["التَّهْلُكَةِ﴾", 2.92]], "start": 0.0, "audio_at": 0.04, "cd": 4.16}, {"v": "v29", "wav": "assets/v29.wav", "dur": 5.72, "ref": "سورة النساء · 29", "words": [["﴿وَلَا", 0.12], ["تَقْتُلُوا", 1.02], ["أَنفُسَكُمْ﴾", 2.36]], "start": 4.16, "audio_at": 4.2, "cd": 5.66}, {"v": "v157", "wav": "assets/v157.wav", "dur": 5.14, "ref": "سورة الأعراف · 157", "words": [["﴿وَيُحَرِّمُ", 0.12], ["عَلَيْهِمُ", 1.22], ["الْخَبَائِثَ﴾", 2.08]], "start": 9.82, "audio_at": 9.86, "cd": 5.08}]
 ;
 MOTION.scene({ id: 's2',
   draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
   draw0(t, lt, ctx) {
     const { X, at } = ctx; let ci = 0; VC.forEach((c, i) => { if (lt >= c.start) ci = i; });
-    const c = VC[ci], sl = lt - c.start, au = sl - 0.6;
+    const c = VC[ci], sl = lt - c.start, au = sl - 0.04;
     NG.bg(ctx, t, { gy: 900, glow: .13 });
     NG.label(ctx, 'من القرآن الكريم', lt);
     for (let q = 0; q < 3; q++) { X.globalAlpha = .06; X.strokeStyle = '#E5483B'; X.lineWidth = 2; X.save(); X.translate(540, 900); X.rotate(lt * .05 * (q % 2 ? -1 : 1) + q); X.strokeRect(-420 + q * 60, -420 + q * 60, 840 - q * 120, 840 - q * 120); X.restore(); }
     X.globalAlpha = 1;
     NG.vwords(ctx, c.words, au, 620, 104, sl);
-    NG.src(ctx, c.ref, 1240, sl, 1.2);
-    ctx.text(X, 'تلاوة القارئ محمد اللحيدان', 540, 1320, { family: 'body', weight: 400, size: 34, color: '#7A766F', align: 'center', alpha: at(sl, .6, 1.2) });
+    NG.src(ctx, c.ref, 1240, sl, .5);
+    ctx.text(X, 'تلاوة القارئ محمد اللحيدان', 540, 1320, { family: 'body', weight: 400, size: 34, color: '#7A766F', align: 'center', alpha: at(sl, .3, .8) });
     const f = 1 - at(sl, 0, .25, 'cubicOut'); if (f > 0 && ci > 0) { X.fillStyle = 'rgba(229,72,59,' + f * .4 + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
   } });

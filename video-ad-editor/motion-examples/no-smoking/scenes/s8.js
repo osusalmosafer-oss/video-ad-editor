@@ -69,7 +69,7 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
-const T8 = {"i1": 1.45, "i2": 3.22, "i3": 4.72, "q": 6.35};
+const T8 = {"i1": 1.19, "i2": 2.96, "i3": 4.46, "q": 6.09};
 
 MOTION.scene({ id: 's8',
   draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },

@@ -70,7 +70,7 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   X.restore();
 };
 const V9 = {"wav": "assets/v65.wav", "dur": 4.48, "ref": "سورة الطلاق · 2", "words": [["﴿وَمَن", 0.12], ["يَتَّقِ", 0.62], ["اللَّهَ", 1.52], ["يَجْعَل", 2.04], ["لَّهُ", 2.75], ["مَخْرَجًا﴾", 3.24]]};
-const T9 = {"w1": 0.25, "w2": 0.93, "w3": 1.33, "w4": 1.95, "verse": 4.21};
+const T9 = {"w1": -0.01, "w2": 0.67, "w3": 1.07, "w4": 1.69, "verse": 3.65};
 
 MOTION.scene({ id: 's9',
   draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
