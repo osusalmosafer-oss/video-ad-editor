@@ -1,5 +1,16 @@
 
 const NG = (window.__NG = window.__NG || {});
+NG.cam = function (ctx, lt, sc) {
+  const X = ctx.X, d = Math.max(1, (sc && sc.scene && sc.scene.dur) || (ctx.scene && ctx.scene.dur) || 8), k = Math.max(0, Math.min(1, lt / d));
+  const z = 1.03 + .05 * k + .006 * ctx.beatPulse(ctx.scene.start + lt, 7);
+  X.translate(540 + 14 * Math.sin(lt * .5), 960 + 10 * Math.cos(lt * .4)); X.scale(z, z); X.translate(-540, -960);
+};
+NG.dust = function (ctx, t, col) {
+  const X = ctx.X; for (let i = 0; i < 34; i++) {
+    const ph = (t * (.02 + (i % 5) * .006) + i * .137) % 1, x = (i * 331 % 1080) + 40 * Math.sin(t * .4 + i), y = 1980 - ph * 2100;
+    X.globalAlpha = .18 * Math.sin(ph * 3.1416) * (.4 + (i % 4) * .2); X.fillStyle = col || '#FFD9A0'; X.beginPath(); X.arc(x, y, 1.5 + (i % 3), 0, 6.283); X.fill();
+  } X.globalAlpha = 1;
+};
 NG.bg = function (ctx, t, o = {}) {
   const { X, W, H } = ctx; const c = o.col || '229,72,59';
   const g = X.createLinearGradient(0, 0, 0, H); g.addColorStop(0, o.top || '#0A0B0F'); g.addColorStop(1, o.bot || '#1A1C24');
@@ -7,6 +18,7 @@ NG.bg = function (ctx, t, o = {}) {
   const gl = X.createRadialGradient(W / 2, o.gy || 900, 0, W / 2, o.gy || 900, 950);
   gl.addColorStop(0, 'rgba(' + c + ',' + (o.glow == null ? .14 : o.glow) + ')'); gl.addColorStop(1, 'rgba(' + c + ',0)');
   X.fillStyle = gl; X.fillRect(0, 0, W, H);
+  NG.dust(ctx, t, o.dust);
 };
 NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   const { X } = ctx;
@@ -57,13 +69,15 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
+const T5 = {"i1": 1.56, "i2": 2.72, "i3": 5.16, "i4": 6.68, "who": 8.38};
 
 MOTION.scene({ id: 's5',
-  draw(t, lt, ctx) {
+  draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
+  draw0(t, lt, ctx) {
     const { X, at } = ctx;
     NG.bg(ctx, t, { gy: 700, glow: .14 });
     NG.label(ctx, 'أضرار صحية', lt);
-    const dark = at(lt, 1, 4.5, 'sineInOut');
+    const dark = at(lt, T5.i1 - .4, T5.i4 + 1.2, 'sineInOut');
     const mix = (a, b, k) => { const p = (h) => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)); const A = p(a), B = p(b); return 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * k)).join(',') + ')'; };
     const bre = 1 + .025 * Math.sin(lt * 2.6) * (1 - dark * .6);
     X.save(); X.translate(540, 700); X.scale(bre, bre);
@@ -73,11 +87,13 @@ MOTION.scene({ id: 's5',
     X.strokeStyle = mix('#E8C0B8', '#4A403B', dark); X.lineWidth = 26; X.lineCap = 'round'; X.beginPath(); X.moveTo(0, -190); X.lineTo(0, -40); X.stroke();
     X.restore();
     NG.smoke(ctx, lt, 540, 960, { n: 16, h: 220, alpha: dark * .8, r: 60, spread: 220 });
-    const items = [['سرطان الرئة والفم', 1.2], ['أمراض القلب والجلطات', 2.2], ['ضيق التنفس المزمن', 3.2], ['تلف الأسنان واللثة', 4.2]];
+    const items = [['سرطان الرئة والفم', T5.i1], ['أمراض القلب والجلطات', T5.i2], ['ضيق التنفس المزمن', T5.i3], ['تلف الأسنان واللثة', T5.i4]];
     items.forEach(([s, t0], i) => { const k = at(lt, t0, t0 + .5, 'expoOut'); const y = 1090 + i * 118;
       X.globalAlpha = k; X.fillStyle = '#E5483B'; X.fillRect(540 + 340 * (1 - k * .0) , y - 52, 8, 64); X.globalAlpha = 1;
       ctx.text(X, s, 540 - (1 - k) * 80 - 10, y, { family: 'display', size: 76, color: i % 2 ? '#F2EFE9' : '#FFB4A8', align: 'center', alpha: k, maxWidth: 640 }); });
-    const w = at(lt, 5.4, 6.0, 'cubicOut');
-    ctx.text(X, 'أكثر من 8 ملايين وفاة كل سنة', 540, 1560, { family: 'body', weight: 700, size: 46, color: '#F2EFE9', align: 'center', alpha: w });
-    ctx.text(X, 'التبغ — منظمة الصحة العالمية', 540, 1620, { family: 'body', weight: 400, size: 34, color: '#9A968F', align: 'center', alpha: w });
+    const w = at(lt, T5.who, T5.who + .6, 'cubicOut'), cnt = Math.round(8 * at(lt, T5.who, T5.who + 1.3, 'expoOut'));
+    ctx.text(X, 'أكثر من', 770, 1545, { family: 'body', weight: 700, size: 40, color: '#F2EFE9', align: 'center', alpha: w });
+    ctx.text(X, ctx.num(cnt), 540, 1555, { family: 'num', weight: 900, size: 150, color: '#E5483B', align: 'center', alpha: w, dir: 'ltr', shadow: { blur: 40, y: 0, color: 'rgba(229,72,59,.6)' } });
+    ctx.text(X, 'ملايين وفاة كل سنة', 300, 1545, { family: 'body', weight: 700, size: 40, color: '#F2EFE9', align: 'center', alpha: w });
+    ctx.text(X, 'التبغ — منظمة الصحة العالمية', 540, 1610, { family: 'body', weight: 400, size: 30, color: '#9A968F', align: 'center', alpha: w });
   } });

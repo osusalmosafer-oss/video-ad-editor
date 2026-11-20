@@ -19,15 +19,57 @@
  },
  {
   "scene": "s7",
-  "at": 4.3,
+  "at": 5.73,
   "wav": "assets/v27.wav",
   "gain": 1.0
  },
  {
   "scene": "s9",
-  "at": 2.7,
+  "at": 4.21,
   "wav": "assets/v65.wav",
   "gain": 1.0
+ },
+ {
+  "scene": "s1",
+  "at": 0.15,
+  "wav": "assets/m1.wav",
+  "gain": 1.5
+ },
+ {
+  "scene": "s4",
+  "at": 0.1,
+  "wav": "assets/m2.wav",
+  "gain": 1.5
+ },
+ {
+  "scene": "s5",
+  "at": 0.3,
+  "wav": "assets/m3.wav",
+  "gain": 1.5
+ },
+ {
+  "scene": "s6",
+  "at": 0.3,
+  "wav": "assets/m4.wav",
+  "gain": 1.5
+ },
+ {
+  "scene": "s7",
+  "at": 0.3,
+  "wav": "assets/m5.wav",
+  "gain": 1.5
+ },
+ {
+  "scene": "s8",
+  "at": 0.3,
+  "wav": "assets/m6.wav",
+  "gain": 1.5
+ },
+ {
+  "scene": "s9",
+  "at": 0.3,
+  "wav": "assets/m7.wav",
+  "gain": 1.5
  },
  {
   "scene": "s4b",

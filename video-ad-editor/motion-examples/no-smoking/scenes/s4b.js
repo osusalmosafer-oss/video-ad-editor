@@ -1,5 +1,16 @@
 
 const NG = (window.__NG = window.__NG || {});
+NG.cam = function (ctx, lt, sc) {
+  const X = ctx.X, d = Math.max(1, (sc && sc.scene && sc.scene.dur) || (ctx.scene && ctx.scene.dur) || 8), k = Math.max(0, Math.min(1, lt / d));
+  const z = 1.03 + .05 * k + .006 * ctx.beatPulse(ctx.scene.start + lt, 7);
+  X.translate(540 + 14 * Math.sin(lt * .5), 960 + 10 * Math.cos(lt * .4)); X.scale(z, z); X.translate(-540, -960);
+};
+NG.dust = function (ctx, t, col) {
+  const X = ctx.X; for (let i = 0; i < 34; i++) {
+    const ph = (t * (.02 + (i % 5) * .006) + i * .137) % 1, x = (i * 331 % 1080) + 40 * Math.sin(t * .4 + i), y = 1980 - ph * 2100;
+    X.globalAlpha = .18 * Math.sin(ph * 3.1416) * (.4 + (i % 4) * .2); X.fillStyle = col || '#FFD9A0'; X.beginPath(); X.arc(x, y, 1.5 + (i % 3), 0, 6.283); X.fill();
+  } X.globalAlpha = 1;
+};
 NG.bg = function (ctx, t, o = {}) {
   const { X, W, H } = ctx; const c = o.col || '229,72,59';
   const g = X.createLinearGradient(0, 0, 0, H); g.addColorStop(0, o.top || '#0A0B0F'); g.addColorStop(1, o.bot || '#1A1C24');
@@ -7,6 +18,7 @@ NG.bg = function (ctx, t, o = {}) {
   const gl = X.createRadialGradient(W / 2, o.gy || 900, 0, W / 2, o.gy || 900, 950);
   gl.addColorStop(0, 'rgba(' + c + ',' + (o.glow == null ? .14 : o.glow) + ')'); gl.addColorStop(1, 'rgba(' + c + ',0)');
   X.fillStyle = gl; X.fillRect(0, 0, W, H);
+  NG.dust(ctx, t, o.dust);
 };
 NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   const { X } = ctx;
@@ -60,7 +72,8 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
 const CARDS = [{"n": "الشيخ محمد بن صالح العثيمين", "ph": "p_uth", "k": "uth", "pre": "التدخين الذي هو شرب الدخان أو التبغ", "s": "موقع الشيخ ابن عثيمين — «حكم شرب الدخان»", "start": 0.0, "dur": 8.01, "audio_at": 0.6, "words": [["محرم", 0.25], ["بدلالة", 1.62], ["الكتاب", 2.32], ["والسنة", 3.39], ["والاعتبار", 4.66], ["الصحيح", 5.56]]}, {"n": "الشيخ عبدالعزيز بن باز", "ph": "p_baz", "k": "baz", "pre": "التدخين…", "s": "موقع الشيخ ابن باز — «التدخين والسهر من أسباب الطلاق»", "start": 8.01, "dur": 7.6, "audio_at": 8.61, "words": [["يضيق", 0.2], ["مجاري", 0.56], ["الدم،", 0.82], ["يسيء", 1.68], ["إلى", 1.95], ["شرايينه،", 2.28], ["يسيء", 3.14], ["إلى", 3.45], ["صدره،", 4.16], ["يسيء", 5.02], ["إلى", 5.3], ["قلبه", 5.42]]}]
 ;
 MOTION.scene({ id: 's4b',
-  draw(t, lt, ctx) {
+  draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
+  draw0(t, lt, ctx) {
     const { X, at } = ctx; let ci = 0; CARDS.forEach((c, i) => { if (lt >= c.start) ci = i; });
     const c = CARDS[ci], sl = lt - c.start, au = sl - 0.6;
     NG.bg(ctx, t, { gy: 800, glow: .14 });

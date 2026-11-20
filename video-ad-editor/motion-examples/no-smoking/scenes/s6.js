@@ -1,5 +1,16 @@
 
 const NG = (window.__NG = window.__NG || {});
+NG.cam = function (ctx, lt, sc) {
+  const X = ctx.X, d = Math.max(1, (sc && sc.scene && sc.scene.dur) || (ctx.scene && ctx.scene.dur) || 8), k = Math.max(0, Math.min(1, lt / d));
+  const z = 1.03 + .05 * k + .006 * ctx.beatPulse(ctx.scene.start + lt, 7);
+  X.translate(540 + 14 * Math.sin(lt * .5), 960 + 10 * Math.cos(lt * .4)); X.scale(z, z); X.translate(-540, -960);
+};
+NG.dust = function (ctx, t, col) {
+  const X = ctx.X; for (let i = 0; i < 34; i++) {
+    const ph = (t * (.02 + (i % 5) * .006) + i * .137) % 1, x = (i * 331 % 1080) + 40 * Math.sin(t * .4 + i), y = 1980 - ph * 2100;
+    X.globalAlpha = .18 * Math.sin(ph * 3.1416) * (.4 + (i % 4) * .2); X.fillStyle = col || '#FFD9A0'; X.beginPath(); X.arc(x, y, 1.5 + (i % 3), 0, 6.283); X.fill();
+  } X.globalAlpha = 1;
+};
 NG.bg = function (ctx, t, o = {}) {
   const { X, W, H } = ctx; const c = o.col || '229,72,59';
   const g = X.createLinearGradient(0, 0, 0, H); g.addColorStop(0, o.top || '#0A0B0F'); g.addColorStop(1, o.bot || '#1A1C24');
@@ -7,6 +18,7 @@ NG.bg = function (ctx, t, o = {}) {
   const gl = X.createRadialGradient(W / 2, o.gy || 900, 0, W / 2, o.gy || 900, 950);
   gl.addColorStop(0, 'rgba(' + c + ',' + (o.glow == null ? .14 : o.glow) + ')'); gl.addColorStop(1, 'rgba(' + c + ',0)');
   X.fillStyle = gl; X.fillRect(0, 0, W, H);
+  NG.dust(ctx, t, o.dust);
 };
 NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   const { X } = ctx;
@@ -57,9 +69,11 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
+const T6 = {"a": 0.84, "i1": 2.03, "i2": 6.73, "end": 10.73};
 
 MOTION.scene({ id: 's6',
-  draw(t, lt, ctx) {
+  draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
+  draw0(t, lt, ctx) {
     const { X, at } = ctx;
     NG.bg(ctx, t, { gy: 800, glow: .12 });
     NG.label(ctx, 'وهم الشيشة', lt);
@@ -75,8 +89,8 @@ MOTION.scene({ id: 's6',
     X.restore();
     NG.smoke(ctx, lt, 300, 690, { n: 24, h: 330, alpha: k, r: 100, spread: 140 });
     X.save(); X.globalAlpha = k; X.strokeStyle = '#6E6A64'; X.lineWidth = 22; X.lineCap = 'round'; X.beginPath(); X.moveTo(318, 850); X.bezierCurveTo(520, 810, 700, 1010, 830, 1110); X.stroke(); X.strokeStyle = '#B8B3AA'; X.lineWidth = 34; X.beginPath(); X.moveTo(822, 1102); X.lineTo(850, 1128); X.stroke(); X.restore();
-    const a = at(lt, 1.2, 1.9, 'expoOut');
+    const a = at(lt, T6.a, T6.a + .55, 'backOut');
     ctx.text(X, 'ليست أخفَّ!', 540, 480 + (1 - a) * 40, { family: 'display', size: 150, color: '#F2EFE9', align: 'center', alpha: a, shadow: { blur: 30, y: 0, color: 'rgba(229,72,59,.5)' } });
-    const items = [['جلسة واحدة: دخان كثير قد يفوق عدة سجائر', 2.4], ['الفحم يطلق غاز أول أكسيد الكربون', 3.6], ['الخرطوم المشترك ينقل العدوى', 4.8]];
+    const items = [['جلسة واحدة: دخان كثير قد يفوق عدة سجائر', T6.i1], ['الفحم يطلق غاز أول أكسيد الكربون', T6.i2]];
     items.forEach(([s, t0], i) => { const q = at(lt, t0, t0 + .5, 'expoOut'); ctx.text(X, s, 540, 1420 + i * 100 + (1 - q) * 30, { family: 'body', weight: 700, size: 50, color: i == 1 ? '#FFB4A8' : '#F2EFE9', align: 'center', alpha: q, maxWidth: 940 }); });
   } });

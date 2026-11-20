@@ -1,5 +1,16 @@
 
 const NG = (window.__NG = window.__NG || {});
+NG.cam = function (ctx, lt, sc) {
+  const X = ctx.X, d = Math.max(1, (sc && sc.scene && sc.scene.dur) || (ctx.scene && ctx.scene.dur) || 8), k = Math.max(0, Math.min(1, lt / d));
+  const z = 1.03 + .05 * k + .006 * ctx.beatPulse(ctx.scene.start + lt, 7);
+  X.translate(540 + 14 * Math.sin(lt * .5), 960 + 10 * Math.cos(lt * .4)); X.scale(z, z); X.translate(-540, -960);
+};
+NG.dust = function (ctx, t, col) {
+  const X = ctx.X; for (let i = 0; i < 34; i++) {
+    const ph = (t * (.02 + (i % 5) * .006) + i * .137) % 1, x = (i * 331 % 1080) + 40 * Math.sin(t * .4 + i), y = 1980 - ph * 2100;
+    X.globalAlpha = .18 * Math.sin(ph * 3.1416) * (.4 + (i % 4) * .2); X.fillStyle = col || '#FFD9A0'; X.beginPath(); X.arc(x, y, 1.5 + (i % 3), 0, 6.283); X.fill();
+  } X.globalAlpha = 1;
+};
 NG.bg = function (ctx, t, o = {}) {
   const { X, W, H } = ctx; const c = o.col || '229,72,59';
   const g = X.createLinearGradient(0, 0, 0, H); g.addColorStop(0, o.top || '#0A0B0F'); g.addColorStop(1, o.bot || '#1A1C24');
@@ -7,6 +18,7 @@ NG.bg = function (ctx, t, o = {}) {
   const gl = X.createRadialGradient(W / 2, o.gy || 900, 0, W / 2, o.gy || 900, 950);
   gl.addColorStop(0, 'rgba(' + c + ',' + (o.glow == null ? .14 : o.glow) + ')'); gl.addColorStop(1, 'rgba(' + c + ',0)');
   X.fillStyle = gl; X.fillRect(0, 0, W, H);
+  NG.dust(ctx, t, o.dust);
 };
 NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   const { X } = ctx;
@@ -58,10 +70,12 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   X.restore();
 };
 const V7 = {"wav": "assets/v27.wav", "dur": 7.31, "ref": "سورة الإسراء · 27", "words": [["﴿إِنَّ", 0.05], ["الْمُبَذِّرِينَ", 1.13], ["كَانُوا", 2.91], ["إِخْوَانَ", 4.03], ["الشَّيَاطِينِ﴾", 5.83]]};
+const T7 = {"burn": 1.07, "yom": 2.14, "verse": 5.73};
 
 MOTION.scene({ id: 's7',
-  setup(ctx) { const r = ctx.rng('coins'); this.c = []; for (let i = 0; i < 26; i++) this.c.push({ x: 540 + r.range(-300, 300), y: 1040 + r.range(-40, 150) - Math.abs(r.range(-300, 300)) * .35, rr: r.range(46, 62), d: 1.2 + i * .12 }); },
-  draw(t, lt, ctx) {
+  setup(ctx) { const r = ctx.rng('coins'); this.c = []; for (let i = 0; i < 26; i++) this.c.push({ x: 540 + r.range(-300, 300), y: 1040 + r.range(-40, 150) - Math.abs(r.range(-300, 300)) * .35, rr: r.range(46, 62), d: T7.burn + i * .1 }); },
+  draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
+  draw0(t, lt, ctx) {
     const { X, at } = ctx;
     NG.bg(ctx, t, { gy: 1000, glow: .15, col: '255,150,40' });
     NG.label(ctx, 'أضرار مادية', lt, '#F0B04A');
@@ -76,9 +90,9 @@ MOTION.scene({ id: 's7',
       X.globalAlpha = a * .7; X.fillStyle = 'rgba(255,255,255,.35)'; X.font = 'bold ' + c.rr + 'px Inter'; X.textAlign = 'center'; X.fillText('$', c.x, y + c.rr * .35);
       X.globalAlpha = 1;
     });
-    NG.smoke(ctx, lt + 1, 540, 1150, { n: 20, h: 520, alpha: at(lt, 1.5, 3, 'sineOut'), c: '120,116,110', r: 80, spread: 280 });
-    const b = at(lt, 3.4, 4.0, 'expoOut');
+    NG.smoke(ctx, lt + 1, 540, 1150, { n: 20, h: 520, alpha: at(lt, T7.burn, T7.burn + 1.5, 'sineOut'), c: '120,116,110', r: 80, spread: 280 });
+    const b = at(lt, T7.yom, T7.yom + .6, 'expoOut');
     ctx.text(X, 'يوميًا، شهريًا، سنةً بعد سنة…', 540, 1290, { family: 'body', weight: 700, size: 54, color: '#F2EFE9', align: 'center', alpha: b });
-    NG.vwords(ctx, V7.words, lt - 4.3, 1400, 56, lt - 4.1, '#F0B04A', { hi: '#FFE0A0', maxW: 940, lh: 1.5 });
-    NG.src(ctx, V7.ref + ' — ' + 'تلاوة محمد اللحيدان', 1585, lt, 4.9);
+    NG.vwords(ctx, V7.words, lt - T7.verse, 1400, 56, lt - T7.verse + .2, '#F0B04A', { hi: '#FFE0A0', maxW: 940, lh: 1.5 });
+    NG.src(ctx, V7.ref + ' — ' + 'تلاوة محمد اللحيدان', 1585, lt, T7.verse + .6);
   } });

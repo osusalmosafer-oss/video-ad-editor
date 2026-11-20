@@ -1,5 +1,16 @@
 
 const NG = (window.__NG = window.__NG || {});
+NG.cam = function (ctx, lt, sc) {
+  const X = ctx.X, d = Math.max(1, (sc && sc.scene && sc.scene.dur) || (ctx.scene && ctx.scene.dur) || 8), k = Math.max(0, Math.min(1, lt / d));
+  const z = 1.03 + .05 * k + .006 * ctx.beatPulse(ctx.scene.start + lt, 7);
+  X.translate(540 + 14 * Math.sin(lt * .5), 960 + 10 * Math.cos(lt * .4)); X.scale(z, z); X.translate(-540, -960);
+};
+NG.dust = function (ctx, t, col) {
+  const X = ctx.X; for (let i = 0; i < 34; i++) {
+    const ph = (t * (.02 + (i % 5) * .006) + i * .137) % 1, x = (i * 331 % 1080) + 40 * Math.sin(t * .4 + i), y = 1980 - ph * 2100;
+    X.globalAlpha = .18 * Math.sin(ph * 3.1416) * (.4 + (i % 4) * .2); X.fillStyle = col || '#FFD9A0'; X.beginPath(); X.arc(x, y, 1.5 + (i % 3), 0, 6.283); X.fill();
+  } X.globalAlpha = 1;
+};
 NG.bg = function (ctx, t, o = {}) {
   const { X, W, H } = ctx; const c = o.col || '229,72,59';
   const g = X.createLinearGradient(0, 0, 0, H); g.addColorStop(0, o.top || '#0A0B0F'); g.addColorStop(1, o.bot || '#1A1C24');
@@ -7,6 +18,7 @@ NG.bg = function (ctx, t, o = {}) {
   const gl = X.createRadialGradient(W / 2, o.gy || 900, 0, W / 2, o.gy || 900, 950);
   gl.addColorStop(0, 'rgba(' + c + ',' + (o.glow == null ? .14 : o.glow) + ')'); gl.addColorStop(1, 'rgba(' + c + ',0)');
   X.fillStyle = gl; X.fillRect(0, 0, W, H);
+  NG.dust(ctx, t, o.dust);
 };
 NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   const { X } = ctx;
@@ -60,7 +72,8 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
 const VC = [{"v": "v195", "wav": "assets/v195.wav", "dur": 4.22, "ref": "سورة البقرة · 195", "words": [["﴿وَلَا", 0.12], ["تُلْقُوا", 0.6], ["بِأَيْدِيكُمْ", 1.5], ["إِلَى", 2.5], ["التَّهْلُكَةِ﴾", 2.92]], "start": 0.0, "audio_at": 0.6, "cd": 5.62}, {"v": "v29", "wav": "assets/v29.wav", "dur": 5.72, "ref": "سورة النساء · 29", "words": [["﴿وَلَا", 0.12], ["تَقْتُلُوا", 1.02], ["أَنفُسَكُمْ﴾", 2.36]], "start": 5.62, "audio_at": 6.22, "cd": 7.12}, {"v": "v157", "wav": "assets/v157.wav", "dur": 5.14, "ref": "سورة الأعراف · 157", "words": [["﴿وَيُحَرِّمُ", 0.12], ["عَلَيْهِمُ", 1.22], ["الْخَبَائِثَ﴾", 2.08]], "start": 12.74, "audio_at": 13.34, "cd": 6.54}]
 ;
 MOTION.scene({ id: 's2',
-  draw(t, lt, ctx) {
+  draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
+  draw0(t, lt, ctx) {
     const { X, at } = ctx; let ci = 0; VC.forEach((c, i) => { if (lt >= c.start) ci = i; });
     const c = VC[ci], sl = lt - c.start, au = sl - 0.6;
     NG.bg(ctx, t, { gy: 900, glow: .13 });

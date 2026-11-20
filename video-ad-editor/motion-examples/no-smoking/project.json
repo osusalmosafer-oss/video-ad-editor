@@ -51,27 +51,27 @@
   {
    "id": "s5",
    "file": "scenes/s5.js",
-   "minDur": 6.2
+   "minDur": 10.78
   },
   {
    "id": "s6",
    "file": "scenes/s6.js",
-   "minDur": 6.0
+   "minDur": 11.63
   },
   {
    "id": "s7",
    "file": "scenes/s7.js",
-   "minDur": 12.31
+   "minDur": 13.74
   },
   {
    "id": "s8",
    "file": "scenes/s8.js",
-   "minDur": 5.8
+   "minDur": 9.75
   },
   {
    "id": "s9",
    "file": "scenes/s9.js",
-   "minDur": 8.28
+   "minDur": 9.79
   }
  ]
 }

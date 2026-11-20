@@ -1,5 +1,16 @@
 
 const NG = (window.__NG = window.__NG || {});
+NG.cam = function (ctx, lt, sc) {
+  const X = ctx.X, d = Math.max(1, (sc && sc.scene && sc.scene.dur) || (ctx.scene && ctx.scene.dur) || 8), k = Math.max(0, Math.min(1, lt / d));
+  const z = 1.03 + .05 * k + .006 * ctx.beatPulse(ctx.scene.start + lt, 7);
+  X.translate(540 + 14 * Math.sin(lt * .5), 960 + 10 * Math.cos(lt * .4)); X.scale(z, z); X.translate(-540, -960);
+};
+NG.dust = function (ctx, t, col) {
+  const X = ctx.X; for (let i = 0; i < 34; i++) {
+    const ph = (t * (.02 + (i % 5) * .006) + i * .137) % 1, x = (i * 331 % 1080) + 40 * Math.sin(t * .4 + i), y = 1980 - ph * 2100;
+    X.globalAlpha = .18 * Math.sin(ph * 3.1416) * (.4 + (i % 4) * .2); X.fillStyle = col || '#FFD9A0'; X.beginPath(); X.arc(x, y, 1.5 + (i % 3), 0, 6.283); X.fill();
+  } X.globalAlpha = 1;
+};
 NG.bg = function (ctx, t, o = {}) {
   const { X, W, H } = ctx; const c = o.col || '229,72,59';
   const g = X.createLinearGradient(0, 0, 0, H); g.addColorStop(0, o.top || '#0A0B0F'); g.addColorStop(1, o.bot || '#1A1C24');
@@ -7,6 +18,7 @@ NG.bg = function (ctx, t, o = {}) {
   const gl = X.createRadialGradient(W / 2, o.gy || 900, 0, W / 2, o.gy || 900, 950);
   gl.addColorStop(0, 'rgba(' + c + ',' + (o.glow == null ? .14 : o.glow) + ')'); gl.addColorStop(1, 'rgba(' + c + ',0)');
   X.fillStyle = gl; X.fillRect(0, 0, W, H);
+  NG.dust(ctx, t, o.dust);
 };
 NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   const { X } = ctx;
@@ -57,19 +69,21 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   if (ember) { const p = .75 + .25 * Math.sin(t * 9); X.shadowColor = 'rgba(255,90,40,' + p + ')'; X.shadowBlur = 50 * p; X.fillStyle = '#FF5A28'; X.beginPath(); X.ellipse(0, paperTop, w / 2, 10, 0, 0, 6.283); X.fill(); }
   X.restore();
 };
+const T8 = {"i1": 1.45, "i2": 3.22, "i3": 4.72, "q": 6.35};
 
 MOTION.scene({ id: 's8',
-  draw(t, lt, ctx) {
+  draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
+  draw0(t, lt, ctx) {
     const { X, at } = ctx;
     NG.bg(ctx, t, { gy: 900, glow: .13 });
     NG.label(ctx, 'أضرار دينية', lt);
-    const items = [['معصيةٌ تتكرّر كل يوم', 0.6], ['تبذيرٌ للمال، وإيذاءٌ لمن حولك', 1.8], ['وسؤالٌ بين يدي الله عن المال والجسد', 3.0]];
+    const items = [['معصيةٌ تتكرّر كل يوم', T8.i1], ['تبذيرٌ للمال، وإيذاءٌ لمن حولك', T8.i2], ['وسؤالٌ بين يدي الله عن المال والجسد', T8.i3]];
     items.forEach(([s, t0], i) => { const k = at(lt, t0, t0 + .6, 'expoOut'); const y = 620 + i * 250;
       X.save(); X.globalAlpha = k; X.strokeStyle = 'rgba(229,72,59,.55)'; X.lineWidth = 3; X.strokeRect(540 - 450 * k, y - 100, 900 * k, 190); X.restore();
       ctx.text(X, String(i + 1), 540 + 380, y + 28, { family: 'num', weight: 900, size: 76, color: '#E5483B', align: 'center', alpha: k });
       ctx.text(X, s, 540 - 30, y + 12 + (1 - k) * 30, { family: 'display', size: 70, color: '#F2EFE9', align: 'center', alpha: k, maxWidth: 740 }); });
-    const q = at(lt, 4.2, 4.9, 'expoOut');
+    const q = at(lt, T8.q, T8.q + .7, 'expoOut');
     ctx.text(X, '«لا تزولُ قدما عبدٍ يومَ القيامة حتى يُسأل…', 540, 1420, { family: 'body', weight: 700, size: 44, color: '#FFB4A8', align: 'center', alpha: q, maxWidth: 940 });
     ctx.text(X, 'وعن مالِه من أين اكتسبه وفيمَ أنفقه، وعن جسمِه فيمَ أبلاه»', 540, 1500, { family: 'body', weight: 700, size: 44, color: '#FFB4A8', align: 'center', alpha: q, maxWidth: 940 });
-    NG.src(ctx, 'رواه الترمذي', 1580, lt, 5.2);
+    NG.src(ctx, 'رواه الترمذي', 1580, lt, T8.q + .9);
   } });

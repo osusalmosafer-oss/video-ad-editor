@@ -1,5 +1,16 @@
 
 const NG = (window.__NG = window.__NG || {});
+NG.cam = function (ctx, lt, sc) {
+  const X = ctx.X, d = Math.max(1, (sc && sc.scene && sc.scene.dur) || (ctx.scene && ctx.scene.dur) || 8), k = Math.max(0, Math.min(1, lt / d));
+  const z = 1.03 + .05 * k + .006 * ctx.beatPulse(ctx.scene.start + lt, 7);
+  X.translate(540 + 14 * Math.sin(lt * .5), 960 + 10 * Math.cos(lt * .4)); X.scale(z, z); X.translate(-540, -960);
+};
+NG.dust = function (ctx, t, col) {
+  const X = ctx.X; for (let i = 0; i < 34; i++) {
+    const ph = (t * (.02 + (i % 5) * .006) + i * .137) % 1, x = (i * 331 % 1080) + 40 * Math.sin(t * .4 + i), y = 1980 - ph * 2100;
+    X.globalAlpha = .18 * Math.sin(ph * 3.1416) * (.4 + (i % 4) * .2); X.fillStyle = col || '#FFD9A0'; X.beginPath(); X.arc(x, y, 1.5 + (i % 3), 0, 6.283); X.fill();
+  } X.globalAlpha = 1;
+};
 NG.bg = function (ctx, t, o = {}) {
   const { X, W, H } = ctx; const c = o.col || '229,72,59';
   const g = X.createLinearGradient(0, 0, 0, H); g.addColorStop(0, o.top || '#0A0B0F'); g.addColorStop(1, o.bot || '#1A1C24');
@@ -7,6 +18,7 @@ NG.bg = function (ctx, t, o = {}) {
   const gl = X.createRadialGradient(W / 2, o.gy || 900, 0, W / 2, o.gy || 900, 950);
   gl.addColorStop(0, 'rgba(' + c + ',' + (o.glow == null ? .14 : o.glow) + ')'); gl.addColorStop(1, 'rgba(' + c + ',0)');
   X.fillStyle = gl; X.fillRect(0, 0, W, H);
+  NG.dust(ctx, t, o.dust);
 };
 NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   const { X } = ctx;
@@ -58,20 +70,22 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
   X.restore();
 };
 const V9 = {"wav": "assets/v65.wav", "dur": 4.48, "ref": "سورة الطلاق · 2", "words": [["﴿وَمَن", 0.12], ["يَتَّقِ", 0.62], ["اللَّهَ", 1.52], ["يَجْعَل", 2.04], ["لَّهُ", 2.75], ["مَخْرَجًا﴾", 3.24]]};
+const T9 = {"w1": 0.25, "w2": 0.93, "w3": 1.33, "w4": 1.95, "verse": 4.21};
 
 MOTION.scene({ id: 's9',
-  draw(t, lt, ctx) {
+  draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
+  draw0(t, lt, ctx) {
     const { X, at } = ctx;
     const g = at(lt, 1.2, 4, 'sineInOut');
     NG.bg(ctx, t, { top: '#0A1210', bot: '#12301F', gy: 1000, glow: .1 + .22 * g, col: '79,191,139' });
-    const k = at(lt, .2, 1.2, 'expoOut'), br = at(lt, 1.0, 2.2, 'expoOut');
+    const k = at(lt, .2, 1.2, 'expoOut'), br = at(lt, T9.w3 - .2, T9.w3 + 1.0, 'expoOut');
     NG.smoke(ctx, lt, 540, 700, { h: 400, n: 18, alpha: (1 - at(lt, .8, 1.8)) });
-    X.save(); X.translate(540, 760); X.scale(1.3, 1.3); X.globalAlpha = 1 - at(lt, 3.2, 4.2);
+    X.save(); X.translate(540, 760); X.scale(1.3, 1.3); X.globalAlpha = 1 - at(lt, T9.w4 + .9, T9.w4 + 1.9);
     X.save(); X.translate(-120 * br, 40 * br * br); X.rotate(-.5 * br + 1.2); X.translate(0, -120); NG.cig(ctx, 0, 0, 260, 0, .05, lt, 0); X.restore();
     X.save(); X.translate(120 * br, 40 * br * br); X.rotate(.5 * br + 1.9); X.translate(0, 120); NG.cig(ctx, 0, 0, 260, 0, 0, lt, 0); X.restore();
     X.restore();
-    NG.words(ctx, 'ابدأ اليوم… الإقلاع ممكن', 1120, lt, 1.4, .3, 100, '#F2EFE9', { glow: 'rgba(79,191,139,.5)' });
-    NG.vwords(ctx, V9.words, lt - 2.7, 1380, 58, lt - 2.5, '#7FE0B0', { hi: '#C8FFE2', maxW: 940, lh: 1.5 });
-    NG.src(ctx, V9.ref + ' — تلاوة محمد اللحيدان', 1540, lt, 3.2, '#8FB9A4');
-    NG.src(ctx, 'واستعن بالله ثم بطبيب مختص', 1600, lt, 3.6, '#8FB9A4');
+    NG.vwords(ctx, [['الإقلاع', T9.w1], ['ممكن…', T9.w2], ['ابدأ', T9.w3], ['اليوم', T9.w4]].map(w => ['\u200F' + w[0], w[1]]), lt, 1120, 92, lt, '#F2EFE9', { hi: '#C8FFE2', maxW: 940, lh: 1.4 });
+    NG.vwords(ctx, V9.words, lt - T9.verse, 1380, 58, lt - T9.verse + .2, '#7FE0B0', { hi: '#C8FFE2', maxW: 940, lh: 1.5 });
+    NG.src(ctx, V9.ref + ' — تلاوة محمد اللحيدان', 1540, lt, T9.verse + .6, '#8FB9A4');
+    NG.src(ctx, 'واستعن بالله ثم بطبيب مختص', 1600, lt, T9.verse + 1.0, '#8FB9A4');
   } });

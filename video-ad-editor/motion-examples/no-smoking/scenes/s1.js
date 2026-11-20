@@ -1,5 +1,16 @@
 
 const NG = (window.__NG = window.__NG || {});
+NG.cam = function (ctx, lt, sc) {
+  const X = ctx.X, d = Math.max(1, (sc && sc.scene && sc.scene.dur) || (ctx.scene && ctx.scene.dur) || 8), k = Math.max(0, Math.min(1, lt / d));
+  const z = 1.03 + .05 * k + .006 * ctx.beatPulse(ctx.scene.start + lt, 7);
+  X.translate(540 + 14 * Math.sin(lt * .5), 960 + 10 * Math.cos(lt * .4)); X.scale(z, z); X.translate(-540, -960);
+};
+NG.dust = function (ctx, t, col) {
+  const X = ctx.X; for (let i = 0; i < 34; i++) {
+    const ph = (t * (.02 + (i % 5) * .006) + i * .137) % 1, x = (i * 331 % 1080) + 40 * Math.sin(t * .4 + i), y = 1980 - ph * 2100;
+    X.globalAlpha = .18 * Math.sin(ph * 3.1416) * (.4 + (i % 4) * .2); X.fillStyle = col || '#FFD9A0'; X.beginPath(); X.arc(x, y, 1.5 + (i % 3), 0, 6.283); X.fill();
+  } X.globalAlpha = 1;
+};
 NG.bg = function (ctx, t, o = {}) {
   const { X, W, H } = ctx; const c = o.col || '229,72,59';
   const g = X.createLinearGradient(0, 0, 0, H); g.addColorStop(0, o.top || '#0A0B0F'); g.addColorStop(1, o.bot || '#1A1C24');
@@ -7,6 +18,7 @@ NG.bg = function (ctx, t, o = {}) {
   const gl = X.createRadialGradient(W / 2, o.gy || 900, 0, W / 2, o.gy || 900, 950);
   gl.addColorStop(0, 'rgba(' + c + ',' + (o.glow == null ? .14 : o.glow) + ')'); gl.addColorStop(1, 'rgba(' + c + ',0)');
   X.fillStyle = gl; X.fillRect(0, 0, W, H);
+  NG.dust(ctx, t, o.dust);
 };
 NG.words = function (ctx, str, y, lt, t0, step, size, color, o = {}) {
   const { X } = ctx;
@@ -59,14 +71,15 @@ NG.cig = function (ctx, x, y, len, rot, burn, t, ember) {
 };
 
 MOTION.scene({ id: 's1',
-  draw(t, lt, ctx) {
+  draw(t, lt, ctx) { ctx.X.save(); NG.cam(ctx, lt); this.draw0(t, lt, ctx); ctx.X.restore(); },
+  draw0(t, lt, ctx) {
     const { X, at } = ctx;
     NG.bg(ctx, t, { gy: 800, glow: .16 });
     const k = at(lt, 0, 1.2, 'expoOut');
     NG.smoke(ctx, lt + 3, 540, 820, { h: 760, n: 30, alpha: k });
     NG.cig(ctx, 540, 1000 + (1 - k) * 200, 480, 0, .02 + lt * .01, lt, 1);
-    const a = at(lt, 1.0, 1.8, 'expoOut');
+    const a = at(lt, .25, .9, 'expoOut');
     ctx.text(X, 'التدخين والشيشة', 540, 1330 + (1 - a) * 50, { family: 'display', size: 128, color: '#F2EFE9', align: 'center', alpha: a, maxWidth: 940 });
-    const b = at(lt, 2.2, 3.0, 'expoOut');
+    const b = at(lt, 1.7, 2.4, 'expoOut');
     ctx.text(X, 'حكمهما… وأضرارهما', 540, 1470 + (1 - b) * 40, { family: 'display', size: 84, color: '#E5483B', align: 'center', alpha: b, shadow: { blur: 40, y: 0, color: 'rgba(229,72,59,.6)' } });
   } });
