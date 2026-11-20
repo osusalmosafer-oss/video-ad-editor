@@ -31,9 +31,9 @@
    "minDur": 3.0
   },
   {
-   "id": "c1",
-   "file": "scenes/c1.js",
-   "minDur": 16.9
+   "id": "baz1",
+   "file": "scenes/baz1.js",
+   "minDur": 51.1
   }
  ]
 }
