@@ -19,6 +19,7 @@
   "body": "IBM Plex Sans Arabic",
   "num": "Inter"
  },
+ "images": {},
  "post": {
   "grain": 0.04,
   "vignette": 0.4
@@ -43,6 +44,11 @@
    "id": "s4",
    "file": "scenes/s4.js",
    "minDur": 4.6
+  },
+  {
+   "id": "s4b",
+   "file": "scenes/s4b.js",
+   "minDur": 12.6
   },
   {
    "id": "s5",

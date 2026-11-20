@@ -104,6 +104,35 @@ MOTION.scene({ id: 's4',
     }
   } });
 """
+
+# ---- s4b أقوال العلماء (مقتطفات نصية حرفية من موقعيهما الرسميين)
+S['s4b'] = r"""
+const QS = [
+  { n: 'الشيخ محمد بن صالح العثيمين', r: 'رحمه الله', ph: 'p_uth', t: 'التدخين الذي هو شرب الدخان أو التبغ محرم بدلالة الكتاب والسنة والاعتبار الصحيح', s: 'موقع الشيخ ابن عثيمين — «حكم شرب الدخان»' },
+  { n: 'الشيخ عبدالعزيز بن باز', r: 'رحمه الله', ph: 'p_baz', t: 'التدخين يضيق مجاري الدم، يسيء إلى شرايينه، يسيء إلى صدره، يسيء إلى قلبه… فمضاره كثيرة', s: 'موقع الشيخ ابن باز — «التدخين والسهر من أسباب الطلاق»' },
+  { n: 'الشيخ محمد بن صالح العثيمين', r: 'رحمه الله', ph: 'p_uth', t: 'شرب الدخان ضرر في البدن، وفي المال', s: 'موقع الشيخ ابن عثيمين — «حكم شرب الدخان»' }
+];
+MOTION.scene({ id: 's4b',
+  draw(t, lt, ctx) {
+    const { X, at } = ctx; const D = 4.2, i = Math.max(0, Math.min(2, Math.floor(lt / D))), sl = lt - i * D, q = QS[i];
+    NG.bg(ctx, t, { gy: 800, glow: .14 });
+    NG.label(ctx, 'من أقوال العلماء', lt, '#E8C46A');
+    const k = at(sl, 0, .7, 'expoOut'), cx = 540, cy = 640, R = 150;
+    X.save(); X.globalAlpha = k; X.strokeStyle = '#E8C46A'; X.lineWidth = 6; X.beginPath(); X.arc(cx, cy, R + 10 + 6 * Math.sin(sl * 3), 0, 6.283); X.stroke();
+    X.beginPath(); X.arc(cx, cy, R, 0, 6.283); X.clip();
+    const img = ctx.images && ctx.images[q.ph] && ctx.img(q.ph);
+    if (img) { const s = (R * 2.1) / Math.min(img.width, img.height); X.drawImage(img, cx - img.width * s / 2, cy - img.height * s / 2, img.width * s, img.height * s); }
+    else { X.fillStyle = '#2A2420'; X.fillRect(cx - R, cy - R, R * 2, R * 2); X.fillStyle = '#5B4A30'; X.beginPath(); X.arc(cx, cy - 36, 54, 0, 6.283); X.fill(); X.beginPath(); X.ellipse(cx, cy + 130, 100, 86, 0, 0, 6.283); X.fill(); }
+    X.restore();
+    ctx.text(X, q.n, 540, 880, { family: 'display', size: 64, color: '#F2EFE9', align: 'center', alpha: k, maxWidth: 960 });
+    ctx.text(X, q.r, 540, 950, { family: 'body', weight: 400, size: 38, color: '#E8C46A', align: 'center', alpha: k });
+    ctx.text(X, '«', 540, 1030, { family: 'display', size: 140, color: '#E5483B', align: 'center', alpha: .8 * k });
+    NG.words(ctx, q.t, 1140, sl, .3, .17, 62, '#F2EFE9', { family: 'body', lh: 1.65 });
+    NG.src(ctx, q.s, 1500, sl, 1.8);
+    const f = 1 - at(sl, 0, .25, 'cubicOut'); if (f > 0 && i > 0) { X.fillStyle = 'rgba(232,196,106,' + f * .35 + ')'; X.fillRect(0, 0, ctx.W, ctx.H); }
+  } });
+"""
+
 # ---- s5 health
 S['s5'] = r"""
 MOTION.scene({ id: 's5',
@@ -218,7 +247,7 @@ MOTION.scene({ id: 's9',
     NG.src(ctx, 'سورة الطلاق — واستعن بالله ثم بطبيب مختص', 1560, lt, 4.4, '#8FB9A4');
   } });
 """
-dur = {'s1': 4.6, 's2': 8.4, 's3': 8.4, 's4': 4.6, 's5': 7.0, 's6': 6.8, 's7': 6.6, 's8': 6.6, 's9': 6.6}
+dur = {'s1': 4.6, 's2': 8.4, 's3': 8.4, 's4': 4.6, 's4b': 12.6, 's5': 7.0, 's6': 6.8, 's7': 6.6, 's8': 6.6, 's9': 6.6}
 for k, v in S.items(): open(f'{D}/scenes/{k}.js', 'w').write(HELP + v)
 bpm = 72; spb = 60 / bpm; total = round(sum(dur.values()), 3)
 beats = [round(i * spb, 4) for i in range(int(total / spb) + 1)]
@@ -228,10 +257,10 @@ for k, d in dur.items():
 json.dump({'duration': total, 'bpm': bpm, 'beats': beats, 'bars': beats[::4], 'sections': [{'name': 'intro', 'start': 0, 'end': total}], 'scenes': sc, 'vo': []}, open(f'{D}/timeline.json', 'w'), ensure_ascii=False)
 json.dump({'name': 'أدلة تحريم الدخان والشيشة وأضرارهما', 'fps': 60, 'width': 1080, 'height': 1920, 'bpm': bpm, 'beatsPerBar': 4, 'beatOffset': 0,
   'palette': {'bg': '#0A0B0F', 'ink': '#F2EFE9', 'acc': '#E5483B', 'clay': '#C4372B', 'hi': '#FFB4A8', 'mut': '#9A968F'},
-  'fonts': {'display': 'Lalezar', 'body': 'IBM Plex Sans Arabic', 'num': 'Inter'}, 'post': {'grain': 0.04, 'vignette': 0.4},
+  'fonts': {'display': 'Lalezar', 'body': 'IBM Plex Sans Arabic', 'num': 'Inter'}, 'images': {k: f'assets/{f}' for k, f in {'p_baz': 'baz.png', 'p_uth': 'uth.png'}.items() if os.path.exists(f'{D}/assets/{f}')}, 'post': {'grain': 0.04, 'vignette': 0.4},
   'scenes': [{'id': k, 'file': f'scenes/{k}.js', 'minDur': d} for k, d in dur.items()]}, open(f'{D}/project.json', 'w'), ensure_ascii=False, indent=1)
 sfx = [{'type': 'impact', 'at': 'scene:s4+2.0', 'gain': .9}, {'type': 'riser', 'at': 'scene:s4+2.0', 'gain': .5}]
-for k in ['s2', 's3', 's5', 's6', 's7', 's8', 's9']: sfx.append({'type': 'swoosh-pass', 'at': f'scene:{k}', 'gain': .5})
+for k in ['s2', 's3', 's4b', 's5', 's6', 's7', 's8', 's9']: sfx.append({'type': 'swoosh-pass', 'at': f'scene:{k}', 'gain': .5})
 sfx += [{'type': 'tick', 'at': 'scene:s2+4.2', 'gain': .6}, {'type': 'tick', 'at': 'scene:s3+4.2', 'gain': .6}]
 for i, t0 in enumerate([1.2, 2.2, 3.2, 4.2]): sfx.append({'type': 'pop', 'at': f'scene:s5+{t0}', 'gain': .5})
 for i, t0 in enumerate([2.4, 3.6, 4.8]): sfx.append({'type': 'pop', 'at': f'scene:s6+{t0}', 'gain': .5})
