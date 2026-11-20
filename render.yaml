@@ -36,3 +36,32 @@ services:
       name: awj-data
       mountPath: /var/data
       sizeGB: 10
+
+  # ---------- نظام إدارة ومتابعة طلبات استلام التبرعات ----------
+  - type: web
+    name: donations-pickup
+    runtime: node
+    rootDir: donations-app
+    plan: starter            # القرص الدائم يتطلب خطة مدفوعة
+    region: frankfurt
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: 22.12.0       # يلزم Node 22.5 فما فوق (SQLite المدمج)
+      - key: DATA_DIR
+        value: /var/data
+      - key: TZ
+        value: Asia/Riyadh
+      - key: ADMIN_PASSWORD
+        sync: false          # كلمة مرور المشرف (يُطلب إدخالها)
+      - key: EMPLOYEE_PASSWORD
+        sync: false
+      - key: DRIVER_PASSWORD
+        sync: false
+    disk:
+      name: donations-data
+      mountPath: /var/data
+      sizeGB: 1
