@@ -257,7 +257,7 @@ for k, d in dur.items():
 json.dump({'duration': total, 'bpm': bpm, 'beats': beats, 'bars': beats[::4], 'sections': [{'name': 'intro', 'start': 0, 'end': total}], 'scenes': sc, 'vo': []}, open(f'{D}/timeline.json', 'w'), ensure_ascii=False)
 json.dump({'name': 'أدلة تحريم الدخان والشيشة وأضرارهما', 'fps': 60, 'width': 1080, 'height': 1920, 'bpm': bpm, 'beatsPerBar': 4, 'beatOffset': 0,
   'palette': {'bg': '#0A0B0F', 'ink': '#F2EFE9', 'acc': '#E5483B', 'clay': '#C4372B', 'hi': '#FFB4A8', 'mut': '#9A968F'},
-  'fonts': {'display': 'Lalezar', 'body': 'IBM Plex Sans Arabic', 'num': 'Inter'}, 'images': {k: f'assets/{f}' for k, f in {'p_baz': 'baz.png', 'p_uth': 'uth.png'}.items() if os.path.exists(f'{D}/assets/{f}')}, 'post': {'grain': 0.04, 'vignette': 0.4},
+  'fonts': {'display': 'Lalezar', 'body': 'IBM Plex Sans Arabic', 'num': 'Inter'}, 'images': {k: f'assets/{f}' for k, f in {'p_baz': 'baz.jpg', 'p_uth': 'uth.jpg'}.items() if os.path.exists(f'{D}/assets/{f}')}, 'post': {'grain': 0.04, 'vignette': 0.4},
   'scenes': [{'id': k, 'file': f'scenes/{k}.js', 'minDur': d} for k, d in dur.items()]}, open(f'{D}/project.json', 'w'), ensure_ascii=False, indent=1)
 sfx = [{'type': 'impact', 'at': 'scene:s4+2.0', 'gain': .9}, {'type': 'riser', 'at': 'scene:s4+2.0', 'gain': .5}]
 for k in ['s2', 's3', 's4b', 's5', 's6', 's7', 's8', 's9']: sfx.append({'type': 'swoosh-pass', 'at': f'scene:{k}', 'gain': .5})

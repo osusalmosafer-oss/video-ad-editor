@@ -19,7 +19,10 @@
   "body": "IBM Plex Sans Arabic",
   "num": "Inter"
  },
- "images": {},
+ "images": {
+  "p_baz": "assets/baz.jpg",
+  "p_uth": "assets/uth.jpg"
+ },
  "post": {
   "grain": 0.04,
   "vignette": 0.4
