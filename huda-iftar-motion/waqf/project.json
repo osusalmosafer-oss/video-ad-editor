@@ -1,0 +1,13 @@
+{ "name": "huda-waqf", "fps": 60, "width": 1080, "height": 1920, "bpm": 96, "beatsPerBar": 4, "beatOffset": 0,
+  "palette": { "bg": "#0D2830", "ink": "#F3F5F5", "acc": "#CC9D3E", "clay": "#A97C25", "hi": "#E6C679", "mut": "#8FA7AB" },
+  "fonts": { "display": "Cairo", "body": "Tajawal", "num": "Inter" },
+  "images": { "kaaba": "assets/kaaba.png", "quran": "assets/quran.png", "header": "assets/header.png", "building": "assets/building.png", "seal": "assets/seal.png", "logo": "assets/logo.png" },
+  "post": { "grain": 0.05, "vignette": 0.3 },
+  "scenes": [
+    { "id": "w1", "file": "scenes/w1.js", "start": 0,    "end": 3.6 },
+    { "id": "w2", "file": "scenes/w2.js", "start": 3.6,  "end": 11,   "transition": { "type": "wipe", "dur": 0.5, "dir": "rtl", "bar": 0 } },
+    { "id": "w3", "file": "scenes/w3.js", "start": 11,   "end": 17,   "transition": { "type": "crossfade", "dur": 0.5 } },
+    { "id": "w4", "file": "scenes/w4.js", "start": 17,   "end": 21,   "transition": { "type": "wipe", "dur": 0.5, "dir": "rtl", "bar": 0 } },
+    { "id": "w5", "file": "scenes/w5.js", "start": 21,   "end": 33,   "transition": { "type": "crossfade", "dur": 0.5 } },
+    { "id": "w6", "file": "scenes/w6.js", "start": 33,   "end": 40,   "transition": { "type": "dip", "dur": 0.6 } }
+  ] }

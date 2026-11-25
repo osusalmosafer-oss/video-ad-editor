@@ -1,0 +1,13 @@
+{ "name": "huda-iftar", "fps": 60, "width": 1080, "height": 1920, "bpm": 96, "beatsPerBar": 4, "beatOffset": 0,
+  "palette": { "bg": "#0D2830", "ink": "#F3F5F5", "acc": "#CC9D3E", "clay": "#A97C25", "hi": "#E6C679", "mut": "#8FA7AB" },
+  "fonts": { "display": "Cairo", "body": "Tajawal", "num": "Inter" },
+  "images": { "kaaba": "assets/kaaba.png", "bag": "assets/bag.png", "seal": "assets/seal.png", "logo": "assets/logo.png" },
+  "post": { "grain": 0.05, "vignette": 0.3 },
+  "scenes": [
+    { "id": "s1", "file": "scenes/s1.js", "start": 0,    "end": 3.4 },
+    { "id": "s2", "file": "scenes/s2.js", "start": 3.4,  "end": 9.2,  "transition": { "type": "wipe", "dur": 0.5, "dir": "rtl", "bar": 0 } },
+    { "id": "s3", "file": "scenes/s3.js", "start": 9.2,  "end": 14,   "transition": { "type": "crossfade", "dur": 0.5 } },
+    { "id": "s4", "file": "scenes/s4.js", "start": 14,   "end": 18,   "transition": { "type": "wipe", "dur": 0.5, "dir": "rtl", "bar": 0 } },
+    { "id": "s5", "file": "scenes/s5.js", "start": 18,   "end": 30,   "transition": { "type": "crossfade", "dur": 0.5 } },
+    { "id": "s6", "file": "scenes/s6.js", "start": 30,   "end": 37,   "transition": { "type": "dip", "dur": 0.6 } }
+  ] }

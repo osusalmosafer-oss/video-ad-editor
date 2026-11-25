@@ -1,0 +1,6 @@
+engine/node_modules/
+*/renders/frames/
+*/renders/preview/
+r*.log
+*/renders/video.mp4
+*/renders/*.mp4
