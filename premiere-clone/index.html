@@ -111,6 +111,8 @@ select,input[type=text],input[type=number],textarea{background:var(--bg);border:
       <button id="bDel" class="danger" title="Delete">🗑 حذف</button>
       <button id="bDup" title="Ctrl+D">⧉ نسخ</button>
       <button id="bText">T + نص</button>
+      <button id="bSrt" title="استيراد ترجمة .srt كنصوص">📝 استيراد SRT</button>
+      <input type="file" id="srtFile" accept=".srt,.vtt,.txt" hidden>
       <button id="bRipple" title="حذف مع إغلاق الفراغ">⟸ حذف وسدّ الفراغ</button>
       <span style="flex:1"></span>
       <label style="color:var(--mut)"><input type="checkbox" id="snap" checked> مغناطيس</label>
@@ -212,7 +214,7 @@ function defaults(kind){
   if (kind === 'text') return {...base, text:'نص جديد', size:8, color:'#ffffff', stroke:'#000000', strokeW:6, bg:false, bgColor:'#000000', bgOp:60,
                                weight:'900', align:'center', x:50, y:75, anim:'none', fadeIn:0.2, fadeOut:0.2};
   if (kind === 'audio') return {...base, volume:100};
-  return {...base, scale:100, x:0, y:0, rotate:0, fit:'cover', brightness:100, contrast:100, saturate:100, blur:0, speed:1, volume:100};
+  return {...base, scale:100, x:0, y:0, rotate:0, fit:'cover', trans:'none', transDur:0.5, brightness:100, contrast:100, saturate:100, blur:0, speed:1, volume:100};
 }
 function freeStart(track, from, dur){
   // append after the last clip on that track if the requested slot is taken
@@ -252,6 +254,21 @@ function dupClip(){
   const c = selClip(); if (!c) return;
   const b = JSON.parse(JSON.stringify(c)); b.id = 'c'+uid++; b.start = c.start + c.dur;
   S.clips.push(b); S.sel = b.id; syncEls(); commit();
+}
+
+function importSrt(txt){
+  const ts = x => { const m = x.trim().replace(',', '.').match(/(?:(\d+):)?(\d+):(\d+(?:\.\d+)?)/); return m ? (+(m[1]||0))*3600 + (+m[2])*60 + (+m[3]) : NaN; };
+  let n = 0;
+  for (const blk of txt.replace(/\r/g, '').replace(/^WEBVTT.*\n/, '').split(/\n\s*\n/)){
+    const ln = blk.split('\n').map(l => l.trim()).filter(Boolean), i = ln.findIndex(l => l.includes('-->'));
+    if (i < 0) continue;
+    const [a, b] = ln[i].split('-->'), st = ts(a), en = ts(b.trim().split(/\s/)[0]);
+    const text = ln.slice(i + 1).join('\n'); if (isNaN(st) || isNaN(en) || en <= st || !text) continue;
+    const p = defaults('text'); p.text = text; p.size = 6.5; p.bg = true; p.fadeIn = 0; p.fadeOut = 0;
+    S.clips.push({id:'c'+uid++, type:'text', track:'T1', start:st, in:0, dur:en - st, p}); n++;
+  }
+  if (!n) return alert('لم أجد ترجمات صالحة في الملف');
+  commit();
 }
 
 /* ---------- media elements & audio graph ---------- */
@@ -348,7 +365,16 @@ function drawVisual(c, f){
   const fl = []; if (p.brightness !== 100) fl.push(`brightness(${p.brightness}%)`); if (p.contrast !== 100) fl.push(`contrast(${p.contrast}%)`);
   if (p.saturate !== 100) fl.push(`saturate(${p.saturate}%)`); if (p.blur > 0) fl.push(`blur(${p.blur / 100 * W * .05}px)`);
   if (fl.length) ctx.filter = fl.join(' ');
-  ctx.translate(W/2 + p.x/100*W, H/2 + p.y/100*H); ctx.rotate(p.rotate * Math.PI / 180);
+  let ox = 0, zs = 1;
+  const k0 = p.trans && p.trans !== 'none' ? clamp((S.t - c.start) / Math.max(.05, p.transDur), 0, 1) : 1;
+  if (k0 < 1){
+    const k = 1 - Math.pow(1 - k0, 3);
+    if (p.trans === 'slide') ox = (1 - k) * W;
+    else if (p.trans === 'slideL') ox = -(1 - k) * W;
+    else if (p.trans === 'zoom'){ zs = 1.5 - .5 * k; ctx.globalAlpha *= k; }
+    else if (p.trans === 'wipe'){ ctx.beginPath(); ctx.rect(0, 0, W * k, H); ctx.clip(); }
+  }
+  ctx.translate(W/2 + p.x/100*W + ox, H/2 + p.y/100*H); ctx.rotate(p.rotate * Math.PI / 180); ctx.scale(zs, zs);
   ctx.drawImage(e, -w*s/2, -h*s/2, w*s, h*s);
   ctx.restore();
 }
@@ -519,6 +545,7 @@ function renderInspector(){
     h += F.text.map(f => slider(c, f)).join('');
   } else if (c.type !== 'audio'){
     h += `<div class="fld"><label>الملاءمة</label><select data-k="fit"><option value="cover">ملء الإطار</option><option value="contain">احتواء</option></select></div>`;
+    h += `<div class="fld"><label>انتقال الدخول</label><select data-k="trans"><option value="none">بدون</option><option value="slide">انزلاق من اليمين</option><option value="slideL">انزلاق من اليسار</option><option value="zoom">تكبير</option><option value="wipe">مسح</option></select></div>` + slider(c, ['transDur','مدة الانتقال (ث)',0.1,2,.1]);
     h += F.visual.map(f => slider(c, f)).join('') + '<div class="grp">تصحيح اللون</div>' + F.color.map(f => slider(c, f)).join('');
     if (c.type === 'video') h += `<div class="grp">السرعة والصوت</div><div class="fld"><label>السرعة</label><select data-k="speed">${[.25,.5,.75,1,1.25,1.5,2,3].map(s => `<option value="${s}">${s}x</option>`).join('')}</select></div>` + F.audio.map(f => slider(c, f)).join('');
   } else h += F.audio.map(f => slider(c, f)).join('');
@@ -599,6 +626,8 @@ $('#bEnd').onclick = () => seek(total());
 $('#bBack').onclick = () => seek(S.t - 1 / S.fps);
 $('#bFwd').onclick = () => seek(S.t + 1 / S.fps);
 $('#bSplit').onclick = splitAt; $('#bDel').onclick = () => delClip(false); $('#bRipple').onclick = () => delClip(true);
+$('#bSrt').onclick = () => $('#srtFile').click();
+$('#srtFile').onchange = async e => { const f = e.target.files[0]; if (f) importSrt(await f.text()); e.target.value = ''; };
 $('#bDup').onclick = dupClip; $('#bText').onclick = addText;
 $('#bUndo').onclick = undo; $('#bRedo').onclick = redo; $('#bExport').onclick = startExport;
 $('#aspect').onchange = e => { S.aspect = e.target.value; applyCanvas(); };
