@@ -57,7 +57,7 @@ const tLook = look => () => {
 };
 const CAP_STYLES = [
   {hlColor:'#ffd23f', bgColor:'#000000', bgOp:60, bg:true, strokeW:0, hl:'karaoke'},
-  {bg:false, strokeW:0, glow:55, glowColor:'#00d1b2', hl:'karaoke', hlColor:'#00d1b2', color:'#ffffff'},
+  {bg:false, strokeW:5, stroke:'#000000', glow:55, glowColor:'#00d1b2', hl:'karaoke', hlColor:'#5ff5dc', color:'#ffffff'},
   {bg:true, bgColor:'#7b61ff', bgOp:92, strokeW:0, hl:'karaoke', hlColor:'#ffffff', color:'#ddd6ff'},
   {bg:false, hl:'none', strokeW:7, stroke:'#000000', color:'#ffffff', glow:0},
 ];
