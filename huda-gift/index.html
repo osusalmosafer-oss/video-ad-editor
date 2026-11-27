@@ -33,6 +33,34 @@ details{margin-top:14px}summary{cursor:pointer;font-weight:700;color:var(--teal-
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#23393a;color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;max-width:90%;text-align:center}
 .toast.on{opacity:1}
 h2{font-size:15px;margin:0 0 4px}
+
+/* ===== الإيصال الحراري 80mm ===== */
+#receipt{width:72mm;margin:0 auto;background:#fff;color:#000;font-family:Tajawal,Tahoma,sans-serif;text-align:center;padding:3mm 0 12mm;font-size:12pt;line-height:1.5}
+#receipt img{display:block;margin:0 auto}
+#receipt .logo{width:100%}
+#receipt .ihd{width:42%;margin-top:1mm}
+#receipt .branch{font-size:10pt;font-weight:700;margin:1mm 0}
+#receipt hr{border:0;border-top:1.2px dashed #000;margin:2.5mm 0}
+#receipt .lbl{display:inline-block;border:1.5px solid #000;border-radius:2mm;padding:0 3mm;font-weight:800;font-size:11pt}
+#receipt .val{font-size:17pt;font-weight:800;margin:1mm 0 2mm;word-break:break-word}
+#receipt .txt{font-size:11.5pt;font-weight:500;line-height:1.7;text-align:center}
+#receipt .proj{font-weight:800;font-size:14pt;border-bottom:1.5px solid #000}
+#receipt .ft{font-size:10.5pt;font-weight:700}
+#receipt .ft .ph{font-size:13pt;direction:ltr;font-weight:800}
+.rcpWrap{margin-top:16px;padding-top:12px;border-top:1px dashed var(--line)}
+.rcpBox{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px;overflow:auto}
+.pr{background:#23393a;color:#fff}
+@page{size:80mm auto;margin:0}
+@media print{
+  html,body{background:#fff!important;margin:0!important}
+  header,.toast,main>section:not(.prev),.prev>h2,.prev>canvas{display:none!important}
+  main{display:block!important;margin:0!important;padding:0!important;max-width:none!important}
+  .panel{border:0!important;padding:0!important;background:#fff!important}
+  .prev{position:static!important}
+  .rcpWrap{margin:0!important;padding:0!important;border:0!important}
+  .rcpWrap>h2{display:none}
+  .rcpBox{border:0!important;padding:0!important;overflow:visible!important}
+}
 </style>
 </head>
 <body>
@@ -55,6 +83,7 @@ h2{font-size:15px;margin:0 0 4px}
 
     <div class="btns">
       <button class="wa" id="send">📲 إرسال للعميل عبر واتساب</button>
+      <button class="pr" id="print">🖨 طباعة على الطابعة الحرارية</button>
       <button class="dl" id="download">⬇ تحميل الصورة</button>
       <button class="sec" id="copy">📋 نسخ الصورة</button>
     </div>
@@ -66,6 +95,8 @@ h2{font-size:15px;margin:0 0 4px}
       <textarea id="projList" rows="5" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit"></textarea>
       <label>رسالة واتساب الافتراضية <span>(استخدم {to} و{from} و{project})</span></label>
       <input id="tpl">
+      <label>سطر الفرع <span>(يظهر أعلى الإيصال)</span></label>
+      <input id="branch">
       <label>رقم خدمة العملاء <span>(للتوثيق في الرسالة)</span></label>
       <input id="csNum" dir="ltr" style="text-align:right">
       <button class="sec" id="saveSet" style="margin-top:10px;width:100%">حفظ الإعدادات</button>
@@ -75,6 +106,21 @@ h2{font-size:15px;margin:0 0 4px}
   <section class="panel prev">
     <h2>المعاينة</h2>
     <canvas id="cv" width="1080" height="1080"></canvas>
+    <div class="rcpWrap" id="printArea">
+      <h2>معاينة الإيصال الحراري (أبيض وأسود 80mm)</h2>
+      <div class="rcpBox"><div id="receipt">
+        <img class="logo" src="logo-bw.png" alt="جمعية هدى">
+        <div class="branch" id="rBranch"></div>
+        <img class="ihd" src="ihdaa-bw.png" alt="إهداء">
+        <hr>
+        <span class="lbl">إلى</span><div class="val" id="rTo">…</div>
+        <span class="lbl">من</span><div class="val" id="rFrom">…</div>
+        <hr>
+        <div class="txt">مكانتك عندي لا يمكن أن تقاس بالكلمات، هذه الهدية تحمل بين طياتها أجراً عظيماً لك ساهمت عنك في مشروع <span class="proj" id="rProj">…</span> حيث الأجور المضاعفة ليبقى لك خير هذه الصدقة وأجرها في الدنيا والآخرة.</div>
+        <hr>
+        <div class="ft"><div class="ph" id="rPhone"></div><div dir="ltr">@hudaamkkah</div><div id="rDate" dir="ltr"></div></div>
+      </div></div>
+    </div>
   </section>
 </main>
 <div class="toast" id="toast"></div>
@@ -84,7 +130,8 @@ const $=id=>document.getElementById(id);
 const DEF={
   projects:["سقيا الماء","كفالة حلقة تحفيظ","وقف مصحف","إفطار صائم","كسوة الحجاج","طباعة المصحف","رعاية الحفاظ"],
   tpl:"السلام عليكم، تفضّل إهداء من {from} إلى {to} بمناسبة مساهمته في مشروع {project} 🤍\nجمعية هدى لتعليم القرآن وعلومه بشرق مكة المكرمة",
-  csNum:"0555012537"
+  csNum:"0555012537",
+  branch:"فرع مكة المكرمة - أبراج البيت"
 };
 const S=(()=>{try{return Object.assign({},DEF,JSON.parse(localStorage.getItem('huda_set')||'{}'))}catch(e){return {...DEF}}})();
 const cv=$('cv'),ctx=cv.getContext('2d');
@@ -158,15 +205,29 @@ $('send').onclick=async()=>{
 // الإعدادات
 function loadSet(){
   $('projects').innerHTML=S.projects.map(p=>`<option value="${p}">`).join('');
-  $('projList').value=S.projects.join('\n');$('tpl').value=S.tpl;$('csNum').value=S.csNum;
+  $('projList').value=S.projects.join('\n');$('tpl').value=S.tpl;$('csNum').value=S.csNum;$('branch').value=S.branch;fillReceipt();
 }
 $('saveSet').onclick=()=>{
   S.projects=$('projList').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  S.tpl=$('tpl').value;S.csNum=$('csNum').value.trim();
+  S.tpl=$('tpl').value;S.csNum=$('csNum').value.trim();S.branch=$('branch').value.trim();
   try{localStorage.setItem('huda_set',JSON.stringify(S))}catch(e){}
   loadSet();toast('تم حفظ الإعدادات ✅');
 };
 ['to','from','project'].forEach(i=>$(i).addEventListener('input',draw));
+
+function pad(n){return String(n).padStart(2,'0')}
+function fillReceipt(){
+  $('rTo').textContent=$('to').value.trim()||'…';
+  $('rFrom').textContent=$('from').value.trim()||'…';
+  $('rProj').textContent=$('project').value.trim()||'…';
+  $('rBranch').textContent=S.branch||'';
+  $('rPhone').textContent=S.csNum?('+966 '+S.csNum.replace(/^0/,'').replace(/(\d{3})(\d{3})(\d{3})/,'$1 $2 $3')):'';
+  const d=new Date();
+  $('rDate').textContent=`${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}  ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+['to','from','project'].forEach(i=>$(i).addEventListener('input',fillReceipt));
+$('print').onclick=()=>{if(!check())return;fillReceipt();window.print()};
+fillReceipt();
 loadSet();
 Promise.all([bg.decode().catch(()=>{}),document.fonts.load('700 40px Tajawal').catch(()=>{})]).then(draw);
 </script>
