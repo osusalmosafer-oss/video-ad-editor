@@ -221,6 +221,50 @@ async function runWhisper(c, m, lang, model, karaoke, task){
   const segs = await transcribeClip(c, m, {lang, model, task, st});
   const n = addSegments(segs, karaoke); st(`تمّ: أُضيف ${n} سطر ترجمة`); setTimeout(closeDlg, 1500);
 }
+/* ============ محرر منحنى الحركة (Bézier) ============ */
+function curveDialog(c, k){
+  const a = c.kf && c.kf[k]; if (!a || a.length < 2) return;
+  const lt = S.t - c.start; let seg = Math.max(0, a.findIndex((f, i) => i < a.length - 1 && lt >= f.t && lt < a[i + 1].t)); if (seg < 0) seg = 0;
+  const label = {scale:'الحجم', x:'الموضع أفقي', y:'الموضع رأسي', rotate:'الدوران', opacity:'الشفافية', size:'حجم الخط'}[k] || k;
+  const W = 260, H = 210, PAD = 24, YMIN = -.6, YMAX = 1.6;
+  $('#dlgw').classList.add('float');
+  dlg(`<b>📈 منحنى حركة: ${label}</b>
+    <div class="fld" style="margin-top:8px"><label>المقطع بين مفتاحين</label><select id="cvSeg"></select></div>
+    <canvas id="cvE" width="${W}" height="${H}" style="background:#16161a;border-radius:6px;touch-action:none;display:block;margin:6px auto"></canvas>
+    <div class="grid" style="grid-template-columns:repeat(4,1fr)" id="cvPre"></div>
+    <div id="cvInfo" style="color:var(--mut);font-size:11px;text-align:center;margin:4px 0"></div>
+    <button class="pri" onclick="closeDlg()">تم</button> <button id="cvRst">افتراضي</button>`);
+  const sel = $('#cvSeg'); a.slice(0, -1).forEach((f, i) => sel.insertAdjacentHTML('beforeend', `<option value="${i}">${f.t.toFixed(2)}s → ${a[i + 1].t.toFixed(2)}s  (${(+f.v).toFixed(0)} → ${(+a[i + 1].v).toFixed(0)})</option>`)); sel.value = seg;
+  $('#cvPre').innerHTML = [['linear','خطي'],['ease','سلس'],['in','تسارع'],['out','تباطؤ'],['inout','تسارع+تباطؤ'],['back','تجاوز'],['snap','حاد']].map(([p, n]) => `<button data-p="${p}" style="font-size:11px;padding:4px 2px">${n}</button>`).join('');
+  const cvE = $('#cvE'), g = cvE.getContext('2d');
+  const curB = () => a[seg].b || CURVES[c.p.ease] || CURVES.inout;
+  const X = x => PAD + x * (W - 2 * PAD), Y = y => H - PAD - (y - YMIN) / (YMAX - YMIN) * (H - 2 * PAD);
+  const draw = () => {
+    g.clearRect(0, 0, W, H); const b = curB();
+    g.strokeStyle = '#2e2e36'; g.lineWidth = 1; for (const y of [0, 1]){ g.beginPath(); g.moveTo(X(0), Y(y)); g.lineTo(X(1), Y(y)); g.stroke(); }
+    g.strokeStyle = '#3a3a44'; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(X(0), Y(0)); g.lineTo(X(1), Y(1)); g.stroke(); g.setLineDash([]);
+    g.strokeStyle = '#7b61ff'; g.lineWidth = 2.5; g.beginPath(); for (let i = 0; i <= 60; i++){ const x = i / 60, y = bezierY(b, x); i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y)); } g.stroke();
+    g.strokeStyle = '#00d1b2'; g.lineWidth = 1.5;
+    for (const [px, py, qx, qy] of [[0, 0, b[0], b[1]], [1, 1, b[2], b[3]]]){ g.beginPath(); g.moveTo(X(px), Y(py)); g.lineTo(X(qx), Y(qy)); g.stroke(); g.fillStyle = '#fff'; g.beginPath(); g.arc(X(qx), Y(qy), 6, 0, 7); g.fill(); g.stroke(); }
+    g.fillStyle = '#ffd23f'; for (const [px, py] of [[0, 0], [1, 1]]){ g.beginPath(); g.arc(X(px), Y(py), 4, 0, 7); g.fill(); }
+    $('#cvInfo').textContent = 'cubic-bezier(' + b.map(v => +v.toFixed(2)).join(', ') + ')';
+  };
+  const setB = b => { a[seg].b = b; render(); draw(); };
+  let drag = -1;
+  cvE.onpointerdown = e => {
+    const r = cvE.getBoundingClientRect(), mx = (e.clientX - r.left) * W / r.width, my = (e.clientY - r.top) * H / r.height, b = curB(), d = [Math.hypot(mx - X(b[0]), my - Y(b[1])), Math.hypot(mx - X(b[2]), my - Y(b[3]))];
+    drag = d[0] < d[1] ? 0 : 1; if (d[drag] > 30) drag = -1; if (drag < 0) return; cvE.setPointerCapture(e.pointerId);
+  };
+  cvE.onpointermove = e => {
+    if (drag < 0) return; const r = cvE.getBoundingClientRect(), mx = (e.clientX - r.left) * W / r.width, my = (e.clientY - r.top) * H / r.height, b = [...curB()];
+    b[drag * 2] = clamp((mx - PAD) / (W - 2 * PAD), 0, 1); b[drag * 2 + 1] = clamp(YMIN + (H - PAD - my) / (H - 2 * PAD) * (YMAX - YMIN), YMIN, YMAX); setB(b);
+  };
+  cvE.onpointerup = () => { if (drag >= 0){ drag = -1; commit(); } };
+  sel.onchange = () => { seg = +sel.value; seek(c.start + a[seg].t + (a[seg + 1].t - a[seg].t) / 2); draw(); };
+  $('#cvPre').onclick = e => { const p = e.target.dataset.p; if (p){ setB([...CURVES[p]]); commit(); } };
+  $('#cvRst').onclick = () => { delete a[seg].b; render(); draw(); commit(); };
+  draw();
+}
 function addMarker(){ if (S.markers.some(x => Math.abs(x.t - S.t) < .05)) return; S.markers.push({t:+S.t.toFixed(3), label:''}); S.markers.sort((a, b) => a.t - b.t); commit(); }
 
 /* ============ قوالب جاهزة ============ */
@@ -520,7 +564,7 @@ function renderInspector(){
   const b = $('#ibody'), c = selClip();
   if (!c){ b.innerHTML = '<div class="empty">اختر مقطعاً من التايملاين أو من المعاينة</div>'; return; }
   const sc = b.parentElement.scrollTop;
-  let h = `<div class="fld"><label><span>${clipLabel(c).slice(0, 30)}</span><b>${fmt(c.start)} → ${fmt(c.start + c.dur)}</b></label></div>`;
+  let h = `<div class="fld"><label><span>${clipLabel(c).slice(0, 30)}</span><b style="direction:ltr;unicode-bidi:isolate">${fmt(c.start)} → ${fmt(c.start + c.dur)}</b></label></div>`;
   for (const sec of specFor(c)){
     const body = sec.items.map(it => fieldHTML(c, it)).join('');
     h += `<details data-s="${sec.t}" ${openSecs.has(sec.t) || sec.open ? 'open' : ''}><summary>${sec.t}</summary>${body}</details>`;
