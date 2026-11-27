@@ -66,7 +66,7 @@ function fitStage(){
 
 /* ============ تراجع/إعادة ============ */
 let lastSnap = '';
-const snapshot = () => JSON.stringify({clips:S.clips, tracks:TRACKS, markers:S.markers});
+const snapshot = () => JSON.stringify({clips:S.clips, tracks:TRACKS, markers:S.markers, aspect:S.aspect});
 function commit(){
   const snap = snapshot();
   if (snap === lastSnap) return;
@@ -76,6 +76,7 @@ function commit(){
 }
 function restore(snap){
   const d = JSON.parse(snap); S.clips = d.clips; TRACKS = d.tracks; S.markers = d.markers || []; lastSnap = snap;
+  if (d.aspect && d.aspect !== S.aspect){ S.aspect = d.aspect; const a = $('#aspect'); if (a) a.value = d.aspect; applyCanvas(); }
   if (!S.clips.find(c => c.id === S.sel)) S.sel = null; syncEls(); refresh();
 }
 function undo(){ if (!S.undo.length) return; S.redo.push(lastSnap); restore(S.undo.pop()); }

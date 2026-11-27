@@ -275,6 +275,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('act', x === b));
   document.querySelectorAll('.tabc').forEach(t => t.hidden = t.id !== b.dataset.tab);
   if (b.dataset.tab === 't4' && typeof renderTranscript === 'function') renderTranscript();
+  if (b.dataset.tab === 't5' && typeof renderRemix === 'function') renderRemix();
 });
 
 /* ============ التشغيل ============ */
@@ -614,9 +615,10 @@ async function toggleRec(){
 }
 
 /* ============ التصدير والمشاريع ============ */
-let recorder = null, chunks = [], exportCancel = false, exTimer = 0;
-function startExport(){
-  if (!S.clips.length) return alert('أضف مقاطع للتايملاين أولاً');
+let recorder = null, chunks = [], exportCancel = false, exTimer = 0, exportResolve = () => {}, exportName = 'video';
+function startExport(name){
+  if (!S.clips.length){ alert('أضف مقاطع للتايملاين أولاً'); return Promise.resolve(); }
+  exportName = typeof name === 'string' ? name : 'video';
   pause(); ensureAudio(); actx.resume();
   const stream = cv.captureStream(+S.fps);
   recDest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
@@ -626,12 +628,13 @@ function startExport(){
   recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
   recorder.onstop = () => {
     $('#ov').style.display = 'none'; S.exporting = false; clearInterval(exTimer);
-    if (exportCancel) return;
-    dl(new Blob(chunks, {type:recorder.mimeType || mime}), 'video.' + ((recorder.mimeType || mime).includes('mp4') ? 'mp4' : 'webm'));
+    if (exportCancel){ exportResolve(false); return; }
+    dl(new Blob(chunks, {type:recorder.mimeType || mime}), exportName + '.' + ((recorder.mimeType || mime).includes('mp4') ? 'mp4' : 'webm')); exportResolve(true);
   };
   S.exporting = true; $('#ov').style.display = 'grid'; seek(0);
   setTimeout(() => { recorder.start(250); play(); }, 400);
   exTimer = setInterval(() => { $('#bar i').style.width = (S.t / total() * 100) + '%'; }, 200);
+  return new Promise(res => { exportResolve = res; });
 }
 function finishExport(){ setTimeout(() => recorder && recorder.state !== 'inactive' && recorder.stop(), 300); }
 $('#ovc').onclick = () => { exportCancel = true; pause(); if (recorder && recorder.state !== 'inactive') recorder.stop(); };
@@ -687,7 +690,7 @@ $('#bSrtOut').onclick = exportSrt; $('#bRec').onclick = toggleRec;
 $('#bShot').onclick = () => { const was = S.sel; render(); cv.toBlob(b => dl(b, 'frame.png')); };
 $('#bSafe').onclick = () => { $('#safe').classList.toggle('on'); $('#bSafe').classList.toggle('on'); };
 $('#addTrack').onchange = e => { if (e.target.value) addTrack(e.target.value); e.target.value = ''; };
-$('#bUndo').onclick = undo; $('#bRedo').onclick = redo; $('#bExport').onclick = startExport;
+$('#bUndo').onclick = undo; $('#bRedo').onclick = redo; $('#bExport').onclick = () => startExport();
 $('#aspect').onchange = e => { S.aspect = e.target.value; applyCanvas(); };
 $('#res').onchange = e => { S.res = +e.target.value; applyCanvas(); };
 $('#fps').onchange = e => { S.fps = +e.target.value; };
