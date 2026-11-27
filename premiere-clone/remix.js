@@ -252,5 +252,6 @@ function renderRemix(){
     d.querySelector('b').textContent = '🔗 ' + (g.key || 'بدون اسم مميّز');
     d.querySelector('[data-m]').onclick = () => buildCompilation(g.items, {maxLen:+$('#cpLen').value, trans:$('#cpTr').value, titles:ckd('#cpTit'), number:ckd('#cpNum'), cta:ckd('#cpCta') ? $('#cpCtaT').value : ''});
     gb.appendChild(d); });
+  if (typeof renderPublish === 'function') renderPublish(box);
 }
 const _renderMedia = renderMedia; renderMedia = function(){ _renderMedia(); if ($('#t5') && !$('#t5').hidden) renderRemix(); };

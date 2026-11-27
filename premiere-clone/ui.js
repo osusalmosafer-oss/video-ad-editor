@@ -629,7 +629,7 @@ function startExport(name){
   recorder.onstop = () => {
     $('#ov').style.display = 'none'; S.exporting = false; clearInterval(exTimer);
     if (exportCancel){ exportResolve(false); return; }
-    dl(new Blob(chunks, {type:recorder.mimeType || mime}), exportName + '.' + ((recorder.mimeType || mime).includes('mp4') ? 'mp4' : 'webm')); exportResolve(true);
+    window.lastExportFile = exportName + '.' + ((recorder.mimeType || mime).includes('mp4') ? 'mp4' : 'webm'); dl(new Blob(chunks, {type:recorder.mimeType || mime}), window.lastExportFile); exportResolve(true);
   };
   S.exporting = true; $('#ov').style.display = 'grid'; seek(0);
   setTimeout(() => { recorder.start(250); play(); }, 400);
