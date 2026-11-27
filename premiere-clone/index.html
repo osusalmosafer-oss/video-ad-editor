@@ -2,15 +2,21 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>استوديو الفيديو — محرّر احترافي في المتصفح</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2e2e6e">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="مونتاج أبو صهيب"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>مونتاج أبو صهيب — محرّر فيديو عربي</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700;900&family=Lalezar&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app">
   <div id="top">
-    <h1>🎬 استوديو الفيديو</h1>
+    <h1><img src="icons/favicon-48.png" alt="" style="width:26px;height:26px;vertical-align:middle;border-radius:7px;margin-inline-start:6px">مونتاج أبو صهيب</h1>
     <button id="bUndo" title="Ctrl+Z">↶ تراجع</button>
     <button id="bRedo" title="Ctrl+Shift+Z">↷ إعادة</button>
     <select id="aspect" style="width:auto">
@@ -25,11 +31,12 @@
     <button id="bSrtOut">⬇ SRT</button>
     <button id="bSave">💾 حفظ</button>
     <button id="bLoad">📂 فتح</button>
+    <button id="bInstall" hidden>📲 ثبّت التطبيق</button>
     <button class="pri" id="bExport">⬇ تصدير الفيديو</button>
   </div>
 
   <div id="media" class="panel">
-    <div class="tabs"><button class="act" data-tab="t1">الوسائط</button><button data-tab="t2">عناصر</button><button data-tab="t3">قوالب</button><button data-tab="t4">ذكاء</button><button data-tab="t5">نشر</button></div>
+    <div class="tabs"><button class="act" data-tab="t1">الوسائط</button><button data-tab="t2">عناصر</button><button data-tab="t3">قوالب</button><button data-tab="t4">ذكاء</button><button data-tab="t5">نشر</button><button data-tab="t6">مستشار</button></div>
     <div class="tabc" id="t1">
       <div id="drop">اسحب ملفات الفيديو / الصور / الصوت هنا<br>أو اضغط للاختيار</div>
       <input type="file" id="file" multiple accept="video/*,image/*,audio/*" hidden>
@@ -40,6 +47,7 @@
     <div class="tabc" id="t3" hidden></div>
     <div class="tabc" id="t4" hidden></div>
     <div class="tabc" id="t5" hidden></div>
+    <div class="tabc" id="t6" hidden></div>
   </div>
 
   <div id="prev">
@@ -87,6 +95,7 @@
   </div>
 </div>
 
+<nav id="nav"><button data-sheet="media">📁<span>المكتبة</span></button><button data-sheet="insp">🎛<span>الخصائص</span></button><button id="nSplit">✂<span>قصّ</span></button><button id="nPlay" class="pri">▶<span>تشغيل</span></button></nav>
 <div id="ov"><div><b id="ovt">جاري التصدير…</b><div id="bar"><i></i></div><p style="color:var(--mut);font-size:12px">التصدير يتم بزمن حقيقي — لا تغلق التبويب</p><button id="ovc">إلغاء</button></div></div>
 <div id="dlgw"><div id="dlg"></div></div>
 
@@ -96,5 +105,9 @@
 <script src="remix.js"></script>
 <script src="publish.js"></script>
 <script src="brand.js"></script>
+<script src="baseline-core.js"></script>
+<script src="baseline-data.js"></script>
+<script src="advisor.js"></script>
+<script src="pwa.js"></script>
 </body>
 </html>

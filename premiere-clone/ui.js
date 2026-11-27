@@ -320,6 +320,7 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
   document.querySelectorAll('.tabc').forEach(t => t.hidden = t.id !== b.dataset.tab);
   if (b.dataset.tab === 't4' && typeof renderTranscript === 'function') renderTranscript();
   if (b.dataset.tab === 't5' && typeof renderRemix === 'function') renderRemix();
+  if (b.dataset.tab === 't6' && typeof renderAdvisor === 'function') renderAdvisor();
 });
 
 /* ============ التشغيل ============ */
