@@ -59,16 +59,21 @@ const TEXT_STYLES = [
   {n:'كاريوكي', p:{hl:'karaoke', bg:true, bgOp:60, strokeW:0, text:'كل كلمة تتلوّن مع الصوت', fadeIn:0, fadeOut:0}},
   {n:'كلمة كلمة', p:{aIn:'words', aInDur:1.2, text:'كلمة تلو الأخرى تظهر'}},
 ];
-function addText(style, text){
-  const d = (typeof style === 'number' ? TEXT_STYLES[style] : style) || TEXT_STYLES[0], tr = gfxTrack(0);
-  const c = mk('text', tr, freeStart(tr, S.t, 3), 3, {...d.p, ...(text ? {text} : {})}); finish(c);
+function freeGfx(start, dur){          // أول مسار جرافيك لا يتقاطع مع مقاطعه هذا الوقت (وإلا ينشئ مساراً)
+  const l = TRACKS.filter(t => t.kind === 'gfx');
+  for (let i = l.length - 1; i >= 0; i--) if (!S.clips.some(c => c.track === l[i].id && start < c.start + c.dur && start + dur > c.start)) return l[i].id;
+  addTrack('gfx', true); return TRACKS[0].id;
 }
-function addShape(shape){ const tr = gfxTrack(0); const c = mk('shape', tr, S.t, 3, {shape, ...(shape === 'line' ? {w:60, h:.6} : shape === 'bar' ? {w:80, h:2, y:5} : shape === 'circle' || shape === 'star' || shape === 'heart' ? {w:20, h:11} : {})}); finish(c); }
-function addFx(kind){ const tr = gfxTrack(1); const p = {kind}; if (kind === 'snow') p.count = 80; if (kind === 'rain') p.count = 120;
+function addText(style, text){
+  const d = (typeof style === 'number' ? TEXT_STYLES[style] : style) || TEXT_STYLES[0];
+  const c = mk('text', freeGfx(S.t, 3), S.t, 3, {...d.p, ...(text ? {text} : {})}); finish(c);
+}
+function addShape(shape){ const c = mk('shape', freeGfx(S.t, 3), S.t, 3, {shape, ...(shape === 'line' ? {w:60, h:.6} : shape === 'bar' ? {w:80, h:2, y:5} : shape === 'circle' || shape === 'star' || shape === 'heart' ? {w:20, h:11} : {})}); finish(c); }
+function addFx(kind){ const dd = kind === 'flare' ? 2.5 : 4, tr = freeGfx(S.t, dd); const p = {kind}; if (kind === 'snow') p.count = 80; if (kind === 'rain') p.count = 120;
   if (kind === 'emoji') p.emoji = '❤️'; if (kind === 'burst' || kind === 'burstEmoji'){ p.count = 70; p.speed = 60; if (kind === 'burstEmoji') p.emoji = '🎉'; } if (kind === 'flare') p.count = 0;
   finish(mk('fx', tr, S.t, kind === 'flare' ? 2.5 : 4, p)); }
 function addAdjust(look){ finish(mk('adjust', gfxTrack(2), S.t, Math.max(3, total() - S.t) || 5, {look:look || 'cinematic'})); }
-function addEmoji(e){ const tr = gfxTrack(0); finish(mk('text', tr, freeStart(tr, S.t, 3), 3, {text:e, size:18, strokeW:0, x:50, y:50, aIn:'pop', aInDur:.5})); }
+function addEmoji(e){ finish(mk('text', freeGfx(S.t, 3), S.t, 3, {text:e, size:18, strokeW:0, x:50, y:50, aIn:'pop', aInDur:.5})); }
 function splitAt(){
   const t = S.t, ok = c => t > c.start + .05 && t < c.start + c.dur - .05, c = S.clips.find(c => c.id === S.sel && ok(c)) || S.clips.find(ok);
   if (!c) return;
@@ -96,8 +101,9 @@ function copyClip(){ const c = selClip(); if (c) clipboard = JSON.stringify(c); 
 function pasteClip(){ if (!clipboard) return; const b = JSON.parse(clipboard); b.id = 'c' + uid++; b.start = S.t; if (!TRACKS.find(t => t.id === b.track)) b.track = defTrack(kindOf(b)); S.clips.push(b); finish(b); }
 function freezeFrame(){
   const c = selClip(); if (!c || c.type !== 'video' || S.t <= c.start + .05 || S.t >= c.start + c.dur - .05) return alert('اختر مقطع فيديو وضع المؤشر داخله');
-  const e = els.get(c.id), W = e.videoWidth, H = e.videoHeight, k = document.createElement('canvas'); k.width = W; k.height = H; k.getContext('2d').drawImage(e, 0, 0, W, H);
-  k.toBlob(blob => {
+  const e = els.get(c.id), W = e && e.videoWidth, H = e && e.videoHeight; if (!W || !H) return alert('الإطار لم يُحمَّل بعد — حرّك المؤشر داخل المقطع وانتظر لحظة ثم أعد المحاولة');
+  const k = document.createElement('canvas'); k.width = W; k.height = H; k.getContext('2d').drawImage(e, 0, 0, W, H);
+  k.toBlob(blob => { if (!blob) return alert('تعذّر التقاط الإطار');
     const url = URL.createObjectURL(blob), m = {id:'m' + uid++, name:'إطار مجمّد.png', type:'image', url, dur:2, thumb:url, w:W, h:H}; S.media.push(m);
     const t = S.t; splitAt(); const b = selClip(), len = 2;
     for (const x of S.clips) if (x.track === c.track && x.start >= b.start - 1e-6) x.start += len;
@@ -189,8 +195,12 @@ function transitionDialog(){
 function applyTransition(c, type, d){
   const prev = S.clips.filter(x => x !== c && x.track === c.track && Math.abs(x.start + x.dur - c.start) < .06).sort((a, b) => b.start - a.start)[0];
   if (!prev) return alert('لا يوجد مقطع ملاصق قبل المقطع المحدد على نفس المسار');
-  d = Math.min(d, prev.dur - .1, c.dur - .1); const sp = c.p.speed || 1;
-  if ((c.type === 'video') && c.in >= d * sp - 1e-6){ c.in -= d * sp; c.dur += d; c.start -= d; } else c.start -= d;
+  d = Math.min(d, prev.dur - .1, c.dur - .1); const sp = c.p.speed || 1, ps = prev.p.speed || 1, pm = mediaOf(prev);
+  // الأفضل: مدّ نهاية المقطع السابق تحت المقطع الحالي (لا تتحرك بقية المقاطع)
+  const prevCanExtend = prev.type === 'image' || (pm && prev.in + (prev.dur + d) * ps <= pm.dur + 1e-6);
+  if (prevCanExtend){ prev.dur += d; }
+  else if (c.type === 'video' && c.in >= d * sp - 1e-6){ c.in -= d * sp; c.dur += d; c.start -= d; }
+  else c.start -= d;
   c.p.aIn = type; c.p.aInDur = d; prev.p.fadeOut = Math.max(prev.p.fadeOut || 0, d); syncEls(); commit();
 }
 function captionDialog(){
@@ -523,8 +533,8 @@ function renderInspector(){
     if (el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && el.type === 'text')) el.value = v;
     const read = () => el.type === 'checkbox' ? el.checked : (el.type === 'range' || el.type === 'number' || el.dataset.num) ? +el.value : el.value;
     el.addEventListener('input', () => {
-      setVal(c, k, read());
-      if (k === 'speed') c.dur = Math.min(c.dur, (mediaOf(c).dur - c.in) / c.p.speed);
+      const oldSp = c.p.speed || 1; setVal(c, k, read());
+      if (k === 'speed') c.dur = Math.max(.1, Math.min(c.dur * oldSp / c.p.speed, (mediaOf(c).dur - c.in) / c.p.speed));
       const lbl = b.querySelector(`[data-v="${k}"]`); if (lbl) lbl.textContent = (+val(c, k)).toFixed(1).replace(/\.0$/, '');
       syncPlayback(); render(); if (k === 'text') renderTimeline();
     });

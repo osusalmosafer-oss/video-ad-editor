@@ -24,6 +24,20 @@ async function getPipe(task, model, st, label){
 }
 
 /* ---- تفريغ ---- */
+async function clipAudio16k(c, m){
+  ensureAudio();
+  const buf = await actx.decodeAudioData(await (await fetch(m.url)).arrayBuffer()), sp = c.p.speed || 1;
+  const off = new OfflineAudioContext(1, Math.max(1, Math.ceil(buf.duration * 16000)), 16000), src = off.createBufferSource(); src.buffer = buf; src.connect(off.destination); src.start();
+  return (await off.startRendering()).getChannelData(0).slice(Math.floor(c.in * 16000), Math.floor((c.in + c.dur * sp) * 16000));
+}
+// تفريغ بتوقيت كل كلمة (لوضع لقطات مساندة B-roll عند ذكر الكلمة بالضبط)
+async function transcribeWords(c, m, {lang, model, st}){
+  st = st || aiSt; st('تحميل نموذج التفريغ…');
+  const asr = await getPipe('automatic-speech-recognition', 'Xenova/whisper-' + model, st, 'تنزيل نموذج التفريغ');
+  st('تحضير الصوت…'); const data = await clipAudio16k(c, m), sp = c.p.speed || 1; st('تفريغ الكلمات…');
+  const out = await asr(data, {language:lang || null, task:'transcribe', chunk_length_s:30, stride_length_s:5, return_timestamps:'word'});
+  return (out.chunks || []).map(ch => ({text:(ch.text || '').trim(), start:c.start + ch.timestamp[0] / sp, end:c.start + (ch.timestamp[1] ?? ch.timestamp[0] + .4) / sp})).filter(w => w.text);
+}
 async function transcribeClip(c, m, {lang, model, task, st}){
   st = st || aiSt;
   st('تحميل نموذج التفريغ…');
