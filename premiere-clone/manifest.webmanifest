@@ -1,0 +1,19 @@
+{
+  "name": "مونتاج أبو صهيب",
+  "short_name": "مونتاج أبو صهيب",
+  "description": "محرّر فيديو عربي احترافي: حركات ومؤثرات، تفريغ وترجمة ودبلجة، نمط أسس، مستشار تسويق وحزمة نشر.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1b1b1f",
+  "theme_color": "#2e2e6e",
+  "categories": ["multimedia", "productivity"],
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

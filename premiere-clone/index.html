@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2e2e6e">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="مونتاج أبو صهيب"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>مونتاج أبو صهيب — محرّر فيديو عربي</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700;900&family=Lalezar&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <h1><img src="icons/favicon-48.png" alt="" style="width:26px;height:26px;vertical-align:middle;border-radius:7px;margin-inline-start:6px">مونتاج أبو صهيب</h1>
+    <button id="bUndo" title="Ctrl+Z">↶ تراجع</button>
+    <button id="bRedo" title="Ctrl+Shift+Z">↷ إعادة</button>
+    <select id="aspect" style="width:auto">
+      <option value="9:16">عمودي 9:16</option><option value="16:9">أفقي 16:9</option>
+      <option value="1:1">مربع 1:1</option><option value="4:5">بوست 4:5</option>
+    </select>
+    <select id="res" style="width:auto"><option value="720">720p</option><option value="1080">1080p</option><option value="480">480p</option></select>
+    <select id="fps" style="width:auto"><option value="30">30 إطار</option><option value="24">24 إطار</option><option value="60">60 إطار</option></select>
+    <button id="bSafe" title="مناطق انستقرام/تيك توك الآمنة">🛡 مناطق آمنة</button>
+    <span class="sp"></span>
+    <button id="bShot">📸 صورة</button>
+    <button id="bSrtOut">⬇ SRT</button>
+    <button id="bSave">💾 حفظ</button>
+    <button id="bBackup" title="نسخة احتياطية لمشروعك وما تعلّمه المستشار">🛟 نسخة احتياطية</button>
+    <button id="bLoad" title="فتح مشروع محفوظ (ملف .json)">📂 فتح مشروع</button>
+    <button id="bInstall" hidden>📲 ثبّت التطبيق</button>
+    <button class="pri" id="bExport">⬇ تصدير الفيديو</button>
+  </div>
+
+  <div id="media" class="panel">
+    <div class="tabs"><button class="act" data-tab="t1">الوسائط</button><button data-tab="t2">عناصر</button><button data-tab="t3">قوالب</button><button data-tab="t4">ذكاء</button><button data-tab="t5">نشر</button><button data-tab="t6">مستشار</button></div>
+    <div class="tabc" id="t1">
+      <button class="pri" id="bGallery" style="width:100%;padding:12px;font-size:15px;margin-bottom:8px">📷 إضافة فيديو أو صورة من الاستديو</button>
+      <div id="drop">اسحب ملفات الفيديو / الصور / الصوت هنا<br>أو اضغط للاختيار</div>
+      <input type="file" id="file" multiple accept="video/*,image/*,audio/*" hidden>
+      <input type="file" id="projFile" accept=".json,application/json,video/*,image/*,audio/*" hidden>
+      <div id="mlist"></div>
+    </div>
+    <div class="tabc" id="t2" hidden></div>
+    <div class="tabc" id="t3" hidden></div>
+    <div class="tabc" id="t4" hidden></div>
+    <div class="tabc" id="t5" hidden></div>
+    <div class="tabc" id="t6" hidden></div>
+  </div>
+
+  <div id="prev">
+    <div id="stage"><div id="wrap"><canvas id="cv"></canvas><div id="safe"><i style="top:0;height:14%">أزرار التطبيق (علوي)</i><i style="bottom:0;height:22%">الكابشن وأزرار التفاعل (سفلي)</i></div>
+      <div id="gz"><i class="hd tl" data-h="tl"></i><i class="hd tr" data-h="tr"></i><i class="hd bl" data-h="bl"></i><i class="hd br" data-h="br"></i><i class="hd rot" data-h="rot"></i></div></div></div>
+    <div id="tc">
+      <button id="bStart" title="Home">⏮</button>
+      <button id="bBack" title="←">◀</button>
+      <button class="pri" id="bPlay" title="Space">▶ تشغيل</button>
+      <button id="bFwd" title="→">▶</button>
+      <button id="bEnd" title="End">⏭</button>
+      <button id="bLoop" title="تكرار التشغيل">🔁</button>
+      <span id="time">00:00.00 / 00:00.00</span>
+    </div>
+  </div>
+
+  <div id="insp" class="panel"><p class="ph">الخصائص</p><div id="ibody"><div class="empty">اختر مقطعاً من التايملاين أو من المعاينة</div></div></div>
+
+  <div id="tl">
+    <div id="tlbar">
+      <button id="bSplit" title="S">✂ قصّ</button>
+      <button id="bDel" class="danger" title="Delete">🗑 حذف</button>
+      <button id="bRipple" title="Shift+Delete">⟸ حذف وسدّ</button>
+      <button id="bDup" title="Ctrl+D">⧉ نسخ</button>
+      <button id="bFreeze" title="تجميد الإطار الحالي">🧊 تجميد</button>
+      <button id="bSilence" title="إزالة السكتات تلقائياً">🔇 إزالة سكتات</button>
+      <button id="bCap" title="ترجمة تلقائية من الصوت (Whisper)">🗣 ترجمة تلقائية</button>
+      <button id="bTrans" title="انتقال بين مقطعين متجاورين">🔀 انتقال</button>
+      <button id="bBeats" title="علامات على إيقاع الموسيقى">🥁 إيقاع</button>
+      <button id="bMark" title="M">📍 علامة</button>
+      <button id="bText">T نص</button>
+      <button id="bSrt">📝 استيراد SRT</button>
+      <input type="file" id="srtFile" accept=".srt,.vtt,.txt" hidden>
+      <button id="bRec" title="تسجيل تعليق صوتي">🎙 تسجيل</button>
+      <select id="addTrack" style="width:auto"><option value="">＋ مسار…</option><option value="video">مسار فيديو</option><option value="gfx">مسار جرافيك</option><option value="audio">مسار صوت</option></select>
+      <span style="flex:1"></span>
+      <label style="color:var(--mut)"><input type="checkbox" id="snap" checked> مغناطيس</label>
+      <button id="bFit">ملاءمة</button>
+      <input type="range" id="zoom" min="10" max="300" value="80" style="width:110px;accent-color:var(--acc)">
+    </div>
+    <div id="tlbody">
+      <div id="labels"></div>
+      <div id="scroll"><div id="inner"><div id="ruler"></div><div id="rows"></div><div id="ph"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<nav id="nav"><button id="nGallery">📷<span>استديو</span></button><button data-sheet="media">📁<span>المكتبة</span></button><button data-sheet="insp">🎛<span>الخصائص</span></button><button id="nSplit">✂<span>قصّ</span></button><button id="nPlay" class="pri">▶<span>تشغيل</span></button></nav>
+<div id="ov"><div><b id="ovt">جاري التصدير…</b><div id="bar"><i></i></div><p style="color:var(--mut);font-size:12px">التصدير يتم بزمن حقيقي — لا تغلق التبويب</p><button id="ovc">إلغاء</button></div></div>
+<div id="dlgw"><div id="dlg"></div></div>
+
+<script src="engine.js"></script>
+<script src="ui.js"></script>
+<script src="ai.js"></script>
+<script src="remix.js"></script>
+<script src="publish.js"></script>
+<script src="brand.js"></script>
+<script src="baseline-core.js"></script>
+<script src="baseline-data.js"></script>
+<script src="advisor.js"></script>
+<script src="pro.js"></script>
+<script src="pwa.js"></script>
+</body>
+</html>
