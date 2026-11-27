@@ -37,7 +37,11 @@ h2{font-size:15px;margin:0 0 4px}
 /* ===== الإيصال الحراري 80mm ===== */
 #receipt{width:72mm;margin:0 auto;background:#fff;color:#000;font-family:Tajawal,Tahoma,sans-serif;text-align:center;padding:3mm 0 12mm;font-size:12pt;line-height:1.5}
 #receipt img{display:block;margin:0 auto}
-#receipt .logo{width:100%}
+#receipt .brand{display:flex;align-items:center;justify-content:center;gap:3mm}
+#receipt .icon{width:21mm;margin:0!important}
+#receipt .bt{text-align:right}
+#receipt .bn{font-size:21pt;font-weight:800;line-height:1.2}
+#receipt .bs{font-size:9.5pt;font-weight:700;line-height:1.4}
 #receipt .ihd{width:42%;margin-top:1mm}
 #receipt .branch{font-size:10pt;font-weight:700;margin:1mm 0}
 #receipt hr{border:0;border-top:1.2px dashed #000;margin:2.5mm 0}
@@ -109,7 +113,8 @@ h2{font-size:15px;margin:0 0 4px}
     <div class="rcpWrap" id="printArea">
       <h2>معاينة الإيصال الحراري (أبيض وأسود 80mm)</h2>
       <div class="rcpBox"><div id="receipt">
-        <img class="logo" src="logo-bw.png" alt="جمعية هدى">
+        <div class="brand"><img class="icon" src="icon-bw.png" alt="">
+          <div class="bt"><div class="bn">جمعية هدى</div><div class="bs">لتعليم القرآن وعلومه<br>بشرق مكة المكرمة</div><div class="bs">ترخيص رقم (2311)</div></div></div>
         <div class="branch" id="rBranch"></div>
         <img class="ihd" src="ihdaa-bw.png" alt="إهداء">
         <hr>
