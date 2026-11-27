@@ -57,6 +57,7 @@ h2{font-size:15px;margin:0 0 4px}
 @page{size:80mm auto;margin:0}
 @media print{
   html,body{background:#fff!important;margin:0!important}
+  .modal{display:none!important}
   header,.toast,main>section:not(.prev),.prev>h2,.prev>canvas{display:none!important}
   main{display:block!important;margin:0!important;padding:0!important;max-width:none!important}
   .panel{border:0!important;padding:0!important;background:#fff!important}
@@ -84,6 +85,9 @@ th{color:var(--mut);font-weight:700;font-size:12px}
 .tw{overflow-x:auto}
 .mini{padding:5px 10px;font-size:13px;border-radius:8px;background:#eef4f4;color:var(--teal-d)}
 .lh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#receipt .qrbox{margin:1mm 0 0}
+#receipt .qrbox canvas{border:0;border-radius:0;display:block;margin:1.5mm auto 0;width:34mm;height:34mm;image-rendering:pixelated}
+#receipt .qrbox .ql{font-size:10.5pt;font-weight:800}
 </style>
 </head>
 <body>
@@ -123,6 +127,8 @@ th{color:var(--mut);font-weight:700;font-size:12px}
       <input id="tpl">
       <label>أزرار «إلى» السريعة <span>(واحد في كل سطر)</span></label>
       <textarea id="recList" rows="4" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit"></textarea>
+      <label>رابط رمز QR <span>(المتجر الإلكتروني، اتركه فارغًا لإخفائه)</span></label>
+      <input id="qrUrl" dir="ltr" style="text-align:left">
       <label>سطر الفرع <span>(يظهر أعلى الإيصال)</span></label>
       <input id="branch">
       <label>رقم خدمة العملاء <span>(للتوثيق في الرسالة)</span></label>
@@ -147,6 +153,8 @@ th{color:var(--mut);font-weight:700;font-size:12px}
         <hr>
         <div class="txt">مكانتك عندي لا يمكن أن تقاس بالكلمات، هذه الهدية تحمل بين طياتها أجراً عظيماً لك ساهمت عنك في مشروع <span class="proj" id="rProj">…</span> حيث الأجور المضاعفة ليبقى لك خير هذه الصدقة وأجرها في الدنيا والآخرة.</div>
         <hr>
+        <div class="qrbox" id="qrBox"><div class="ql">للتبرع من خلال المتجر الإلكتروني</div><canvas id="rQr"></canvas></div>
+        <hr>
         <div class="ft"><div id="rSerial"></div><div class="ph" id="rPhone"></div><div dir="ltr">@hudaamkkah</div><div id="rDate" dir="ltr"></div></div>
       </div></div>
     </div>
@@ -164,12 +172,14 @@ th{color:var(--mut);font-weight:700;font-size:12px}
 <div class="mb"><button class="sec" id="mEdit">تعديل</button><button class="pr" id="mOk">✔ الاسم صحيح، اطبع</button></div></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="qr.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const DEF={
   projects:["سقيا الماء","كفالة حلقة تحفيظ","وقف مصحف","إفطار صائم","كسوة الحجاج","طباعة المصحف","رعاية الحفاظ"],
   tpl:"السلام عليكم، تفضّل إهداء من {from} إلى {to} بمناسبة مساهمته في مشروع {project} 🤍\nجمعية هدى لتعليم القرآن وعلومه بشرق مكة المكرمة",
   csNum:"0555012537",
+  qrUrl:"https://hm.org.sa/projects",
   branch:"فرع مكة المكرمة - أبراج البيت",
   recips:["والدي الغالي","والدتي الغالية","زوجتي الغالية","زوجي العزيز","ابني","ابنتي","أخي","أختي","صديقي","عن روح والدي","عن روح والدتي"]
 };
@@ -245,16 +255,26 @@ $('send').onclick=async()=>{
 // الإعدادات
 function loadSet(){
   $('projects').innerHTML=S.projects.map(p=>`<option value="${p}">`).join('');
-  $('projList').value=S.projects.join('\n');$('tpl').value=S.tpl;$('csNum').value=S.csNum;$('branch').value=S.branch;$('recList').value=S.recips.join('\n');renderChips();fillReceipt();
+  $('projList').value=S.projects.join('\n');$('tpl').value=S.tpl;$('csNum').value=S.csNum;$('branch').value=S.branch;$('qrUrl').value=S.qrUrl;drawQr();$('recList').value=S.recips.join('\n');renderChips();fillReceipt();
 }
 $('saveSet').onclick=()=>{
   S.projects=$('projList').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  S.tpl=$('tpl').value;S.csNum=$('csNum').value.trim();S.branch=$('branch').value.trim();S.recips=$('recList').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  S.tpl=$('tpl').value;S.csNum=$('csNum').value.trim();S.branch=$('branch').value.trim();S.qrUrl=$('qrUrl').value.trim();S.recips=$('recList').value.split('\n').map(s=>s.trim()).filter(Boolean);
   try{localStorage.setItem('huda_set',JSON.stringify(S))}catch(e){}
   loadSet();toast('تم حفظ الإعدادات ✅');
 };
 ['to','from','project'].forEach(i=>$(i).addEventListener('input',draw));
 
+function drawQr(){
+  const box=$('qrBox'),c=$('rQr'),u=(S.qrUrl||'').trim();
+  if(!u||typeof qrcode==='undefined'){box.style.display='none';return}
+  box.style.display='';
+  const q=qrcode(0,'M');q.addData(u);q.make();
+  const n=q.getModuleCount(),cell=8,quiet=2,size=(n+quiet*2)*cell;
+  c.width=c.height=size;const x=c.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,size,size);x.fillStyle='#000';
+  for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(q.isDark(r,k))x.fillRect((k+quiet)*cell,(r+quiet)*cell,cell,cell);
+}
 function pad(n,l=2){return String(n).padStart(l,'0')}
 const LS={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 function fmtDate(t){const d=new Date(t);return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`}
