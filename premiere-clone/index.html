@@ -187,6 +187,7 @@ function addFiles(files){
       const im = new Image(); im.onload = () => { m.w = im.naturalWidth; m.h = im.naturalHeight; m.thumb = m.url; renderMedia(); }; im.src = m.url;
     } else {
       const v = document.createElement(type === 'video' ? 'video' : 'audio'); v.preload = 'auto'; v.muted = true; v.src = m.url;
+      computePeaks(m);
       v.onloadedmetadata = () => { m.dur = v.duration || 5; m.w = v.videoWidth; m.h = v.videoHeight; renderMedia(); };
       if (type === 'video') v.onloadeddata = () => { v.currentTime = Math.min(0.2, (v.duration||1)/2); };
       v.onseeked = () => { if (type !== 'video' || m.thumb) return; const c = document.createElement('canvas'); c.width = 104; c.height = 76;
@@ -211,7 +212,7 @@ function renderMedia(){
 }
 
 /* ---------- keyframes ---------- */
-const KF = new Set(['scale','x','y','rotate','size']);
+const KF = new Set(['scale','x','y','rotate','size','opacity']);
 function val(c, k){
   const a = c.kf && c.kf[k];
   if (!a || !a.length) return c.p[k];
@@ -245,6 +246,31 @@ function syncInspector(){
     const v = val(c, k); el.value = v;
     const l = document.querySelector(`#ibody [data-v="${k}"]`); if (l) l.textContent = (+v).toFixed(1).replace(/\.0$/, '');
   });
+}
+
+/* ---------- waveform ---------- */
+const PPS = 100;
+async function computePeaks(m){
+  try {
+    ensureAudio();
+    const buf = await actx.decodeAudioData(await (await fetch(m.url)).arrayBuffer());
+    const ch = buf.getChannelData(0), n = Math.ceil(buf.duration * PPS), step = buf.sampleRate / PPS, pk = new Float32Array(n);
+    for (let i = 0; i < n; i++){ let mx = 0; const a = Math.floor(i * step), b = Math.min(ch.length, Math.floor((i + 1) * step)); for (let j = a; j < b; j += 4){ const v = Math.abs(ch[j]); if (v > mx) mx = v; } pk[i] = mx; }
+    m.peaks = pk;
+  } catch(_){ m.peaks = null; }
+  renderTimeline();
+}
+function waveCanvas(c, m, w, h){
+  const cvs = document.createElement('canvas'), W = Math.min(4000, Math.max(1, Math.round(w)));
+  cvs.width = W; cvs.height = h; cvs.style.cssText = 'position:absolute;left:0;bottom:0;width:'+w+'px;height:'+h+'px;pointer-events:none';
+  const g = cvs.getContext('2d'), sp = c.p.speed || 1, vol = (c.p.volume ?? 100) / 100;
+  g.fillStyle = c.type === 'audio' ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.7)';
+  for (let x = 0; x < W; x++){
+    const a = Math.floor((c.in + (x / W * c.dur) * sp) * PPS), b = Math.max(a + 1, Math.floor((c.in + ((x + 1) / W * c.dur) * sp) * PPS));
+    let mx = 0; for (let i = a; i < b && i < m.peaks.length; i++) if (m.peaks[i] > mx) mx = m.peaks[i];
+    const bh = Math.min(h, Math.max(1, mx * vol * h * 1.2)); g.fillRect(x, (h - bh) / 2, 1, bh);
+  }
+  return cvs;
 }
 
 /* ---------- clips ---------- */
@@ -383,7 +409,7 @@ function drawText(c, f){
   const p = c.p, W = cv.width, H = cv.height, size = val(c, 'size') / 100 * W;
   let sc = 1; if (p.anim === 'pop'){ const t = S.t - c.start; sc = t < .3 ? 0.6 + 0.4 * Math.min(1, t/.3) * (1 + .25*Math.sin(Math.min(1,t/.3)*Math.PI)) : 1; }
   ctx.save();
-  ctx.globalAlpha = (p.opacity/100) * f;
+  ctx.globalAlpha = (val(c, 'opacity')/100) * f;
   ctx.translate(val(c,'x')/100*W, val(c,'y')/100*H); ctx.scale(sc, sc);
   ctx.font = `${p.weight} ${size}px Cairo, 'Segoe UI', Tahoma, Arial, sans-serif`;
   ctx.textAlign = p.align; ctx.textBaseline = 'middle'; ctx.direction = 'inherit';
@@ -393,7 +419,7 @@ function drawText(c, f){
     const bx = p.align === 'center' ? -mw/2 : p.align === 'left' ? -size/2 : -mw + size/2;
     ctx.fillStyle = p.bgColor; ctx.globalAlpha *= p.bgOp / 100;
     ctx.beginPath(); ctx.roundRect(bx, -mh/2 + h0 + (lines.length-1)*lh/2 - 0, mw, mh, size*.25); ctx.fill();
-    ctx.globalAlpha = (p.opacity/100) * f;
+    ctx.globalAlpha = (val(c, 'opacity')/100) * f;
   }
   ctx.lineJoin = 'round'; ctx.lineWidth = p.strokeW / 100 * size * 2;
   lines.forEach((l, i) => {
@@ -409,7 +435,7 @@ function drawVisual(c, f){
   const p = c.p, W = cv.width, H = cv.height;
   const base = p.fit === 'cover' ? Math.max(W/w, H/h) : Math.min(W/w, H/h), s = base * val(c, 'scale') / 100;
   ctx.save();
-  ctx.globalAlpha = p.opacity/100 * f;
+  ctx.globalAlpha = val(c, 'opacity')/100 * f;
   const fl = []; if (p.brightness !== 100) fl.push(`brightness(${p.brightness}%)`); if (p.contrast !== 100) fl.push(`contrast(${p.contrast}%)`);
   if (p.saturate !== 100) fl.push(`saturate(${p.saturate}%)`); if (p.blur > 0) fl.push(`blur(${p.blur / 100 * W * .05}px)`);
   if (fl.length) ctx.filter = fl.join(' ');
@@ -510,6 +536,7 @@ function renderTimeline(){
       d.style.left = c.start * S.zoom + 'px'; d.style.width = Math.max(6, c.dur * S.zoom) + 'px';
       const m = mediaOf(c); if (m && m.thumb && c.type !== 'audio') d.style.backgroundImage = `url(${m.thumb})`;
       d.innerHTML = '<div class="h l"></div><div class="h r"></div><div class="lb"></div>';
+      if (m && m.peaks && c.type !== 'image') d.insertBefore(waveCanvas(c, m, c.dur * S.zoom, c.type === 'audio' ? 36 : 14), d.querySelector('.lb'));
       d.querySelector('.lb').textContent = c.type === 'text' ? c.p.text : (m ? m.name : '');
       const times = new Set(); for (const k in (c.kf || {})) for (const f of c.kf[k]) if (f.t >= 0 && f.t <= c.dur) times.add(+f.t.toFixed(3));
       for (const tm of times){
