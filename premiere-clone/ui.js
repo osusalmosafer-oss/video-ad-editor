@@ -130,7 +130,7 @@ const dl = (blob, name) => { const a = document.createElement('a'); a.href = URL
 
 /* ============ إزالة السكتات والإيقاع والعلامات ============ */
 function dlg(html){ $('#dlg').innerHTML = html; $('#dlgw').style.display = 'grid'; }
-const closeDlg = () => { $('#dlgw').style.display = 'none'; };
+const closeDlg = () => { $('#dlgw').style.display = 'none'; $('#dlgw').classList.remove('float'); };
 function silenceDialog(){
   const c = selClip(), m = c && mediaOf(c);
   if (!c || !(c.type === 'video' || c.type === 'audio')) return alert('اختر مقطع فيديو أو صوت أولاً');
@@ -223,6 +223,50 @@ async function runWhisper(c, m, lang, model, karaoke){
     mk('text', tr, start, dur, {text:txt, size:6.5, bg:true, strokeW:0, fadeIn:0, fadeOut:0, y:72, ...(karaoke ? {hl:'karaoke'} : {})}); n++;
   }
   commit(); st(`تمّ: أُضيف ${n} سطر ترجمة`); setTimeout(closeDlg, 1500);
+}
+/* ============ محرر منحنى الحركة (Bézier) ============ */
+function curveDialog(c, k){
+  const a = c.kf && c.kf[k]; if (!a || a.length < 2) return;
+  const lt = S.t - c.start; let seg = Math.max(0, a.findIndex((f, i) => i < a.length - 1 && lt >= f.t && lt < a[i + 1].t)); if (seg < 0) seg = 0;
+  const label = {scale:'الحجم', x:'الموضع أفقي', y:'الموضع رأسي', rotate:'الدوران', opacity:'الشفافية', size:'حجم الخط'}[k] || k;
+  const W = 260, H = 210, PAD = 24, YMIN = -.6, YMAX = 1.6;
+  $('#dlgw').classList.add('float');
+  dlg(`<b>📈 منحنى حركة: ${label}</b>
+    <div class="fld" style="margin-top:8px"><label>المقطع بين مفتاحين</label><select id="cvSeg"></select></div>
+    <canvas id="cvE" width="${W}" height="${H}" style="background:#16161a;border-radius:6px;touch-action:none;display:block;margin:6px auto"></canvas>
+    <div class="grid" style="grid-template-columns:repeat(4,1fr)" id="cvPre"></div>
+    <div id="cvInfo" style="color:var(--mut);font-size:11px;text-align:center;margin:4px 0"></div>
+    <button class="pri" onclick="closeDlg()">تم</button> <button id="cvRst">افتراضي</button>`);
+  const sel = $('#cvSeg'); a.slice(0, -1).forEach((f, i) => sel.insertAdjacentHTML('beforeend', `<option value="${i}">${f.t.toFixed(2)}s → ${a[i + 1].t.toFixed(2)}s  (${(+f.v).toFixed(0)} → ${(+a[i + 1].v).toFixed(0)})</option>`)); sel.value = seg;
+  $('#cvPre').innerHTML = [['linear','خطي'],['ease','سلس'],['in','تسارع'],['out','تباطؤ'],['inout','تسارع+تباطؤ'],['back','تجاوز'],['snap','حاد']].map(([p, n]) => `<button data-p="${p}" style="font-size:11px;padding:4px 2px">${n}</button>`).join('');
+  const cvE = $('#cvE'), g = cvE.getContext('2d');
+  const curB = () => a[seg].b || CURVES[c.p.ease] || CURVES.inout;
+  const X = x => PAD + x * (W - 2 * PAD), Y = y => H - PAD - (y - YMIN) / (YMAX - YMIN) * (H - 2 * PAD);
+  const draw = () => {
+    g.clearRect(0, 0, W, H); const b = curB();
+    g.strokeStyle = '#2e2e36'; g.lineWidth = 1; for (const y of [0, 1]){ g.beginPath(); g.moveTo(X(0), Y(y)); g.lineTo(X(1), Y(y)); g.stroke(); }
+    g.strokeStyle = '#3a3a44'; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(X(0), Y(0)); g.lineTo(X(1), Y(1)); g.stroke(); g.setLineDash([]);
+    g.strokeStyle = '#7b61ff'; g.lineWidth = 2.5; g.beginPath(); for (let i = 0; i <= 60; i++){ const x = i / 60, y = bezierY(b, x); i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y)); } g.stroke();
+    g.strokeStyle = '#00d1b2'; g.lineWidth = 1.5;
+    for (const [px, py, qx, qy] of [[0, 0, b[0], b[1]], [1, 1, b[2], b[3]]]){ g.beginPath(); g.moveTo(X(px), Y(py)); g.lineTo(X(qx), Y(qy)); g.stroke(); g.fillStyle = '#fff'; g.beginPath(); g.arc(X(qx), Y(qy), 6, 0, 7); g.fill(); g.stroke(); }
+    g.fillStyle = '#ffd23f'; for (const [px, py] of [[0, 0], [1, 1]]){ g.beginPath(); g.arc(X(px), Y(py), 4, 0, 7); g.fill(); }
+    $('#cvInfo').textContent = 'cubic-bezier(' + b.map(v => +v.toFixed(2)).join(', ') + ')';
+  };
+  const setB = b => { a[seg].b = b; render(); draw(); };
+  let drag = -1;
+  cvE.onpointerdown = e => {
+    const r = cvE.getBoundingClientRect(), mx = (e.clientX - r.left) * W / r.width, my = (e.clientY - r.top) * H / r.height, b = curB(), d = [Math.hypot(mx - X(b[0]), my - Y(b[1])), Math.hypot(mx - X(b[2]), my - Y(b[3]))];
+    drag = d[0] < d[1] ? 0 : 1; if (d[drag] > 30) drag = -1; if (drag < 0) return; cvE.setPointerCapture(e.pointerId);
+  };
+  cvE.onpointermove = e => {
+    if (drag < 0) return; const r = cvE.getBoundingClientRect(), mx = (e.clientX - r.left) * W / r.width, my = (e.clientY - r.top) * H / r.height, b = [...curB()];
+    b[drag * 2] = clamp((mx - PAD) / (W - 2 * PAD), 0, 1); b[drag * 2 + 1] = clamp(YMIN + (H - PAD - my) / (H - 2 * PAD) * (YMAX - YMIN), YMIN, YMAX); setB(b);
+  };
+  cvE.onpointerup = () => { if (drag >= 0){ drag = -1; commit(); } };
+  sel.onchange = () => { seg = +sel.value; seek(c.start + a[seg].t + (a[seg + 1].t - a[seg].t) / 2); draw(); };
+  $('#cvPre').onclick = e => { const p = e.target.dataset.p; if (p){ setB([...CURVES[p]]); commit(); } };
+  $('#cvRst').onclick = () => { delete a[seg].b; render(); draw(); commit(); };
+  draw();
 }
 function addMarker(){ if (S.markers.some(x => Math.abs(x.t - S.t) < .05)) return; S.markers.push({t:+S.t.toFixed(3), label:''}); S.markers.sort((a, b) => a.t - b.t); commit(); }
 
@@ -508,7 +552,8 @@ function fieldHTML(c, it){
   if (it.if && !it.if(c.p)) return '';
   if (it.t === 'r'){
     const kb = KF.has(it.k) && !it.nokf ? `<button class="kb" data-kb="${it.k}" title="مفتاح حركة عند المؤشر">◇</button>` : '';
-    return `<div class="fld"><label><span>${it.l}</span><span>${kb}<b data-v="${it.k}">${(+v).toFixed(it.st < 1 ? 1 : 0)}</b></span></label><input type="range" data-k="${it.k}" min="${it.mn}" max="${it.mx}" step="${it.st}" value="${v}"></div>`;
+    const cvb = c.kf && c.kf[it.k] && c.kf[it.k].length > 1 ? `<button class="kb" data-cv="${it.k}" title="محرر منحنى الحركة">📈</button>` : '';
+    return `<div class="fld"><label><span>${it.l}</span><span>${cvb}${kb}<b data-v="${it.k}">${(+v).toFixed(it.st < 1 ? 1 : 0)}</b></span></label><input type="range" data-k="${it.k}" min="${it.mn}" max="${it.mx}" step="${it.st}" value="${v}"></div>`;
   }
   if (it.t === 's') return `<div class="fld"><label>${it.l}</label><select data-k="${it.k}" ${it.num ? 'data-num="1"' : ''}>${it.opts.map(([a, b]) => `<option value="${a}">${b}</option>`).join('')}</select></div>`;
   if (it.t === 'c') return `<div class="fld"><label>${it.l}</label><input type="color" data-k="${it.k}" value="${v}"></div>`;
@@ -527,6 +572,7 @@ function renderInspector(){
   }
   b.innerHTML = h; b.parentElement.scrollTop = sc;
   b.querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => { d.open ? openSecs.add(d.dataset.s) : openSecs.delete(d.dataset.s); }));
+  b.querySelectorAll('[data-cv]').forEach(btn => btn.onclick = () => curveDialog(c, btn.dataset.cv));
   b.querySelectorAll('[data-kb]').forEach(btn => btn.onclick = () => { toggleKf(c, btn.dataset.kb); commit(); renderInspector(); });
   b.querySelectorAll('[data-k]').forEach(el => {
     const k = el.dataset.k, v = c.p[k];

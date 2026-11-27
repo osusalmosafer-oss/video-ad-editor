@@ -83,3 +83,6 @@ details>summary::before{content:"â–¸ "}details[open]>summary::before{content:"â–
 #bar{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin-top:12px}#bar i{display:block;height:100%;width:0;background:var(--acc2)}
 .empty{color:var(--mut);text-align:center;padding:30px 8px;font-size:13px}
 .rec{animation:blink 1s infinite;color:var(--red)!important}@keyframes blink{50%{opacity:.4}}
+
+#dlgw.float{background:transparent;pointer-events:none;place-items:center start;padding-left:20px}
+#dlgw.float #dlg{pointer-events:auto;box-shadow:0 12px 40px #000c;min-width:290px;padding:16px 18px}

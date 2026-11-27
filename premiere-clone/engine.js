@@ -92,9 +92,17 @@ function val(c, k){
   let i = 1; while (a[i].t < t) i++;
   const A = a[i-1], B = a[i]; let u = (t - A.t) / (B.t - A.t);
   const ez = c.p.ease;
-  if (ez === 'linear'){} else if (ez === 'in') u = u * u * u; else if (ez === 'out') u = 1 - Math.pow(1 - u, 3);
+  if (A.b) u = bezierY(A.b, u);
+  else if (ez === 'linear'){} else if (ez === 'in') u = u * u * u; else if (ez === 'out') u = 1 - Math.pow(1 - u, 3);
   else if (ez === 'bounce') u = E.bounce(u); else if (ez === 'elastic') u = E.elastic(u); else if (ez === 'hold') u = u < 1 ? 0 : 1; else u = u * u * (3 - 2 * u);
   return A.v + (B.v - A.v) * u;
+}
+const CURVES = {linear:[0, 0, 1, 1], ease:[.25, .1, .25, 1], in:[.42, 0, 1, 1], out:[0, 0, .58, 1], inout:[.42, 0, .58, 1], back:[.34, 1.56, .64, 1], snap:[.9, 0, .1, 1]};
+function bezierY(b, x){
+  if (x <= 0) return 0; if (x >= 1) return 1;
+  const [x1, y1, x2, y2] = b, bx = t => 3 * (1 - t) * (1 - t) * t * x1 + 3 * (1 - t) * t * t * x2 + t * t * t, by = t => 3 * (1 - t) * (1 - t) * t * y1 + 3 * (1 - t) * t * t * y2 + t * t * t;
+  let lo = 0, hi = 1, t = x; for (let i = 0; i < 24; i++){ t = (lo + hi) / 2; bx(t) < x ? lo = t : hi = t; }
+  return by(t);
 }
 const kfAt = (c, k) => (c.kf && c.kf[k] || []).findIndex(f => Math.abs(f.t - (S.t - c.start)) < .04);
 function setKf(c, k, v){
