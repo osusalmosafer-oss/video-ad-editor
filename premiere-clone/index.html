@@ -55,6 +55,8 @@ select,input[type=text],input[type=number],textarea{background:var(--bg);border:
 .clip.video{background-color:#2c5aa0}.clip.image{background-color:#1f8a7a}.clip.audio{background-color:#2f8f4e}.clip.text{background-color:#7a4cc2}
 .clip.sel{outline:2px solid #fff;z-index:3}
 .clip .lb{position:absolute;inset:0;padding:2px 8px;text-shadow:0 1px 2px #000;white-space:nowrap;overflow:hidden;pointer-events:none;direction:rtl}
+.kf{position:absolute;bottom:3px;width:9px;height:9px;margin-left:-4px;background:#ffd23f;border:1px solid #000;transform:rotate(45deg);cursor:pointer;z-index:2}
+.kb{padding:0 6px!important;line-height:1.2;margin-inline-end:6px;font-size:13px}
 .clip .h{position:absolute;top:0;width:8px;height:100%;cursor:col-resize;background:rgba(255,255,255,.35);opacity:0}
 .clip:hover .h,.clip.sel .h{opacity:1}.clip .h.l{left:0}.clip .h.r{right:0}
 #ph{position:absolute;top:0;bottom:0;width:2px;background:var(--red);z-index:6;pointer-events:none}
@@ -208,13 +210,50 @@ function renderMedia(){
   }
 }
 
+/* ---------- keyframes ---------- */
+const KF = new Set(['scale','x','y','rotate','size']);
+function val(c, k){
+  const a = c.kf && c.kf[k];
+  if (!a || !a.length) return c.p[k];
+  const t = S.t - c.start;
+  if (t <= a[0].t) return a[0].v;
+  const L = a[a.length - 1]; if (t >= L.t) return L.v;
+  let i = 1; while (a[i].t < t) i++;
+  const A = a[i-1], B = a[i]; let u = (t - A.t) / (B.t - A.t);
+  if (c.p.ease !== 'linear') u = u * u * (3 - 2 * u);
+  return A.v + (B.v - A.v) * u;
+}
+const kfAt = (c, k) => (c.kf && c.kf[k] || []).findIndex(f => Math.abs(f.t - (S.t - c.start)) < .04);
+function setKf(c, k, v){
+  c.kf = c.kf || {}; const a = c.kf[k] = c.kf[k] || [], t = clamp(S.t - c.start, 0, c.dur), i = kfAt(c, k);
+  if (i >= 0) a[i].v = v; else { a.push({t, v}); a.sort((x, y) => x.t - y.t); }
+}
+function setVal(c, k, v){ KF.has(k) && c.kf && c.kf[k] && c.kf[k].length ? setKf(c, k, v) : (c.p[k] = v); }
+function toggleKf(c, k){
+  const i = kfAt(c, k);
+  if (i >= 0){ const a = c.kf[k]; c.p[k] = a[i].v; a.splice(i, 1); if (!a.length) delete c.kf[k]; }
+  else { const v = val(c, k); c.p[k] = c.p[k]; setKf(c, k, v); }
+}
+function syncInspector(){
+  const c = selClip(); if (!c) return;
+  document.querySelectorAll('#ibody input[type=range]').forEach(el => {
+    const k = el.dataset.k; if (!KF.has(k)) return;
+    const has = c.kf && c.kf[k] && c.kf[k].length;
+    const kb = document.querySelector(`#ibody [data-kb="${k}"]`);
+    if (kb){ kb.textContent = kfAt(c, k) >= 0 ? '◆' : '◇'; kb.style.color = has ? '#ffd23f' : ''; }
+    if (document.activeElement === el) return;
+    const v = val(c, k); el.value = v;
+    const l = document.querySelector(`#ibody [data-v="${k}"]`); if (l) l.textContent = (+v).toFixed(1).replace(/\.0$/, '');
+  });
+}
+
 /* ---------- clips ---------- */
 function defaults(kind){
   const base = {opacity:100, fadeIn:0, fadeOut:0};
   if (kind === 'text') return {...base, text:'نص جديد', size:8, color:'#ffffff', stroke:'#000000', strokeW:6, bg:false, bgColor:'#000000', bgOp:60,
-                               weight:'900', align:'center', x:50, y:75, anim:'none', fadeIn:0.2, fadeOut:0.2};
+                               weight:'900', align:'center', x:50, y:75, anim:'none', ease:'smooth', fadeIn:0.2, fadeOut:0.2};
   if (kind === 'audio') return {...base, volume:100};
-  return {...base, scale:100, x:0, y:0, rotate:0, fit:'cover', trans:'none', transDur:0.5, brightness:100, contrast:100, saturate:100, blur:0, speed:1, volume:100};
+  return {...base, scale:100, x:0, y:0, rotate:0, fit:'cover', trans:'none', transDur:0.5, ease:'smooth', brightness:100, contrast:100, saturate:100, blur:0, speed:1, volume:100};
 }
 function freeStart(track, from, dur){
   // append after the last clip on that track if the requested slot is taken
@@ -242,6 +281,15 @@ function splitAt(){
   const b = JSON.parse(JSON.stringify(c)); b.id = 'c'+uid++;
   b.start = t; b.in = c.in + cut * sp; b.dur = c.dur - cut; c.dur = cut;
   c.p.fadeOut = 0; b.p.fadeIn = 0;
+  if (c.kf){
+    const tc = S.t; S.t = t; const keep = {};
+    for (const k in c.kf){
+      const v = val(c, k), a = c.kf[k];
+      c.kf[k] = a.filter(f => f.t < cut).concat([{t:cut, v}]);
+      b.kf[k] = [{t:0, v}].concat(a.filter(f => f.t > cut).map(f => ({t:f.t - cut, v:f.v})));
+    }
+    S.t = tc;
+  }
   S.clips.push(b); S.sel = b.id; syncEls(); commit();
 }
 function delClip(ripple){
@@ -332,11 +380,11 @@ function wrap(text, maxW){
   return out;
 }
 function drawText(c, f){
-  const p = c.p, W = cv.width, H = cv.height, size = p.size / 100 * W;
+  const p = c.p, W = cv.width, H = cv.height, size = val(c, 'size') / 100 * W;
   let sc = 1; if (p.anim === 'pop'){ const t = S.t - c.start; sc = t < .3 ? 0.6 + 0.4 * Math.min(1, t/.3) * (1 + .25*Math.sin(Math.min(1,t/.3)*Math.PI)) : 1; }
   ctx.save();
   ctx.globalAlpha = (p.opacity/100) * f;
-  ctx.translate(p.x/100*W, p.y/100*H); ctx.scale(sc, sc);
+  ctx.translate(val(c,'x')/100*W, val(c,'y')/100*H); ctx.scale(sc, sc);
   ctx.font = `${p.weight} ${size}px Cairo, 'Segoe UI', Tahoma, Arial, sans-serif`;
   ctx.textAlign = p.align; ctx.textBaseline = 'middle'; ctx.direction = 'inherit';
   const lines = wrap(p.text, W * .9), lh = size * 1.35, h0 = -(lines.length - 1) * lh / 2;
@@ -359,7 +407,7 @@ function drawVisual(c, f){
   const e = els.get(c.id); if (!e) return;
   const w = e.videoWidth || e.naturalWidth, h = e.videoHeight || e.naturalHeight; if (!w || !h) return;
   const p = c.p, W = cv.width, H = cv.height;
-  const base = p.fit === 'cover' ? Math.max(W/w, H/h) : Math.min(W/w, H/h), s = base * p.scale / 100;
+  const base = p.fit === 'cover' ? Math.max(W/w, H/h) : Math.min(W/w, H/h), s = base * val(c, 'scale') / 100;
   ctx.save();
   ctx.globalAlpha = p.opacity/100 * f;
   const fl = []; if (p.brightness !== 100) fl.push(`brightness(${p.brightness}%)`); if (p.contrast !== 100) fl.push(`contrast(${p.contrast}%)`);
@@ -374,7 +422,7 @@ function drawVisual(c, f){
     else if (p.trans === 'zoom'){ zs = 1.5 - .5 * k; ctx.globalAlpha *= k; }
     else if (p.trans === 'wipe'){ ctx.beginPath(); ctx.rect(0, 0, W * k, H); ctx.clip(); }
   }
-  ctx.translate(W/2 + p.x/100*W + ox, H/2 + p.y/100*H); ctx.rotate(p.rotate * Math.PI / 180); ctx.scale(zs, zs);
+  ctx.translate(W/2 + val(c,'x')/100*W + ox, H/2 + val(c,'y')/100*H); ctx.rotate(val(c,'rotate') * Math.PI / 180); ctx.scale(zs, zs);
   ctx.drawImage(e, -w*s/2, -h*s/2, w*s, h*s);
   ctx.restore();
 }
@@ -390,7 +438,7 @@ function render(){
     }
   }
   $('#time').textContent = fmt(S.t) + ' / ' + fmt(total());
-  const ph = $('#ph'); ph.style.left = (S.t * S.zoom) + 'px';
+  const ph = $('#ph'); ph.style.left = (S.t * S.zoom) + 'px'; syncInspector();
 }
 
 /* ---------- transport ---------- */
@@ -463,6 +511,12 @@ function renderTimeline(){
       const m = mediaOf(c); if (m && m.thumb && c.type !== 'audio') d.style.backgroundImage = `url(${m.thumb})`;
       d.innerHTML = '<div class="h l"></div><div class="h r"></div><div class="lb"></div>';
       d.querySelector('.lb').textContent = c.type === 'text' ? c.p.text : (m ? m.name : '');
+      const times = new Set(); for (const k in (c.kf || {})) for (const f of c.kf[k]) if (f.t >= 0 && f.t <= c.dur) times.add(+f.t.toFixed(3));
+      for (const tm of times){
+        const kd = document.createElement('div'); kd.className = 'kf'; kd.style.left = tm * S.zoom + 'px';
+        kd.onpointerdown = e => { e.stopPropagation(); e.preventDefault(); S.sel = c.id; seek(c.start + tm); renderTimeline(); renderInspector(); };
+        d.appendChild(kd);
+      }
       d.onpointerdown = e => clipDown(e, c, d);
       r.appendChild(d);
     }
@@ -484,7 +538,7 @@ function clipDown(e, c, d){
   e.stopPropagation(); e.preventDefault();
   S.sel = c.id;
   const mode = e.target.classList.contains('l') ? 'l' : e.target.classList.contains('r') ? 'r' : 'move';
-  const x0 = e.clientX, o = {start:c.start, in:c.in, dur:c.dur}, m = mediaOf(c), sp = c.p.speed || 1;
+  const x0 = e.clientX, o = {start:c.start, in:c.in, dur:c.dur, kf:JSON.parse(JSON.stringify(c.kf || {}))}, m = mediaOf(c), sp = c.p.speed || 1;
   const maxSrc = (c.type === 'video' || c.type === 'audio') && m ? m.dur : Infinity;
   let moved = false;
   renderInspector(); document.querySelectorAll('.clip.sel').forEach(x => x.classList.remove('sel')); d.classList.add('sel');
@@ -496,7 +550,7 @@ function clipDown(e, c, d){
       if (row && row.dataset.track !== c.track && trackKind(row.dataset.track) === trackKind(c.track)) c.track = row.dataset.track;
     } else if (mode === 'l'){
       let ns = snapT(o.start + dt, c, 0); ns = clamp(ns, Math.max(0, o.start - o.in / sp), o.start + o.dur - .1);
-      const delta = ns - o.start; c.start = ns; c.in = o.in + delta * sp; c.dur = o.dur - delta;
+      const delta = ns - o.start; for (const k in o.kf) c.kf[k] = o.kf[k].map(f => ({t:f.t - delta, v:f.v})); c.start = ns; c.in = o.in + delta * sp; c.dur = o.dur - delta;
     } else {
       let nd = snapT(o.start + o.dur + dt, c, 0) - o.start; nd = Math.max(.1, nd);
       c.dur = Math.min(nd, (maxSrc - c.in) / sp);
@@ -525,8 +579,8 @@ const F = {
   text:   [['size','حجم الخط',2,30,.5],['strokeW','سماكة الحدود',0,20,.5],['x','الموضع أفقي %',0,100,1],['y','الموضع رأسي %',0,100,1]],
 };
 function slider(c, [k, lab, mn, mx, st]){
-  const v = c.p[k];
-  return `<div class="fld"><label><span>${lab}</span><b data-v="${k}">${(+v).toFixed(st < 1 ? 1 : 0)}</b></label><input type="range" data-k="${k}" min="${mn}" max="${mx}" step="${st}" value="${v}"></div>`;
+  const v = val(c, k), kb = KF.has(k) ? `<button class="kb" data-kb="${k}" title="مفتاح حركة عند المؤشر">◇</button>` : '';
+  return `<div class="fld"><label><span>${lab}</span><span>${kb}<b data-v="${k}">${(+v).toFixed(st < 1 ? 1 : 0)}</b></span></label><input type="range" data-k="${k}" min="${mn}" max="${mx}" step="${st}" value="${v}"></div>`;
 }
 function renderInspector(){
   const b = $('#ibody'), c = selClip();
@@ -549,16 +603,18 @@ function renderInspector(){
     h += F.visual.map(f => slider(c, f)).join('') + '<div class="grp">تصحيح اللون</div>' + F.color.map(f => slider(c, f)).join('');
     if (c.type === 'video') h += `<div class="grp">السرعة والصوت</div><div class="fld"><label>السرعة</label><select data-k="speed">${[.25,.5,.75,1,1.25,1.5,2,3].map(s => `<option value="${s}">${s}x</option>`).join('')}</select></div>` + F.audio.map(f => slider(c, f)).join('');
   } else h += F.audio.map(f => slider(c, f)).join('');
+  if (c.type !== 'audio') h += `<div class="grp">مفاتيح الحركة</div><div class="fld"><label>منحنى الحركة (◇ بجانب الخاصية)</label><select data-k="ease"><option value="smooth">سلس</option><option value="linear">خطي</option></select></div>`;
   h += '<div class="grp">انتقال</div>' + F.common.map(f => slider(c, f)).join('');
   b.innerHTML = h;
+  b.querySelectorAll('[data-kb]').forEach(btn => btn.onclick = () => { toggleKf(c, btn.dataset.kb); commit(); renderInspector(); });
   b.querySelectorAll('[data-k]').forEach(el => {
     const k = el.dataset.k, v = c.p[k];
     if (el.type === 'checkbox') el.checked = !!v; else if (el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.type === 'color') el.value = v;
     const read = () => el.type === 'checkbox' ? el.checked : el.type === 'range' || k === 'speed' ? +el.value : el.value;
     el.addEventListener('input', () => {
-      c.p[k] = read();
+      setVal(c, k, read());
       if (k === 'speed'){ c.dur = Math.min(c.dur, (mediaOf(c).dur - c.in) / c.p.speed); }
-      const lbl = b.querySelector(`[data-v="${k}"]`); if (lbl) lbl.textContent = (+c.p[k]).toFixed(1).replace(/\.0$/, '');
+      const lbl = b.querySelector(`[data-v="${k}"]`); if (lbl) lbl.textContent = (+val(c, k)).toFixed(1).replace(/\.0$/, '');
       syncPlayback(); render();
       if (k === 'text') renderTimeline();
     });
