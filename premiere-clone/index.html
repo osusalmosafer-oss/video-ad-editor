@@ -30,6 +30,7 @@
     <button id="bShot">📸 صورة</button>
     <button id="bSrtOut">⬇ SRT</button>
     <button id="bSave">💾 حفظ</button>
+    <button id="bBackup" title="نسخة احتياطية لمشروعك وما تعلّمه المستشار">🛟 نسخة احتياطية</button>
     <button id="bLoad">📂 فتح</button>
     <button id="bInstall" hidden>📲 ثبّت التطبيق</button>
     <button class="pri" id="bExport">⬇ تصدير الفيديو</button>
@@ -38,6 +39,7 @@
   <div id="media" class="panel">
     <div class="tabs"><button class="act" data-tab="t1">الوسائط</button><button data-tab="t2">عناصر</button><button data-tab="t3">قوالب</button><button data-tab="t4">ذكاء</button><button data-tab="t5">نشر</button><button data-tab="t6">مستشار</button></div>
     <div class="tabc" id="t1">
+      <button class="pri" id="bGallery" style="width:100%;padding:12px;font-size:15px;margin-bottom:8px">📷 إضافة فيديو أو صورة من الاستديو</button>
       <div id="drop">اسحب ملفات الفيديو / الصور / الصوت هنا<br>أو اضغط للاختيار</div>
       <input type="file" id="file" multiple accept="video/*,image/*,audio/*" hidden>
       <input type="file" id="projFile" accept=".json" hidden>
@@ -95,7 +97,7 @@
   </div>
 </div>
 
-<nav id="nav"><button data-sheet="media">📁<span>المكتبة</span></button><button data-sheet="insp">🎛<span>الخصائص</span></button><button id="nSplit">✂<span>قصّ</span></button><button id="nPlay" class="pri">▶<span>تشغيل</span></button></nav>
+<nav id="nav"><button id="nGallery">📷<span>استديو</span></button><button data-sheet="media">📁<span>المكتبة</span></button><button data-sheet="insp">🎛<span>الخصائص</span></button><button id="nSplit">✂<span>قصّ</span></button><button id="nPlay" class="pri">▶<span>تشغيل</span></button></nav>
 <div id="ov"><div><b id="ovt">جاري التصدير…</b><div id="bar"><i></i></div><p style="color:var(--mut);font-size:12px">التصدير يتم بزمن حقيقي — لا تغلق التبويب</p><button id="ovc">إلغاء</button></div></div>
 <div id="dlgw"><div id="dlg"></div></div>
 

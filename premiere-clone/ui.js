@@ -674,7 +674,7 @@ function startExport(name){
   recorder.onstop = () => {
     $('#ov').style.display = 'none'; S.exporting = false; clearInterval(exTimer);
     if (exportCancel){ exportResolve(false); return; }
-    window.lastExportFile = exportName + '.' + ((recorder.mimeType || mime).includes('mp4') ? 'mp4' : 'webm'); dl(new Blob(chunks, {type:recorder.mimeType || mime}), window.lastExportFile); exportResolve(true);
+    window.lastExportFile = exportName + '.' + ((recorder.mimeType || mime).includes('mp4') ? 'mp4' : 'webm'); (window.onExportDone || dl)(new Blob(chunks, {type:recorder.mimeType || mime}), window.lastExportFile); exportResolve(true);
   };
   S.exporting = true; $('#ov').style.display = 'grid'; seek(0);
   setTimeout(() => { recorder.start(250); play(); }, 400);
@@ -710,7 +710,7 @@ $('#bLoad').onclick = () => $('#projFile').click();
 $('#projFile').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
-    const missing = applyProject(JSON.parse(await f.text()));
+    const j = JSON.parse(await f.text()), missing = applyProject(j.app === 'abu-backup' ? j.project : j);
     if (missing.length) alert('استورد هذه الملفات وسيُعاد ربطها تلقائياً بالمشروع:\n' + missing.join('\n'));
   } catch (_) { alert('ملف مشروع غير صالح'); }
   e.target.value = '';

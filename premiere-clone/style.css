@@ -114,3 +114,4 @@ details>summary::before{content:"â–¸ "}details[open]>summary::before{content:"â–
   #dlg,#ov>div{min-width:0;width:92vw}
   #dlgw.float{place-items:end center;padding:0 0 70px}
 }
+#bBackup.due{color:#ffb44d;border-color:#ffb44d}
