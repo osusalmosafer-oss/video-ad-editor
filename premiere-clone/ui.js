@@ -5,7 +5,7 @@ function addFiles(files){
     const type = f.type.startsWith('video') ? 'video' : f.type.startsWith('image') ? 'image' : f.type.startsWith('audio') ? 'audio' : null;
     if (!type) continue;
     const m = {id:'m' + uid++, name:f.name, type, url:URL.createObjectURL(f), dur:5, thumb:null, w:0, h:0};
-    S.media.push(m);
+    S.media.push(m); relink(m);
     if (type === 'image'){
       const im = new Image(); im.onload = () => { m.w = im.naturalWidth; m.h = im.naturalHeight; m.thumb = m.url; renderMedia(); }; im.src = m.url;
     } else {
@@ -84,6 +84,7 @@ function splitAt(){
   S.clips.push(b); finish(b);
 }
 function delClip(ripple){
+  if (S.multi.size > 1){ S.clips = S.clips.filter(x => !S.multi.has(x.id)); S.multi.clear(); S.sel = null; syncEls(); commit(); return; }
   const c = selClip(); if (!c) return;
   S.clips = S.clips.filter(x => x !== c);
   if (ripple) for (const x of S.clips) if (x.track === c.track && x.start >= c.start + c.dur - 1e-6) x.start = Math.max(0, x.start - c.dur);
@@ -191,6 +192,37 @@ function applyTransition(c, type, d){
   d = Math.min(d, prev.dur - .1, c.dur - .1); const sp = c.p.speed || 1;
   if ((c.type === 'video') && c.in >= d * sp - 1e-6){ c.in -= d * sp; c.dur += d; c.start -= d; } else c.start -= d;
   c.p.aIn = type; c.p.aInDur = d; prev.p.fadeOut = Math.max(prev.p.fadeOut || 0, d); syncEls(); commit();
+}
+function captionDialog(){
+  const c = selClip(), m = c && mediaOf(c);
+  if (!c || !(c.type === 'video' || c.type === 'audio') || !m) return alert('اختر مقطع فيديو أو صوت فيه كلام');
+  dlg(`<b>🗣 ترجمة تلقائية من الصوت</b>
+    <p style="color:var(--mut);font-size:12px">تعمل بنموذج Whisper داخل متصفحك (لا يُرفع شيء). أول مرة يُنزَّل النموذج (≈40–250 ميغابايت) ويحتاج اتصال إنترنت.</p>
+    <div class="fld"><label>اللغة</label><select id="wl"><option value="arabic">العربية</option><option value="english">English</option><option value="">كشف تلقائي</option></select></div>
+    <div class="fld"><label>حجم النموذج</label><select id="wm"><option value="tiny">صغير (سريع)</option><option value="base" selected>متوسط</option><option value="small">كبير (أدق وأبطأ)</option></select></div>
+    <div class="fld"><label><input type="checkbox" id="wk" checked> نمط كاريوكي (تمييز الكلمات)</label></div>
+    <div id="wst" style="color:var(--acc2);min-height:20px;margin:6px 0"></div>
+    <button class="pri" id="goW">ابدأ</button> <button onclick="closeDlg()">إغلاق</button>`);
+  $('#goW').onclick = async () => { $('#goW').disabled = true; try { await runWhisper(c, m, $('#wl').value, $('#wm').value, $('#wk').checked); } catch (err) { $('#wst').style.color = 'var(--red)'; $('#wst').textContent = 'تعذّر التنفيذ: ' + (err.message || err) + ' — تأكد من اتصال الإنترنت.'; $('#goW').disabled = false; } };
+}
+async function runWhisper(c, m, lang, model, karaoke){
+  const st = t => { const e = $('#wst'); if (e) e.textContent = t; };
+  st('تحميل مكتبة التعرّف…');
+  const {pipeline, env} = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'); env.allowLocalModels = false;
+  const asr = await pipeline('automatic-speech-recognition', 'Xenova/whisper-' + model, {progress_callback:p => { if (p.status === 'progress') st('تنزيل النموذج… ' + Math.round(p.progress) + '%'); }});
+  st('تحضير الصوت…'); ensureAudio();
+  const buf = await actx.decodeAudioData(await (await fetch(m.url)).arrayBuffer()), sp = c.p.speed || 1;
+  const off = new OfflineAudioContext(1, Math.max(1, Math.ceil(buf.duration * 16000)), 16000), src = off.createBufferSource(); src.buffer = buf; src.connect(off.destination); src.start();
+  const data = (await off.startRendering()).getChannelData(0).slice(Math.floor(c.in * 16000), Math.floor((c.in + c.dur * sp) * 16000));
+  st('جارٍ التفريغ… قد يستغرق دقائق');
+  const out = await asr(data, {language:lang || null, task:'transcribe', chunk_length_s:30, stride_length_s:5, return_timestamps:true});
+  const tr = gfxTrack(0); let n = 0;
+  for (const ch of out.chunks || []){
+    const [s, e] = ch.timestamp, txt = (ch.text || '').trim(); if (!txt) continue;
+    const start = c.start + s / sp, dur = Math.max(.4, ((e ?? s + 2.5) - s) / sp);
+    mk('text', tr, start, dur, {text:txt, size:6.5, bg:true, strokeW:0, fadeIn:0, fadeOut:0, y:72, ...(karaoke ? {hl:'karaoke'} : {})}); n++;
+  }
+  commit(); st(`تمّ: أُضيف ${n} سطر ترجمة`); setTimeout(closeDlg, 1500);
 }
 function addMarker(){ if (S.markers.some(x => Math.abs(x.t - S.t) < .05)) return; S.markers.push({t:+S.t.toFixed(3), label:''}); S.markers.sort((a, b) => a.t - b.t); commit(); }
 
@@ -326,7 +358,7 @@ function renderTimeline(){
       addClip(m, t.id, Math.max(0, (e.clientX - r.getBoundingClientRect().left) / S.zoom));
     };
     for (const c of S.clips.filter(c => c.track === t.id)){
-      const d = document.createElement('div'); d.className = 'clip ' + (kindOf(c) === 'audio' ? 'audio' : c.type) + (c.id === S.sel ? ' sel' : '');
+      const d = document.createElement('div'); d.className = 'clip ' + (kindOf(c) === 'audio' ? 'audio' : c.type) + (c.id === S.sel || S.multi.has(c.id) ? ' sel' : '');
       d.style.left = c.start * S.zoom + 'px'; d.style.width = Math.max(6, c.dur * S.zoom) + 'px';
       const m = mediaOf(c); if (m && m.thumb && c.type !== 'audio') d.style.backgroundImage = `url(${m.thumb})`;
       d.innerHTML = '<div class="h l"></div><div class="h r"></div><div class="lb"></div>';
@@ -355,7 +387,11 @@ function snapT(t, c, edgeLen){
   return Math.max(0, best);
 }
 function clipDown(e, c, d){
-  e.stopPropagation(); e.preventDefault(); S.sel = c.id;
+  e.stopPropagation(); e.preventDefault();
+  if (e.shiftKey){ if (S.sel && !S.multi.size) S.multi.add(S.sel); S.multi.has(c.id) ? S.multi.delete(c.id) : S.multi.add(c.id); S.sel = c.id; renderTimeline(); renderInspector(); return; }
+  const group = S.multi.has(c.id) && S.multi.size > 1; if (!group) S.multi.clear();
+  const gs = group ? [...S.multi].map(id => S.clips.find(x => x.id === id)).filter(Boolean).map(x => [x, x.start]) : [];
+  S.sel = c.id;
   const mode = e.target.classList.contains('l') ? 'l' : e.target.classList.contains('r') ? 'r' : 'move';
   const x0 = e.clientX, o = {start:c.start, in:c.in, dur:c.dur, kf:JSON.parse(JSON.stringify(c.kf || {}))}, m = mediaOf(c), sp = c.p.speed || 1;
   const maxSrc = (c.type === 'video' || c.type === 'audio') && m ? m.dur : Infinity;
@@ -365,8 +401,9 @@ function clipDown(e, c, d){
     const dt = (ev.clientX - x0) / S.zoom; if (Math.abs(ev.clientX - x0) > 2) moved = true;
     if (mode === 'move'){
       c.start = snapT(o.start + dt, c, c.dur);
-      const row = document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.('.row');
-      if (row && row.dataset.track !== c.track && trackKind(row.dataset.track) === kindOf(c)) c.track = row.dataset.track;
+      if (group){ const dl_ = c.start - o.start; for (const [x, s0] of gs) if (x !== c) x.start = Math.max(0, s0 + dl_); }
+      else { const row = document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.('.row');
+        if (row && row.dataset.track !== c.track && trackKind(row.dataset.track) === kindOf(c)) c.track = row.dataset.track; }
     } else if (mode === 'l'){
       let ns = snapT(o.start + dt, c, 0); ns = clamp(ns, Math.max(0, o.start - o.in / sp), o.start + o.dur - .1);
       const delta = ns - o.start; for (const k in o.kf) c.kf[k] = o.kf[k].map(f => ({t:f.t - delta, v:f.v}));
@@ -382,7 +419,7 @@ function clipDown(e, c, d){
 $('#scroll').addEventListener('pointerdown', e => {
   if (e.target.closest('.clip') || e.target.closest('.mk')) return;
   const sc = $('#scroll');
-  if (!e.target.closest('#ruler')){ S.sel = null; renderInspector(); renderTimeline(); }
+  if (!e.target.closest('#ruler')){ S.sel = null; S.multi.clear(); renderInspector(); renderTimeline(); }
   const set = ev => seek((ev.clientX - sc.getBoundingClientRect().left + sc.scrollLeft) / S.zoom);
   set(e);
   const mv = ev => set(ev), up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); };
@@ -408,7 +445,7 @@ const animSec = (T) => ({t:'الحركة والانتقالات', items:[
   SEL('aOut', 'حركة الخروج', ANIMS), R('aOutDur', 'مدة الخروج (ث)', .1, 3, .1, {nokf:true, if:p => p.aOut !== 'none'}),
   SEL('aLoop', 'حركة مستمرة', LOOPS), R('aLoopAmt', 'شدة الحركة المستمرة', 5, 200, 1, {nokf:true, if:p => p.aLoop !== 'none'}),
   R('fadeIn', 'ظهور تدريجي (ث)', 0, 3, .1, {nokf:true}), R('fadeOut', 'اختفاء تدريجي (ث)', 0, 3, .1, {nokf:true}),
-  SEL('ease', 'منحنى مفاتيح الحركة', [['smooth','سلس'],['linear','خطي']])]});
+  SEL('ease', 'منحنى مفاتيح الحركة', [['smooth','سلس'],['linear','خطي'],['in','تسارع'],['out','تباطؤ'],['bounce','ارتداد'],['elastic','مطاطي'],['hold','ثابت (قفز)']])]});
 const colorSec = (t = 'الألوان والمؤثرات') => ({t, items:[
   SEL('look', 'نمط ألوان جاهز', LOOKOPTS),
   R('brightness', 'السطوع', 0, 200), R('contrast', 'التباين', 0, 200), R('saturate', 'التشبّع', 0, 300), R('hue', 'تدوير اللون', -180, 180), R('temp', 'حرارة اللون (بارد ↔ دافئ)', -100, 100),
@@ -417,7 +454,7 @@ const colorSec = (t = 'الألوان والمؤثرات') => ({t, items:[
 function specFor(c){
   const T = c.type, S_ = [];
   if (T === 'audio'){
-    S_.push({t:'الصوت', open:true, items:[R('volume', 'مستوى الصوت', 0, 100), R('duck', 'خفض تلقائي عند وجود كلام (Ducking)', 0, 95, 1, {nokf:true}), R('fadeIn', 'ظهور تدريجي (ث)', 0, 5, .1, {nokf:true}), R('fadeOut', 'اختفاء تدريجي (ث)', 0, 5, .1, {nokf:true})]});
+    S_.push({t:'الصوت', open:true, items:[R('volume', 'مستوى الصوت', 0, 100), R('duck', 'خفض تلقائي عند وجود كلام (Ducking)', 0, 95, 1, {nokf:true}), R('bass', 'جهير (Bass) dB', -12, 12, 1, {nokf:true}), R('treble', 'حاد (Treble) dB', -12, 12, 1, {nokf:true}), R('echo', 'صدى', 0, 100, 1, {nokf:true}), R('fadeIn', 'ظهور تدريجي (ث)', 0, 5, .1, {nokf:true}), R('fadeOut', 'اختفاء تدريجي (ث)', 0, 5, .1, {nokf:true})]});
     return S_;
   }
   if (T === 'text'){
@@ -462,7 +499,7 @@ function specFor(c){
     R('borderW', 'سماكة الإطار', 0, 20, .5, {nokf:true}), COL('borderColor', 'لون الإطار', {if:p => p.borderW > 0}), R('shadow', 'ظل', 0, 100)]});
   S_.push(colorSec());
   S_.push({t:'إزالة الخلفية الخضراء', items:[CHK('chroma', 'تفعيل Chroma Key'), COL('chromaColor', 'اللون المراد إزالته', {if:p => p.chroma}), R('chromaTol', 'التسامح', 1, 100, 1, {nokf:true, if:p => p.chroma}), R('chromaSoft', 'نعومة الحواف', 0, 60, 1, {nokf:true, if:p => p.chroma})]});
-  if (T === 'video') S_.push({t:'السرعة والصوت', items:[SEL('speed', 'السرعة', [[.25,'0.25x'],[.5,'0.5x'],[.75,'0.75x'],[1,'1x'],[1.25,'1.25x'],[1.5,'1.5x'],[2,'2x'],[3,'3x']], {num:true}), R('volume', 'مستوى الصوت', 0, 100)]});
+  if (T === 'video') S_.push({t:'السرعة والصوت', items:[SEL('speed', 'السرعة', [[.25,'0.25x'],[.5,'0.5x'],[.75,'0.75x'],[1,'1x'],[1.25,'1.25x'],[1.5,'1.5x'],[2,'2x'],[3,'3x']], {num:true}), R('volume', 'مستوى الصوت', 0, 100), R('bass', 'جهير (Bass) dB', -12, 12, 1, {nokf:true}), R('treble', 'حاد (Treble) dB', -12, 12, 1, {nokf:true}), R('echo', 'صدى', 0, 100, 1, {nokf:true})]});
   S_.push(animSec('visual')); return S_;
 }
 const openSecs = new Set(['التحويل', 'النص', 'الشكل', 'المؤثر']);
@@ -599,20 +636,34 @@ function startExport(){
 function finishExport(){ setTimeout(() => recorder && recorder.state !== 'inactive' && recorder.stop(), 300); }
 $('#ovc').onclick = () => { exportCancel = true; pause(); if (recorder && recorder.state !== 'inactive') recorder.stop(); };
 
-$('#bSave').onclick = () => dl(new Blob([JSON.stringify({v:2, aspect:S.aspect, res:S.res, fps:S.fps, tracks:TRACKS, markers:S.markers,
-  media:S.media.map(m => ({id:m.id, name:m.name, type:m.type, dur:m.dur})), clips:S.clips})], {type:'application/json'}), 'project.json');
+const projectData = () => ({v:2, aspect:S.aspect, res:S.res, fps:S.fps, tracks:TRACKS, markers:S.markers,
+  media:[...S.media.map(m => ({id:m.id, name:m.name, type:m.type, dur:m.dur})), ...S.pending.map(p => ({id:p.clip.mediaId, name:p.name, type:p.clip.type, dur:p.clip.dur}))],
+  clips:[...S.clips, ...S.pending.map(p => p.clip)]});
+function autosave(){ try { localStorage.setItem('vedit-auto', JSON.stringify(projectData())); } catch (_) {} }
+function applyProject(d){
+  S.aspect = d.aspect; S.res = d.res; S.fps = d.fps; $('#aspect').value = S.aspect; $('#res').value = S.res; $('#fps').value = S.fps;
+  if (d.tracks) TRACKS = d.tracks; S.markers = d.markers || [];
+  const have = new Map(S.media.map(m => [m.name, m])), names = {}; (d.media || []).forEach(m => names[m.id] = m.name);
+  S.clips = []; S.pending = [];
+  for (const c of d.clips){
+    if (NOEL.has(c.type)) S.clips.push(c);
+    else { const h = have.get(names[c.mediaId]); if (h){ c.mediaId = h.id; S.clips.push(c); } else S.pending.push({name:names[c.mediaId] || '?', clip:c}); }
+  }
+  S.sel = null; S.multi.clear(); syncEls(); applyCanvas(); commit();
+  return [...new Set(S.pending.map(p => p.name))];
+}
+function relink(m){
+  const hit = S.pending.filter(p => p.name === m.name); if (!hit.length) return;
+  for (const p of hit){ p.clip.mediaId = m.id; S.clips.push(p.clip); }
+  S.pending = S.pending.filter(p => p.name !== m.name); syncEls(); commit();
+}
+$('#bSave').onclick = () => dl(new Blob([JSON.stringify(projectData())], {type:'application/json'}), 'project.json');
 $('#bLoad').onclick = () => $('#projFile').click();
 $('#projFile').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
-    const d = JSON.parse(await f.text());
-    S.aspect = d.aspect; S.res = d.res; S.fps = d.fps; $('#aspect').value = S.aspect; $('#res').value = S.res; $('#fps').value = S.fps;
-    if (d.tracks) TRACKS = d.tracks; S.markers = d.markers || [];
-    const have = new Map(S.media.map(m => [m.name, m])), idMap = {}, missing = [];
-    for (const m of d.media){ const h = have.get(m.name); if (h) idMap[m.id] = h.id; else missing.push(m.name); }
-    S.clips = d.clips.filter(c => NOEL.has(c.type) || idMap[c.mediaId]).map(c => NOEL.has(c.type) ? c : {...c, mediaId:idMap[c.mediaId]});
-    S.sel = null; syncEls(); applyCanvas(); commit();
-    if (missing.length) alert('استورد هذه الملفات أولاً ثم افتح المشروع مرة ثانية:\n' + missing.join('\n'));
+    const missing = applyProject(JSON.parse(await f.text()));
+    if (missing.length) alert('استورد هذه الملفات وسيُعاد ربطها تلقائياً بالمشروع:\n' + missing.join('\n'));
   } catch (_) { alert('ملف مشروع غير صالح'); }
   e.target.value = '';
 };
@@ -630,7 +681,7 @@ $('#bBack').onclick = () => seek(S.t - 1 / S.fps); $('#bFwd').onclick = () => se
 $('#bLoop').onclick = () => { S.loop = !S.loop; $('#bLoop').classList.toggle('on', S.loop); };
 $('#bSplit').onclick = splitAt; $('#bDel').onclick = () => delClip(false); $('#bRipple').onclick = () => delClip(true);
 $('#bDup').onclick = dupClip; $('#bText').onclick = () => addText(0); $('#bFreeze').onclick = freezeFrame;
-$('#bSilence').onclick = silenceDialog; $('#bTrans').onclick = transitionDialog; $('#bBeats').onclick = detectBeats; $('#bMark').onclick = addMarker;
+$('#bSilence').onclick = silenceDialog; $('#bCap').onclick = captionDialog; $('#bTrans').onclick = transitionDialog; $('#bBeats').onclick = detectBeats; $('#bMark').onclick = addMarker;
 $('#bSrt').onclick = () => $('#srtFile').click(); $('#srtFile').onchange = async e => { const f = e.target.files[0]; if (f) importSrt(await f.text()); e.target.value = ''; };
 $('#bSrtOut').onclick = exportSrt; $('#bRec').onclick = toggleRec;
 $('#bShot').onclick = () => { const was = S.sel; render(); cv.toBlob(b => dl(b, 'frame.png')); };
@@ -662,3 +713,11 @@ addEventListener('keydown', e => {
 });
 window.__S = S; window.__T = () => TRACKS;
 lastSnap = snapshot(); buildSidebar(); applyCanvas(); refresh();
+(function tryRestore(){
+  let d; try { d = JSON.parse(localStorage.getItem('vedit-auto') || 'null'); } catch (_) {}
+  if (!d || !d.clips || !d.clips.length) return;
+  dlg(`<b>↩ استعادة المشروع السابق؟</b><p style="color:var(--mut);font-size:13px">وُجد مشروع محفوظ تلقائياً (${d.clips.length} عنصر). الوسائط (فيديو/صوت/صور) تُربط تلقائياً بمجرد أن تستورد ملفاتك بنفس الأسماء.</p>
+    <button class="pri" id="rsY">استعادة</button> <button id="rsN">مشروع جديد</button>`);
+  $('#rsY').onclick = () => { const miss = applyProject(d); closeDlg(); if (miss.length) setTimeout(() => alert('استورد هذه الملفات وسيُعاد ربطها تلقائياً:\n' + miss.join('\n')), 50); };
+  $('#rsN').onclick = () => { try { localStorage.removeItem('vedit-auto'); } catch (_) {} closeDlg(); };
+})();

@@ -11,7 +11,7 @@ let TRACKS = [
   {id:'A2', kind:'audio', label:'صوت 2'},
 ];
 const S = {media:[], clips:[], markers:[], sel:null, t:0, playing:false, zoom:80, aspect:'9:16', res:720, fps:30,
-           undo:[], redo:[], exporting:false, muted:{}, hidden:{}, loop:false};
+           undo:[], redo:[], exporting:false, muted:{}, hidden:{}, loop:false, multi:new Set(), pending:[]};
 const cv = $('#cv'), ctx = cv.getContext('2d');
 const els = new Map();                  // clip.id -> عنصر الوسائط
 const BB = new Map();                   // clip.id -> صندوق الإحاطة (للتحريك من المعاينة)
@@ -72,6 +72,7 @@ function commit(){
   if (snap === lastSnap) return;
   S.undo.push(lastSnap); if (S.undo.length > 100) S.undo.shift();
   S.redo = []; lastSnap = snap; refresh();
+  if (typeof autosave === 'function') autosave();
 }
 function restore(snap){
   const d = JSON.parse(snap); S.clips = d.clips; TRACKS = d.tracks; S.markers = d.markers || []; lastSnap = snap;
@@ -90,7 +91,9 @@ function val(c, k){
   const L = a[a.length - 1]; if (t >= L.t) return L.v;
   let i = 1; while (a[i].t < t) i++;
   const A = a[i-1], B = a[i]; let u = (t - A.t) / (B.t - A.t);
-  if (c.p.ease !== 'linear') u = u * u * (3 - 2 * u);
+  const ez = c.p.ease;
+  if (ez === 'linear'){} else if (ez === 'in') u = u * u * u; else if (ez === 'out') u = 1 - Math.pow(1 - u, 3);
+  else if (ez === 'bounce') u = E.bounce(u); else if (ez === 'elastic') u = E.elastic(u); else if (ez === 'hold') u = u < 1 ? 0 : 1; else u = u * u * (3 - 2 * u);
   return A.v + (B.v - A.v) * u;
 }
 const kfAt = (c, k) => (c.kf && c.kf[k] || []).findIndex(f => Math.abs(f.t - (S.t - c.start)) < .04);
@@ -111,7 +114,7 @@ const EFFECT_DEF = {look:'none', brightness:100, contrast:100, saturate:100, hue
 const ANIM_DEF = {aIn:'none', aInDur:.6, aOut:'none', aOutDur:.6, aLoop:'none', aLoopAmt:50, ease:'smooth', fadeIn:0, fadeOut:0, opacity:100, blend:'source-over'};
 function defaults(type){
   switch (type){
-    case 'audio': return {volume:100, duck:0, fadeIn:0, fadeOut:0, ease:'smooth'};
+    case 'audio': return {volume:100, duck:0, bass:0, treble:0, echo:0, fadeIn:0, fadeOut:0, ease:'smooth'};
     case 'text': return {...ANIM_DEF, text:'نص جديد', font:'Cairo', weight:'900', size:8, align:'center', color:'#ffffff', grad:false, color2:'#ffd23f',
       stroke:'#000000', strokeW:6, shadow:0, shadowColor:'#000000', glow:0, glowColor:'#7b61ff', ls:0, lh:1.35, bg:false, bgColor:'#000000', bgOp:60,
       hl:'none', hlColor:'#ffd23f', counter:false, cFrom:0, cTo:100, cPrefix:'', cSuffix:'', cDec:0, cDur:2, x:50, y:75, rotate:0, fadeIn:.2, fadeOut:.2};
@@ -120,7 +123,7 @@ function defaults(type){
     case 'fx': return {kind:'confetti', count:60, speed:50, size:50, palette:'rainbow', color:'#ffd23f', emoji:'❤️', x:50, y:50, seed:1, opacity:100, fadeIn:.2, fadeOut:.5, ease:'smooth', blend:'source-over'};
     case 'adjust': return {...ANIM_DEF, ...EFFECT_DEF, look:'cinematic', vignette:35, grain:15};
     default: return {...ANIM_DEF, ...EFFECT_DEF, scale:100, x:0, y:0, rotate:0, fit:'cover', bgBlur:false, flipH:false, flipV:false, mask:'none', maskR:20,
-      cl:0, cr:0, ct:0, cb:0, borderW:0, borderColor:'#ffffff', shadow:0, speed:1, volume:100};
+      cl:0, cr:0, ct:0, cb:0, borderW:0, borderColor:'#ffffff', shadow:0, speed:1, volume:100, bass:0, treble:0, echo:0};
   }
 }
 
@@ -524,12 +527,18 @@ function syncEls(){
     else {
       e = document.createElement(c.type === 'video' ? 'video' : 'audio');
       e.preload = 'auto'; e.playsInline = true; e.src = m.url; e.addEventListener('seeked', () => { if (!S.playing) render(); });
-      try { ensureAudio(); const src = actx.createMediaElementSource(e); src.connect(actx.destination); src.connect(recDest); } catch (_) {}
+      try {
+        ensureAudio(); const src = actx.createMediaElementSource(e);
+        const bass = actx.createBiquadFilter(), treb = actx.createBiquadFilter(), out = actx.createGain(), dly = actx.createDelay(1), fb = actx.createGain(), wet = actx.createGain();
+        bass.type = 'lowshelf'; bass.frequency.value = 200; treb.type = 'highshelf'; treb.frequency.value = 3500; dly.delayTime.value = .28; fb.gain.value = .4; wet.gain.value = 0;
+        src.connect(bass); bass.connect(treb); treb.connect(out); treb.connect(dly); dly.connect(fb); fb.connect(dly); dly.connect(wet); wet.connect(out);
+        out.connect(actx.destination); out.connect(recDest); FXN.set(c.id, {bass, treb, wet});
+      } catch (_) {}
     }
     els.set(c.id, e);
   }
 }
-const duckState = new Map();
+const duckState = new Map(), FXN = new Map();
 function duckFactor(c){
   const d = c.p.duck || 0; if (!d) return 1;
   let loud = false;
@@ -552,6 +561,7 @@ function syncPlayback(){
     if (!active){ if (!e.paused) e.pause(); continue; }
     e.volume = clamp(val(c, 'volume') / 100 * fadeFactor(c) * (c.type === 'audio' ? duckFactor(c) : 1), 0, 1);
     e.playbackRate = sp;
+    const fx = FXN.get(c.id); if (fx){ fx.bass.gain.value = c.p.bass || 0; fx.treb.gain.value = c.p.treble || 0; fx.wet.gain.value = (c.p.echo || 0) / 100 * .8; }
     if (S.playing){
       if (e.paused){ e.currentTime = local; e.play().catch(() => {}); }
       else if (Math.abs(e.currentTime - local) > .35) e.currentTime = local;
