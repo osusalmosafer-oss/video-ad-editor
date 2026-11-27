@@ -90,6 +90,7 @@ function basePlans(){
     {k:'square-1x1', n:'نسخة مربعة 1:1', t:[tAspect('1:1')]},
     {k:'post-4x5-tealorange', n:'نسخة 4:5 للبوست + تيل وبرتقالي', t:[tAspect('4:5'), tLook('tealorange')]},
     {k:'wide-16x9-blurbg', n:'نسخة أفقية 16:9 بخلفية ضبابية', t:[tAspect('16:9')]},
+    {k:'facebook-no-phone', n:'نسخة فيسبوك بلا بطاقة الرقم (توجيه للخاص)', t:[() => typeof tNoCard === 'function' && tNoCard()]},
   ];
 }
 // مزيج عشوائي: تغييرات بسيطة بتركيبات مختلفة

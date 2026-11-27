@@ -517,7 +517,7 @@ function specFor(c){
   if (T === 'shape'){
     S_.push({t:'الشكل', open:true, items:[SEL('shape', 'نوع الشكل', [['rect','مستطيل'],['circle','دائرة'],['triangle','مثلث'],['star','نجمة'],['arrow','سهم'],['heart','قلب'],['line','خط'],['bar','شريط تقدّم']]),
       R('w', 'العرض %', .5, 150), R('h', 'الارتفاع %', .3, 150), R('radius', 'استدارة الزوايا', 0, 100), COL('fill', 'اللون'), CHK('grad', 'تدرّج'), COL('fill2', 'اللون الثاني', {if:p => p.grad || p.shape === 'bar'}),
-      R('gradAngle', 'زاوية التدرّج', 0, 360, 1, {nokf:true, if:p => p.grad}), COL('stroke', 'لون الحدود'), R('strokeW', 'سماكة الحدود', 0, 20, .5), R('shadow', 'ظل', 0, 100)]});
+      R('gradAngle', 'زاوية التدرّج', 0, 360, 1, {nokf:true, if:p => p.grad}), CHK('glass', 'زجاج (يطمس ما خلفه)'), R('glassBlur', 'قوة الطمس', 0, 100, 1, {nokf:true, if:p => p.glass}), R('fillA', 'شفافية التعبئة', 0, 100, 1, {nokf:true}), COL('stroke', 'لون الحدود'), R('strokeW', 'سماكة الحدود', 0, 20, .5), R('shadow', 'ظل', 0, 100)]});
     S_.push({t:'الموضع والدمج', open:true, items:[R('x', 'الموضع أفقي %', -20, 120), R('y', 'الموضع رأسي %', -20, 120), R('rotate', 'دوران°', -180, 180), R('opacity', 'الشفافية', 0, 100), SEL('blend', 'نمط الدمج', BLEND)]});
     S_.push(animSec('shape')); return S_;
   }

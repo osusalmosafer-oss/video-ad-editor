@@ -128,7 +128,7 @@ function defaults(type){
       stroke:'#000000', strokeW:6, shadow:0, shadowColor:'#000000', glow:0, glowColor:'#7b61ff', ls:0, lh:1.35, bg:false, bgColor:'#000000', bgOp:60,
       hl:'none', hlColor:'#ffd23f', counter:false, cFrom:0, cTo:100, cPrefix:'', cSuffix:'', cDec:0, cDur:2, x:50, y:75, rotate:0, fadeIn:.2, fadeOut:.2};
     case 'shape': return {...ANIM_DEF, shape:'rect', w:40, h:10, x:50, y:50, rotate:0, fill:'#7b61ff', grad:false, fill2:'#00d1b2', gradAngle:90,
-      stroke:'#ffffff', strokeW:0, radius:20, shadow:0};
+      stroke:'#ffffff', strokeW:0, radius:20, shadow:0, fillA:100, glass:false, glassBlur:40};
     case 'fx': return {kind:'confetti', count:60, speed:50, size:50, palette:'rainbow', color:'#ffd23f', emoji:'❤️', x:50, y:50, seed:1, opacity:100, fadeIn:.2, fadeOut:.5, ease:'smooth', blend:'source-over'};
     case 'adjust': return {...ANIM_DEF, ...EFFECT_DEF, look:'cinematic', vignette:35, grain:15};
     default: return {...ANIM_DEF, ...EFFECT_DEF, scale:100, x:0, y:0, rotate:0, fit:'cover', bgBlur:false, flipH:false, flipV:false, mask:'none', maskR:20,
@@ -355,7 +355,15 @@ function drawShape(c, f){
     ctx.fillStyle = p.fill2; ctx.globalAlpha *= .35; shapePath2(ctx, 'rect', w, h, r); ctx.fill(); ctx.globalAlpha = clamp(V('opacity') / 100 * f * st.al, 0, 1);
     const k = clamp((S.t - c.start) / Math.max(.1, c.dur), 0, 1); ctx.fillStyle = fs;
     ctx.save(); shapePath2(ctx, 'rect', w, h, r); ctx.clip(); ctx.fillRect(-w / 2, -h / 2, w * k, h); ctx.restore();
-  } else { ctx.fillStyle = fs; shapePath2(ctx, p.shape, w, h, r); ctx.fill(); }
+  } else {
+    if (p.glass){                                   // زجاج: اطمس ما خلف الشكل ثم طبقة شفافة فوقه
+      sg.setTransform(1, 0, 0, 1, 0, 0); sg.globalCompositeOperation = 'copy'; sg.drawImage(cv, 0, 0);
+      ctx.save(); shapePath2(ctx, p.shape, w, h, r); ctx.clip(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.shadowColor = 'transparent'; ctx.filter = `blur(${(p.glassBlur || 40) / 100 * W * .05}px)`; ctx.drawImage(SN, 0, 0); ctx.restore();
+    }
+    const a0 = ctx.globalAlpha; if (p.fillA != null && p.fillA < 100) ctx.globalAlpha = a0 * p.fillA / 100;
+    ctx.fillStyle = fs; shapePath2(ctx, p.shape, w, h, r); ctx.fill(); ctx.globalAlpha = a0;
+  }
   if (V('strokeW') > 0){ ctx.shadowColor = 'transparent'; ctx.lineWidth = V('strokeW') / 100 * W * .05; ctx.strokeStyle = p.stroke; ctx.lineJoin = 'round'; shapePath2(ctx, p.shape === 'bar' ? 'rect' : p.shape, w, h, r); ctx.stroke(); }
   ctx.restore();
   BB.set(c.id, {cx, cy, w:w * st.sc * st.sx, h:h * st.sc, rot:V('rotate') + st.rot});
