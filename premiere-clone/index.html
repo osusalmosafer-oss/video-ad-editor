@@ -31,7 +31,7 @@
     <button id="bSrtOut">⬇ SRT</button>
     <button id="bSave">💾 حفظ</button>
     <button id="bBackup" title="نسخة احتياطية لمشروعك وما تعلّمه المستشار">🛟 نسخة احتياطية</button>
-    <button id="bLoad">📂 فتح</button>
+    <button id="bLoad" title="فتح مشروع محفوظ (ملف .json)">📂 فتح مشروع</button>
     <button id="bInstall" hidden>📲 ثبّت التطبيق</button>
     <button class="pri" id="bExport">⬇ تصدير الفيديو</button>
   </div>
@@ -42,7 +42,7 @@
       <button class="pri" id="bGallery" style="width:100%;padding:12px;font-size:15px;margin-bottom:8px">📷 إضافة فيديو أو صورة من الاستديو</button>
       <div id="drop">اسحب ملفات الفيديو / الصور / الصوت هنا<br>أو اضغط للاختيار</div>
       <input type="file" id="file" multiple accept="video/*,image/*,audio/*" hidden>
-      <input type="file" id="projFile" accept=".json" hidden>
+      <input type="file" id="projFile" accept=".json,application/json,video/*,image/*,audio/*" hidden>
       <div id="mlist"></div>
     </div>
     <div class="tabc" id="t2" hidden></div>

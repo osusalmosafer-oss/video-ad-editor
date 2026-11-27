@@ -709,10 +709,11 @@ $('#bSave').onclick = () => dl(new Blob([JSON.stringify(projectData())], {type:'
 $('#bLoad').onclick = () => $('#projFile').click();
 $('#projFile').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
+  if (/^(video|image|audio)\//.test(f.type)){ addFiles(e.target.files); e.target.value = ''; return; }   // اختار وسائط بدل مشروع: أضِفها
   try {
     const j = JSON.parse(await f.text()), missing = applyProject(j.app === 'abu-backup' ? j.project : j);
     if (missing.length) alert('استورد هذه الملفات وسيُعاد ربطها تلقائياً بالمشروع:\n' + missing.join('\n'));
-  } catch (_) { alert('ملف مشروع غير صالح'); }
+  } catch (_) { alert('هذا ليس ملف مشروع. لإضافة فيديو أو صورة استخدم زر «إضافة من الاستديو» 📷'); }
   e.target.value = '';
 };
 
