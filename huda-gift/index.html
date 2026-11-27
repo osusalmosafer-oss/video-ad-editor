@@ -65,6 +65,25 @@ h2{font-size:15px;margin:0 0 4px}
   .rcpWrap>h2{display:none}
   .rcpBox{border:0!important;padding:0!important;overflow:visible!important}
 }
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.chip{background:#eaf3f2;color:var(--teal-d);border:1px solid #cfe3e1;border-radius:20px;padding:6px 12px;font-size:14px;font-weight:700;cursor:pointer}
+.chip:active,.chip.on{background:var(--teal);color:#fff}
+.modal{position:fixed;inset:0;background:rgba(20,35,36,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.on{display:flex}
+.mbox{background:#fff;border-radius:16px;max-width:460px;width:100%;padding:20px;text-align:center}
+.mbox h3{margin:0 0 10px;color:var(--teal-d)}
+.mrow{background:#f2f7f7;border-radius:10px;padding:10px;margin:8px 0}
+.mrow small{display:block;color:var(--mut);font-size:12px}
+.mrow b{font-size:24px;word-break:break-word}
+.warn{background:#fff3cd;color:#7a5b00;border-radius:10px;padding:8px;margin:8px 0;font-size:14px;font-weight:700}
+.mb{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right}
+th{color:var(--mut);font-weight:700;font-size:12px}
+.tw{overflow-x:auto}
+.mini{padding:5px 10px;font-size:13px;border-radius:8px;background:#eef4f4;color:var(--teal-d)}
+.lh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -74,11 +93,13 @@ h2{font-size:15px;margin:0 0 4px}
     <h2>بيانات الإهداء</h2>
     <label>إلى <span>(المُهدى إليه)</span></label>
     <input id="to" placeholder="مثال: والدي الغالي / أ. محمد العتيبي">
+    <div class="chips" id="toChips"></div>
     <label>من <span>(المُهدي)</span></label>
     <input id="from" placeholder="مثال: ابنك عبدالله">
     <label>اسم المشروع</label>
     <input id="project" list="projects" placeholder="مثال: سقيا الماء / كفالة حلقة / وقف مصحف">
     <datalist id="projects"></datalist>
+    <div class="chips" id="projChips"></div>
 
     <label>رقم جوال العميل <span>(للإرسال المباشر عبر واتساب)</span></label>
     <input id="phone" type="tel" inputmode="tel" placeholder="05XXXXXXXX" dir="ltr" style="text-align:right">
@@ -88,6 +109,7 @@ h2{font-size:15px;margin:0 0 4px}
     <div class="btns">
       <button class="wa" id="send">📲 إرسال للعميل عبر واتساب</button>
       <button class="pr" id="print">🖨 طباعة على الطابعة الحرارية</button>
+      <button class="sec" id="reprint">↻ إعادة طباعة آخر إيصال</button>
       <button class="dl" id="download">⬇ تحميل الصورة</button>
       <button class="sec" id="copy">📋 نسخ الصورة</button>
     </div>
@@ -99,6 +121,8 @@ h2{font-size:15px;margin:0 0 4px}
       <textarea id="projList" rows="5" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit"></textarea>
       <label>رسالة واتساب الافتراضية <span>(استخدم {to} و{from} و{project})</span></label>
       <input id="tpl">
+      <label>أزرار «إلى» السريعة <span>(واحد في كل سطر)</span></label>
+      <textarea id="recList" rows="4" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit"></textarea>
       <label>سطر الفرع <span>(يظهر أعلى الإيصال)</span></label>
       <input id="branch">
       <label>رقم خدمة العملاء <span>(للتوثيق في الرسالة)</span></label>
@@ -123,11 +147,21 @@ h2{font-size:15px;margin:0 0 4px}
         <hr>
         <div class="txt">مكانتك عندي لا يمكن أن تقاس بالكلمات، هذه الهدية تحمل بين طياتها أجراً عظيماً لك ساهمت عنك في مشروع <span class="proj" id="rProj">…</span> حيث الأجور المضاعفة ليبقى لك خير هذه الصدقة وأجرها في الدنيا والآخرة.</div>
         <hr>
-        <div class="ft"><div class="ph" id="rPhone"></div><div dir="ltr">@hudaamkkah</div><div id="rDate" dir="ltr"></div></div>
+        <div class="ft"><div id="rSerial"></div><div class="ph" id="rPhone"></div><div dir="ltr">@hudaamkkah</div><div id="rDate" dir="ltr"></div></div>
       </div></div>
     </div>
   </section>
+  <section class="panel" id="logPanel" style="grid-column:1/-1">
+    <div class="lh"><h2 id="logTitle">سجل إهداءات اليوم</h2>
+      <div><button class="mini" id="expToday">تصدير اليوم (Excel)</button> <button class="mini" id="expAll">تصدير الكل</button></div></div>
+    <div class="tw"><table><thead><tr><th>رقم</th><th>الوقت</th><th>إلى</th><th>من</th><th>المشروع</th><th></th></tr></thead><tbody id="logBody"></tbody></table></div>
+    <div class="hint" id="logEmpty">لا توجد إهداءات مطبوعة اليوم بعد.</div>
+  </section>
 </main>
+<div class="modal" id="modal"><div class="mbox"><h3>تأكيد قبل الطباعة</h3>
+<div class="mrow"><small>إلى</small><b id="mTo"></b></div><div class="mrow"><small>من</small><b id="mFrom"></b></div><div class="mrow"><small>المشروع</small><b id="mProj"></b></div>
+<div class="warn" id="mDup" style="display:none">⚠ طُبع إهداء بنفس البيانات قبل أقل من دقيقتين. تأكد أنه ليس تكرارًا.</div>
+<div class="mb"><button class="sec" id="mEdit">تعديل</button><button class="pr" id="mOk">✔ الاسم صحيح، اطبع</button></div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -136,7 +170,8 @@ const DEF={
   projects:["سقيا الماء","كفالة حلقة تحفيظ","وقف مصحف","إفطار صائم","كسوة الحجاج","طباعة المصحف","رعاية الحفاظ"],
   tpl:"السلام عليكم، تفضّل إهداء من {from} إلى {to} بمناسبة مساهمته في مشروع {project} 🤍\nجمعية هدى لتعليم القرآن وعلومه بشرق مكة المكرمة",
   csNum:"0555012537",
-  branch:"فرع مكة المكرمة - أبراج البيت"
+  branch:"فرع مكة المكرمة - أبراج البيت",
+  recips:["والدي الغالي","والدتي الغالية","زوجتي الغالية","زوجي العزيز","ابني","ابنتي","أخي","أختي","صديقي","عن روح والدي","عن روح والدتي"]
 };
 const S=(()=>{try{return Object.assign({},DEF,JSON.parse(localStorage.getItem('huda_set')||'{}'))}catch(e){return {...DEF}}})();
 const cv=$('cv'),ctx=cv.getContext('2d');
@@ -210,30 +245,97 @@ $('send').onclick=async()=>{
 // الإعدادات
 function loadSet(){
   $('projects').innerHTML=S.projects.map(p=>`<option value="${p}">`).join('');
-  $('projList').value=S.projects.join('\n');$('tpl').value=S.tpl;$('csNum').value=S.csNum;$('branch').value=S.branch;fillReceipt();
+  $('projList').value=S.projects.join('\n');$('tpl').value=S.tpl;$('csNum').value=S.csNum;$('branch').value=S.branch;$('recList').value=S.recips.join('\n');renderChips();fillReceipt();
 }
 $('saveSet').onclick=()=>{
   S.projects=$('projList').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  S.tpl=$('tpl').value;S.csNum=$('csNum').value.trim();S.branch=$('branch').value.trim();
+  S.tpl=$('tpl').value;S.csNum=$('csNum').value.trim();S.branch=$('branch').value.trim();S.recips=$('recList').value.split('\n').map(s=>s.trim()).filter(Boolean);
   try{localStorage.setItem('huda_set',JSON.stringify(S))}catch(e){}
   loadSet();toast('تم حفظ الإعدادات ✅');
 };
 ['to','from','project'].forEach(i=>$(i).addEventListener('input',draw));
 
-function pad(n){return String(n).padStart(2,'0')}
-function fillReceipt(){
-  $('rTo').textContent=$('to').value.trim()||'…';
-  $('rFrom').textContent=$('from').value.trim()||'…';
-  $('rProj').textContent=$('project').value.trim()||'…';
+function pad(n,l=2){return String(n).padStart(l,'0')}
+const LS={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function fmtDate(t){const d=new Date(t);return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`}
+function fmtTime(t){const d=new Date(t);return `${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function nextSerial(){return (LS.get('huda_seq',0)||0)+1}
+function current(){return {to:$('to').value.trim(),from:$('from').value.trim(),project:$('project').value.trim()}}
+// يملأ الإيصال: من بيانات مسجّلة (إعادة طباعة) أو من الخانات الحالية (معاينة)
+function fillReceipt(e){
+  const x=e||Object.assign(current(),{ts:Date.now(),serial:nextSerial()});
+  $('rTo').textContent=x.to||'…';
+  $('rFrom').textContent=x.from||'…';
+  $('rProj').textContent=x.project||'…';
   $('rBranch').textContent=S.branch||'';
+  $('rSerial').textContent='رقم الإهداء: '+pad(x.serial,4);
   $('rPhone').textContent=S.csNum?('+966 '+S.csNum.replace(/^0/,'').replace(/(\d{3})(\d{3})(\d{3})/,'$1 $2 $3')):'';
-  const d=new Date();
-  $('rDate').textContent=`${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}  ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  $('rDate').textContent=`${fmtDate(x.ts)}  ${fmtTime(x.ts)}`;
 }
-['to','from','project'].forEach(i=>$(i).addEventListener('input',fillReceipt));
-$('print').onclick=()=>{if(!check())return;fillReceipt();window.print()};
-fillReceipt();
-loadSet();
+['to','from','project'].forEach(i=>$(i).addEventListener('input',()=>fillReceipt()));
+
+// أزرار سريعة
+function chips(boxId,list,target){
+  const box=$(boxId);box.textContent='';
+  list.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t;
+    b.onclick=()=>{$(target).value=t;draw();fillReceipt()};box.appendChild(b)});
+}
+function renderChips(){chips('toChips',S.recips,'to');chips('projChips',S.projects,'project')}
+
+// السجل
+function logAll(){return LS.get('huda_log',[])}
+function todayKey(){return fmtDate(Date.now())}
+function renderLog(){
+  const all=logAll(),today=all.filter(e=>fmtDate(e.ts)===todayKey()).reverse();
+  $('logTitle').textContent=`سجل إهداءات اليوم (${today.length})`;
+  $('logEmpty').style.display=today.length?'none':'block';
+  const tb=$('logBody');tb.textContent='';
+  today.forEach(e=>{
+    const tr=document.createElement('tr');
+    [pad(e.serial,4),fmtTime(e.ts),e.to,e.from,e.project].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.appendChild(td)});
+    const td=document.createElement('td'),b=document.createElement('button');b.className='mini';b.textContent='↻ إعادة طباعة';b.onclick=()=>printEntry(e);td.appendChild(b);tr.appendChild(td);tb.appendChild(tr);
+  });
+}
+function exportCsv(list,name){
+  if(!list.length){toast('لا توجد بيانات للتصدير');return}
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const rows=[['الرقم','التاريخ','الوقت','إلى','من','المشروع'].map(q).join(',')]
+    .concat(list.map(e=>[pad(e.serial,4),fmtDate(e.ts),fmtTime(e.ts),e.to,e.from,e.project].map(q).join(',')));
+  const b=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();
+}
+$('expToday').onclick=()=>exportCsv(logAll().filter(e=>fmtDate(e.ts)===todayKey()),`ihdaat-${todayKey().replace(/\//g,'-')}.csv`);
+$('expAll').onclick=()=>exportCsv(logAll(),'ihdaat-all.csv');
+
+// الطباعة
+function printEntry(e){
+  fillReceipt(e);
+  window.print();
+  fillReceipt();
+}
+function resetForm(){
+  ['to','from','project','phone','msg'].forEach(i=>$(i).value='');
+  draw();fillReceipt();
+}
+$('print').onclick=()=>{
+  if(!check())return;
+  const c=current();
+  $('mTo').textContent=c.to;$('mFrom').textContent=c.from;$('mProj').textContent=c.project;
+  const dup=logAll().some(e=>Date.now()-e.ts<120000&&e.to===c.to&&e.from===c.from&&e.project===c.project);
+  $('mDup').style.display=dup?'block':'none';
+  $('modal').classList.add('on');
+};
+$('mEdit').onclick=()=>$('modal').classList.remove('on');
+$('mOk').onclick=()=>{
+  $('modal').classList.remove('on');
+  const e=Object.assign(current(),{ts:Date.now(),serial:nextSerial()});
+  const log=logAll();log.push(e);LS.set('huda_log',log);LS.set('huda_seq',e.serial);
+  printEntry(e);
+  renderLog();resetForm();
+  toast(`تم تسجيل الإهداء رقم ${pad(e.serial,4)} ✅`);
+};
+$('reprint').onclick=()=>{const l=logAll();if(!l.length){toast('لا يوجد إيصال سابق');return}printEntry(l[l.length-1])};
+loadSet();renderLog();
 Promise.all([bg.decode().catch(()=>{}),document.fonts.load('700 40px Tajawal').catch(()=>{})]).then(draw);
 </script>
 </body>
