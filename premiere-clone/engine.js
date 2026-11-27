@@ -540,7 +540,7 @@ function syncEls(){
     if (NOEL.has(c.type) || els.has(c.id)) continue;
     const m = mediaOf(c); if (!m) continue;
     let e;
-    if (c.type === 'image'){ e = new Image(); e.src = m.url; }
+    if (c.type === 'image'){ e = new Image(); e.crossOrigin = 'anonymous'; e.src = m.url; }
     else {
       e = document.createElement(c.type === 'video' ? 'video' : 'audio');
       e.preload = 'auto'; e.playsInline = true; e.src = m.url; e.addEventListener('seeked', () => { if (!S.playing) render(); });

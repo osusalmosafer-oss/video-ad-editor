@@ -1,13 +1,14 @@
 'use strict';
 /* ============ نمط أسس المسافر (مأخوذ من تصميم المالك): شعار + كابشن نظيف مقطّع + بطاقة زجاجية ============ */
 const ASAS_KEY = 'vedit-asas';
-const ASAS = Object.assign({bug:'assets/asas/bug.png', wa:'assets/asas/wa.png', phone:'+966 56 640 3938', title:'للحجز والإستفسار', offer:'', bottom:'الرابط في البايو', blue:'#2884FF'},
+const AB = window.ASSET_BASE || '';           // عند النشر عبر قشرة CDN تُحمَّل الأصول من الـCDN
+const ASAS = Object.assign({bug:AB + 'assets/asas/bug.png', wa:AB + 'assets/asas/wa.png', phone:'+966 56 640 3938', title:'للحجز والإستفسار', offer:'', bottom:'الرابط في البايو', blue:'#2884FF'},
   (() => { try { return JSON.parse(localStorage.getItem(ASAS_KEY) || '{}'); } catch (_) { return {}; } })());
 const saveAsas = () => { try { localStorage.setItem(ASAS_KEY, JSON.stringify({phone:ASAS.phone, offer:ASAS.offer, title:ASAS.title, bottom:ASAS.bottom})); } catch (_) {} };
 
 function assetMedia(url, name){
   let m = S.media.find(x => x.url === url);
-  if (!m){ m = {id:'m' + uid++, name, type:'image', url, dur:5, thumb:url, w:0, h:0}; S.media.push(m); const im = new Image(); im.onload = () => { m.w = im.naturalWidth; m.h = im.naturalHeight; renderMedia(); }; im.src = url; }
+  if (!m){ m = {id:'m' + uid++, name, type:'image', url, dur:5, thumb:url, w:0, h:0}; S.media.push(m); const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { m.w = im.naturalWidth; m.h = im.naturalHeight; renderMedia(); }; im.src = url; }
   return m;
 }
 const imgClip = (m, tr, start, dur, p) => { const c = mk('image', tr, start, dur, {fit:'contain', ...p}); c.mediaId = m.id; return c; };

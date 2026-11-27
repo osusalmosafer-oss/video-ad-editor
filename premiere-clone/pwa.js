@@ -22,3 +22,20 @@ $('#nPlay').onclick = () => { S.playing ? pause() : play(); $('#nPlay').innerHTM
 $('#bPlay').addEventListener('click', () => { $('#nPlay').innerHTML = S.playing ? '⏸<span>إيقاف</span>' : '▶<span>تشغيل</span>'; });
 /* اختيار مقطع على الجوال يفتح الخصائص تلقائياً */
 document.addEventListener('pointerup', e => { if (matchMedia('(max-width:820px)').matches && e.target.closest && e.target.closest('.clip') && selClip() && !sheets.insp.classList.contains('open') && !sheets.media.classList.contains('open')) setTimeout(() => toggleSheet('insp'), 120); });
+
+/* ============ تحديث التطبيق المثبَّت: يفحص version.json ويعرض زر «تحديث الآن» ============ */
+(function(){
+  const CUR = window.APP_VERSION; if (!CUR || !/^https?:$/.test(location.protocol)) return;
+  let shown = false;
+  function showUpdate(v){
+    if (shown) return; shown = true;
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:8px;left:8px;right:8px;z-index:200;background:#2e2e6e;color:#fff;border:1px solid #7b61ff;border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:center;box-shadow:0 8px 30px #000a;font-size:13px';
+    d.innerHTML = '<span style="flex:1">🔄 يتوفر تحديث جديد للتطبيق</span><button id="updNow" class="pri" style="padding:5px 12px">تحديث الآن</button><button id="updLater" style="padding:5px 10px">لاحقاً</button>';
+    document.body.appendChild(d);
+    d.querySelector('#updLater').onclick = () => { d.remove(); setTimeout(() => { shown = false; }, 10 * 60e3); };
+    d.querySelector('#updNow').onclick = async () => { try { for (const k of await caches.keys()) await caches.delete(k); const rg = await navigator.serviceWorker.getRegistration(); if (rg) await rg.update(); } catch (_) {} location.reload(); };
+  }
+  async function check(){ try { const r = await fetch('version.json?t=' + Date.now(), {cache:'no-store'}); const v = (await r.json()).version; if (v && v !== CUR) showUpdate(v); } catch (_) {} }
+  setTimeout(check, 4000); setInterval(check, 30 * 60e3); document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+})();
