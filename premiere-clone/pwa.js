@@ -131,3 +131,19 @@ window.onExportDone = (blob, name) => {
     <button onclick="closeDlg()">إغلاق</button>`);
   $('#exSave').onclick = async () => { await saveFile(blob, name); };
 };
+
+/* ============ شاشة البداية: زر كبير واضح لإضافة الفيديو من الاستديو عندما يكون المشروع فارغاً ============ */
+(function startCta(){
+  const stage = $('#stage'); if (!stage) return;
+  stage.style.position = 'relative';
+  const d = document.createElement('div'); d.id = 'startCta';
+  d.style.cssText = 'position:absolute;inset:0;z-index:30;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;text-align:center;background:linear-gradient(#1b1b1fe6,#1b1b1ff2)';
+  d.innerHTML = `<button class="pri" id="ctaAdd" style="font-size:20px;font-weight:900;padding:18px 26px;border-radius:16px;box-shadow:0 8px 30px #7b61ff66">📷 أضف فيديو من الاستديو</button>
+    <div style="color:var(--mut);font-size:13px;line-height:1.8">اختر فيديو أو صورة لتبدأ المونتاج</div>
+    <button id="ctaOpen" style="background:none;border:none;color:var(--acc2);font-size:13px;text-decoration:underline;cursor:pointer">أو افتح مشروعاً محفوظاً</button>`;
+  stage.appendChild(d);
+  $('#ctaAdd').onclick = openGallery;
+  $('#ctaOpen').onclick = () => $('#projFile').click();
+  const upd = () => { const empty = !S.media.length && !S.clips.length && !(S.pending && S.pending.length); d.style.display = empty ? 'flex' : 'none'; };
+  upd(); setInterval(upd, 400);
+})();
