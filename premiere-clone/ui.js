@@ -176,6 +176,22 @@ function detectBeats(){
   }
   S.markers.sort((x, y) => x.t - y.t); commit(); alert(`أُضيفت ${n} علامة إيقاع`);
 }
+const TRANS = [['fade','تلاشي متقاطع (Cross Dissolve)'],['slideR','انزلاق من اليمين'],['slideL','انزلاق من اليسار'],['zoomIn','تكبير'],['wipeR','مسح'],['spin','دوران'],['blur','ضبابية'],['glitch','غليتش'],['flip','قلب']];
+function transitionDialog(){
+  const c = selClip(); if (!c || kindOf(c) !== 'video') return alert('اختر المقطع الذي تريد الانتقال إليه (يجب أن يلاصق مقطعاً قبله)');
+  dlg(`<b>🔀 انتقال إلى هذا المقطع</b>
+    <div class="fld"><label>النوع</label><select id="trT">${TRANS.map(([a, b]) => `<option value="${a}">${b}</option>`).join('')}</select></div>
+    <div class="fld"><label><span>المدة (ث)</span><b id="dvT">0.6</b></label><input type="range" id="trD" min=".2" max="2" step=".1" value=".6" oninput="dvT.textContent=this.value"></div>
+    <button class="pri" id="goTr">تطبيق</button> <button onclick="closeDlg()">إلغاء</button>`);
+  $('#goTr').onclick = () => { applyTransition(c, $('#trT').value, +$('#trD').value); closeDlg(); };
+}
+function applyTransition(c, type, d){
+  const prev = S.clips.filter(x => x !== c && x.track === c.track && Math.abs(x.start + x.dur - c.start) < .06).sort((a, b) => b.start - a.start)[0];
+  if (!prev) return alert('لا يوجد مقطع ملاصق قبل المقطع المحدد على نفس المسار');
+  d = Math.min(d, prev.dur - .1, c.dur - .1); const sp = c.p.speed || 1;
+  if ((c.type === 'video') && c.in >= d * sp - 1e-6){ c.in -= d * sp; c.dur += d; c.start -= d; } else c.start -= d;
+  c.p.aIn = type; c.p.aInDur = d; prev.p.fadeOut = Math.max(prev.p.fadeOut || 0, d); syncEls(); commit();
+}
 function addMarker(){ if (S.markers.some(x => Math.abs(x.t - S.t) < .05)) return; S.markers.push({t:+S.t.toFixed(3), label:''}); S.markers.sort((a, b) => a.t - b.t); commit(); }
 
 /* ============ قوالب جاهزة ============ */
@@ -439,7 +455,7 @@ function specFor(c){
     return S_;
   }
   // فيديو / صورة
-  S_.push({t:'التحويل', open:true, items:[SEL('fit', 'الملاءمة', [['cover','ملء الإطار'],['contain','احتواء']]), R('scale', 'الحجم %', 5, 500), R('x', 'إزاحة أفقية', -150, 150), R('y', 'إزاحة رأسية', -150, 150), R('rotate', 'دوران°', -180, 180),
+  S_.push({t:'التحويل', open:true, items:[SEL('fit', 'الملاءمة', [['cover','ملء الإطار'],['contain','احتواء']]), CHK('bgBlur', 'خلفية ضبابية خلف الفيديو', {if:p => p.fit === 'contain'}), R('scale', 'الحجم %', 5, 500), R('x', 'إزاحة أفقية', -150, 150), R('y', 'إزاحة رأسية', -150, 150), R('rotate', 'دوران°', -180, 180),
     CHK('flipH', 'قلب أفقي'), CHK('flipV', 'قلب رأسي'), R('opacity', 'الشفافية', 0, 100), SEL('blend', 'نمط الدمج', BLEND)]});
   S_.push({t:'القصّ والإطار', items:[SEL('mask', 'القناع', [['none','بدون'],['rounded','زوايا مستديرة'],['circle','دائرة']]), R('maskR', 'استدارة الزوايا', 0, 100, 1, {nokf:true, if:p => p.mask === 'rounded'}),
     R('cl', 'قصّ يسار %', 0, 90, 1, {nokf:true}), R('cr', 'قصّ يمين %', 0, 90, 1, {nokf:true}), R('ct', 'قصّ أعلى %', 0, 90, 1, {nokf:true}), R('cb', 'قصّ أسفل %', 0, 90, 1, {nokf:true}),
@@ -614,7 +630,7 @@ $('#bBack').onclick = () => seek(S.t - 1 / S.fps); $('#bFwd').onclick = () => se
 $('#bLoop').onclick = () => { S.loop = !S.loop; $('#bLoop').classList.toggle('on', S.loop); };
 $('#bSplit').onclick = splitAt; $('#bDel').onclick = () => delClip(false); $('#bRipple').onclick = () => delClip(true);
 $('#bDup').onclick = dupClip; $('#bText').onclick = () => addText(0); $('#bFreeze').onclick = freezeFrame;
-$('#bSilence').onclick = silenceDialog; $('#bBeats').onclick = detectBeats; $('#bMark').onclick = addMarker;
+$('#bSilence').onclick = silenceDialog; $('#bTrans').onclick = transitionDialog; $('#bBeats').onclick = detectBeats; $('#bMark').onclick = addMarker;
 $('#bSrt').onclick = () => $('#srtFile').click(); $('#srtFile').onchange = async e => { const f = e.target.files[0]; if (f) importSrt(await f.text()); e.target.value = ''; };
 $('#bSrtOut').onclick = exportSrt; $('#bRec').onclick = toggleRec;
 $('#bShot').onclick = () => { const was = S.sel; render(); cv.toBlob(b => dl(b, 'frame.png')); };

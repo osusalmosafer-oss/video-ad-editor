@@ -119,7 +119,7 @@ function defaults(type){
       stroke:'#ffffff', strokeW:0, radius:20, shadow:0};
     case 'fx': return {kind:'confetti', count:60, speed:50, size:50, palette:'rainbow', color:'#ffd23f', emoji:'❤️', x:50, y:50, seed:1, opacity:100, fadeIn:.2, fadeOut:.5, ease:'smooth', blend:'source-over'};
     case 'adjust': return {...ANIM_DEF, ...EFFECT_DEF, look:'cinematic', vignette:35, grain:15};
-    default: return {...ANIM_DEF, ...EFFECT_DEF, scale:100, x:0, y:0, rotate:0, fit:'cover', flipH:false, flipV:false, mask:'none', maskR:20,
+    default: return {...ANIM_DEF, ...EFFECT_DEF, scale:100, x:0, y:0, rotate:0, fit:'cover', bgBlur:false, flipH:false, flipV:false, mask:'none', maskR:20,
       cl:0, cr:0, ct:0, cb:0, borderW:0, borderColor:'#ffffff', shadow:0, speed:1, volume:100};
   }
 }
@@ -289,6 +289,7 @@ function drawVisual(c, f){
   const base = p.fit === 'cover' ? Math.max(W / w, H / h) : Math.min(W / w, H / h), s = base * V('scale') / 100, dw = w * s, dh = h * s;
   startLayer(); lg.save();
   if (st.wipe) wipeClip(lg, st.wipe, W, H);
+  if (p.fit === 'contain' && p.bgBlur){ lg.save(); lg.filter = `blur(${W * .03}px) brightness(70%)`; const bs = Math.max(W / w, H / h) * 1.15; lg.drawImage(e, W / 2 - w * bs / 2, H / 2 - h * bs / 2, w * bs, h * bs); lg.restore(); }
   const cx = W / 2 + V('x') / 100 * W + st.dx * W, cy = H / 2 + V('y') / 100 * H + st.dy * H;
   lg.translate(cx, cy); lg.rotate((V('rotate') + st.rot) * Math.PI / 180); lg.scale((p.flipH ? -1 : 1) * st.sx * st.sc, (p.flipV ? -1 : 1) * st.sc);
   const x0 = -dw / 2 + dw * p.cl / 100, x1 = dw / 2 - dw * p.cr / 100, y0 = -dh / 2 + dh * p.ct / 100, y1 = dh / 2 - dh * p.cb / 100, rw = x1 - x0, rh = y1 - y0;
@@ -485,9 +486,10 @@ function render(){
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.filter = 'none'; ctx.globalAlpha = 1;
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   BB.clear();
+  const ordered = [...S.clips].sort((a, b) => a.start - b.start);
   for (const tr of drawOrder()){
     if (S.hidden[tr.id]) continue;
-    for (const c of S.clips){
+    for (const c of ordered){
       if (c.track !== tr.id || S.t < c.start || S.t >= c.start + c.dur) continue;
       const f = fadeFactor(c);
       switch (c.type){
