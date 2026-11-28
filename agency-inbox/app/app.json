@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "صندوق الوكالة",
+    "slug": "agency-inbox",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": { "supportsTablet": false, "bundleIdentifier": "com.agency.inbox" },
+    "android": { "package": "com.agency.inbox" },
+    "plugins": ["expo-secure-store"]
+  }
+}

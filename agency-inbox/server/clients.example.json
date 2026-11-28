@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "name": "مطعم الديوان",
+    "accounts": {
+      "wa": { "phone_number_id": "", "token": "" },
+      "ig": { "account_id": "", "token": "" },
+      "fb": { "page_id": "", "token": "" }
+    }
+  }
+]

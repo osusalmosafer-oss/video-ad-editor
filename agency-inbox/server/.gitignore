@@ -1,0 +1,4 @@
+node_modules
+.env
+clients.json
+data.db*
