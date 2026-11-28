@@ -3,7 +3,7 @@ import { findClient } from './clients.js';
 import { recordInbound } from './db.js';
 
 export function verifySignature(rawBody, header, secret) {
-  if (!secret) return true; // بيئة التجربة فقط
+  if (!secret) return false; // بدون السر لا نقبل أي طلب
   if (!header?.startsWith('sha256=')) return false;
   const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
   const got = header.slice(7);
